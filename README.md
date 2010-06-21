@@ -1,13 +1,16 @@
 
-`thruflo.webapp` is a WSGI compatible web application framework.  
-
-It's poor quality, untested and no doubt deeply flawed.  But is it just the way *I* want my webapp framework to be:
+`thruflo.webapp` is a WSGI compatible web application framework.  It has no test coverage and is no doubt flawed.  But it has the advantage of being setup just the way I want it:
 
 * `re.compile` based url mapping
-* classes for `RequestHandler`s with methods that correspond to the HTTP Request's method, e.g.: `def post(self)` handles a `POST` request
+* class instances handling requests with methods that correspond to the HTTP Request's method, e.g.: `def post(self)` handles a `POST` request
 * a `webob.Request` as self.request
-* `return foo` as the method of responding, where `foo` can be a webob.Response, a string or either a list or a dictionary (to return `json`)
-* `mako` templates with builtin methods including `static_url`, `xsrf_form_html` and `escape` to the template, as well as references to `handler` and `request`
+* `return foo` as the method of responding, where `foo` can be a string, a `webob.Response`, or a `list` or `dict` to be returned as JSON
+* [mako templates][] with builtin methods including:
+  * `static_url`
+  * `xsrf_form_html`
+  * `escape`, as well as references to
+  * `handler` and 
+  * `request`
 
 Or to put it another way:
 
@@ -23,4 +26,7 @@ Or to put it another way:
     application = web.WSGIApplication(mapping)
     
 
-Or see `thruflo.webapp.demo`.
+See [thruflo.webapp.demo][] for a slightly fleshed out usage or read the source code.
+
+[mako templates]: http://www.makotemplates.org
+[thruflo.webapp.demo]: http://github.com/thruflo/thruflo.webapp/tree/master/src/thruflo/webapp/demo/

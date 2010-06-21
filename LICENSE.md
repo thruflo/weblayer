@@ -1,3 +1,4 @@
-Copyright [James Arthur][] 2010.
+[Dedicated to the Public Domain][d] by [James Arthur][j] 2010.
 
-[James Arthur]: http://thruflo.com
+[d]: http://creativecommons.org/publicdomain/zero/1.0/legalcode
+[j]: http://thruflo.com
