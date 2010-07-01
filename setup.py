@@ -2,9 +2,9 @@ from setuptools import setup, find_packages
 
 setup(
     name = 'thruflo.webapp',
-    version = '0.1',
+    version = '0.1.1',
     description = 'Yet another WSGI web app framework',
-    long_description = open('README.md').read(),
+    long_description = open('README.rst').read(),
     author = 'James Arthur',
     author_email = 'thruflo@googlemail.com',
     url = 'http://github.com/thruflo/thruflo.webapp',
@@ -13,7 +13,7 @@ setup(
         'Environment :: Web Environment',
         'Programming Language :: Python'
     ],
-    license = open('LICENSE.md').read(),
+    license = open('LICENSE.rst').read(),
     packages = find_packages('src'),
     namespace_packages = [
         'thruflo'
