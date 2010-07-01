@@ -5,12 +5,7 @@
 * class instances handling requests with methods that correspond to the HTTP Request's method, e.g.: ``def post(self)`` handles a `POST` request
 * a ``webob.Request`` as self.request
 * ``return foo`` as the method of responding, where ``foo`` can be a string, a ``webob.Response``, or a ``list`` or ``dict`` to be returned as JSON
-* `mako templates`_ with builtin methods including:
-  * ``static_url``
-  * ``xsrf_form_html``
-  * ``escape``, as well as references to
-  * ``handler`` and 
-  * ``request``
+* `mako templates`_ with builtin methods including ``static_url``, ``xsrf_form_html`` and ``escape``, as well as references to ``handler`` and ``request``
 
 Or to put it another way::
 
@@ -24,7 +19,6 @@ Or to put it another way::
     
     mapping = [('/.*', Hello)]
     application = web.WSGIApplication(mapping)
-    
 
 See `thruflo.webapp.demo`_ for a slightly fleshed out example usage.
 
