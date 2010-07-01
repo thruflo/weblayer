@@ -417,12 +417,16 @@ class RequestHandler(object):
         
     
     
-    def error(self, status=500, body='System Error'):
+    def error(self, status=500, body=u'System Error'):
         """Clear response and return error.
         """
         
         self.response = webob.Response(status=status)
-        self.response.body = body
+        
+        if isinstance(body, unicode):
+            self.response.unicode_body = body
+        else:
+            self.response.body = body
         
         return self.response
         
