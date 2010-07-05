@@ -73,7 +73,7 @@ class Redis(object):
           the risk of a namespace collision.
         """
         
-        return u'%s%s' % (self.key_prefix, url_escape(k))
+        return u'%s%s' % (self.key_prefix, k)
         
     
     
