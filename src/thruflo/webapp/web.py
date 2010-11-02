@@ -107,29 +107,28 @@ class WSGIApplication(object):
         self.current_request_args = groups
         
         if handler:
+            method = None
             method_name = environ['REQUEST_METHOD']
             if method_name in SUPPORTED_METHODS:
                 method = getattr(handler, method_name.lower(), None)
-                if method:
-                    try:
-                        handler_response = method(*groups)
-                    except Exception, err:
-                        response = handler.handle_exception(err)
-                    else:
-                        if isinstance(handler_response, webob.Response):
-                            response = handler_response
-                        elif isinstance(handler_response, str):
-                            response.body = handler_response
-                        elif isinstance(handler_response, unicode):
-                            response.unicode_body = handler_response
-                        else: # assume it's data
-                            response.content_type = 'application/json; charset=UTF-8'
-                            response.unicode_body = utils.json_encode(handler_response)
+            if method is not None:
+                try:
+                    handler_response = method(*groups)
+                except Exception, err:
+                    response = handler.handle_exception(err)
                 else:
-                    response.status = 405
+                    if isinstance(handler_response, webob.Response):
+                        response = handler_response
+                    elif isinstance(handler_response, str):
+                        response.body = handler_response
+                    elif isinstance(handler_response, unicode):
+                        response.unicode_body = handler_response
+                    else: # assume it's data
+                        response.content_type = 'application/json; charset=UTF-8'
+                        response.unicode_body = utils.json_encode(handler_response)
             else:
-                response.status = 405
-        else:
+                response = handler.handle_method_not_allowed(method_name)
+        else: # n.b.: to handle 404 nicely, define a catch all url handler
             response.status = 404
         
         return response(environ, start_response)
@@ -432,11 +431,21 @@ class RequestHandler(object):
         
     
     def handle_exception(self, err):
-        """Override to handle errors nicely
+        """Override to handle errors nicely.
         """
         
         logging.error(err, exc_info=True)
         return self.error()
+        
+    
+    def handle_method_not_allowed(self, method_name):
+        """Override to handle 405 nicely.
+        """
+        
+        msg = u'%s method not allowed' % method_name
+        
+        logging.warning(msg)
+        return self.error(status=405, body=msg)
         
     
     
