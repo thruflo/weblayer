@@ -1,19 +1,29 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from setuptools import setup, find_packages
 
 setup(
     name = 'thruflo.webapp',
-    version = '0.1.3',
-    description = 'Yet another WSGI web app framework',
+    version = '0.2',
+    description = 'Minimal, testable WSGI framework',
     long_description = open('README.rst').read(),
     author = 'James Arthur',
-    author_email = 'thruflo@googlemail.com',
+    author_email = 'thruflo@geemail.com',
     url = 'http://github.com/thruflo/thruflo.webapp',
     classifiers = [
+        'License :: Public Domain',
+        'Intended Audience :: Developers',
         'Development Status :: 3 - Alpha',
+        'Operating System :: Unix',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2.5',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
         'Environment :: Web Environment',
-        'Programming Language :: Python'
+        'Framework :: Paste'
     ],
-    license = 'Public Domain (http://creativecommons.org/publicdomain/zero/1.0/legalcode)',
+    license = 'http://creativecommons.org/publicdomain/zero/1.0/',
     packages = find_packages('src'),
     namespace_packages = [
         'thruflo'
@@ -24,14 +34,21 @@ setup(
     include_package_data = True,
     zip_safe = False,
     install_requires=[
-        'setuptools_git==0.3.4',
-        'simplejson>=2.0.9',
-        'Mako>=0.3.2',
-        'Beaker>=1.5.3',
-        'redis>=1.34',
-        'webob>=0.9.8',
-        'pytz'
+        'zope.interface >= 3.6, < 4.0',
+        'zope.component >= 3.10, < 4.0',
+        'webob >= 1.0, < 2.0',
+        'Mako >= 0.3, < 0.4'
     ],
+    extras_require = {
+        'dev': [
+            'setuptools_git >= 0.3, < 0.4'
+        ],
+        'tests': [
+            'nose >= 0.11, < 1.0',
+            'coverage >= 3.4, < 4.0',
+            'mock >= 0.7, < 0.8'
+        ]
+    },
     entry_points = {
         'setuptools.file_finders': [
             "foobar = setuptools_git:gitlsfiles"

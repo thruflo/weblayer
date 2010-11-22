@@ -6,7 +6,6 @@
 
 import logging
 import hashlib
-import pytz
 import random
 import re
 import time

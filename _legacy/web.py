@@ -71,7 +71,7 @@ class WSGIApplication(object):
         """
         
         self._init_url_mappings(url_mapping)
-        self.settings = DEFAULT_SETTINGS
+        self.settings = DEFAULT_SETTINGS.copy()
         self.settings.update(settings)
         self.tmpl_lookup = template.tmpl_lookup_factory(
             settings['tmpl_dirs']
