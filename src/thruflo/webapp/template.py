@@ -10,15 +10,6 @@ from zope.interface import implements
 from mako.lookup import TemplateLookup
 
 from interfaces import ITemplateRenderer
-import utils
-
-DEFAULT_BUILT_INS = {
-    "escape": utils.xhtml_escape,
-    "url_escape": utils.url_escape,
-    "json_encode": utils.json_encode,
-    "squeeze": utils.squeeze,
-    "datetime": datetime,
-}
 
 class MakoTemplateRenderer(object):
     """ `Mako` template renderer.
@@ -29,7 +20,8 @@ class MakoTemplateRenderer(object):
     def __init__(
             self, 
             directories,
-            built_ins=DEFAULT_BUILT_INS,
+            built_ins={},
+            TemplateLookupClass=TemplateLookup,
             module_directory='/tmp/mako_modules',
             input_encoding='utf-8', 
             output_encoding='utf-8', 
@@ -39,8 +31,8 @@ class MakoTemplateRenderer(object):
         """
         """
         
-        self.built_ins = DEFAULT_BUILT_INS
-        self.template_lookup = TemplateLookup(
+        self.built_ins = built_ins
+        self.template_lookup = TemplateLookupClass(
             directories=directories,
             module_directory=module_directory,
             input_encoding=input_encoding, 

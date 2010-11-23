@@ -12,9 +12,9 @@ setup(
     author_email = 'thruflo@geemail.com',
     url = 'http://github.com/thruflo/thruflo.webapp',
     classifiers = [
-        'License :: Public Domain',
         'Intended Audience :: Developers',
         'Development Status :: 3 - Alpha',
+        'License :: Public Domain',
         'Operating System :: Unix',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.5',
@@ -47,6 +47,10 @@ setup(
             'nose >= 0.11, < 1.0',
             'coverage >= 3.4, < 4.0',
             'mock >= 0.7, < 0.8'
+        ],
+        'docs': [
+            'Sphinx >= 1.0, < 2.0',
+            'repoze.sphinx.autointerface >= 0.4, < 0.5'
         ]
     },
     entry_points = {
