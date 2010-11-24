@@ -6,18 +6,19 @@
   .. _`Interface`: http://pypi.python.org/pypi/zope.interface
 """
 
-__all__ [
+__all__ = [
     'IWSGIApplication',
     'IRequestHandler',
     'IRequest',
     'IResponse',
-    'ITemplateRenderer'
+    'ITemplateRenderer',
+    'IURLMapping'
 ]
 
 from zope.interface import Interface, Attribute
 
 class IWSGIApplication(Interface):
-    """ Callable WSGI application that responds to requests.
+    """ Callable WSGI application.
     """
     
     def __call__(environ, start_response):
@@ -28,7 +29,7 @@ class IWSGIApplication(Interface):
     
 
 class IRequestHandler(Interface):
-    """
+    """ View that takes a request and returns a response.
     """
     
     cookies = Attribute(u'A dictionary of Cookie.Morsel objects.')
@@ -67,6 +68,12 @@ class IRequestHandler(Interface):
     
     
     # @@ ...
+    
+    def __call__(method_name, *groups):
+        """
+        """
+        
+    
     
 
 class IRequest(Interface):
@@ -127,5 +134,12 @@ class ITemplateRenderer(Interface):
         """
         
     
+    
+
+class IURLMapping(Interface):
+    """ Maps urls to request handlers.
+    """
+    
+    mapping = Attribute(u'List of (compiled_regexp, request_handler) tuples')
     
 
