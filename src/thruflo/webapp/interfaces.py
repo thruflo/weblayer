@@ -29,27 +29,8 @@ class IWSGIApplication(Interface):
     
 
 class IRequestHandler(Interface):
-    """ View that takes a request and returns a response.
+    """ Takes a request and returns a response.
     """
-    
-    cookies = Attribute(u'A dictionary of Cookie.Morsel objects.')
-    def get_cookie(name, default=None):
-        """ Gets the value of the cookie with the given name.
-        """
-        
-    
-    def set_cookie(
-            name, 
-            value, 
-            domain=None, 
-            expires=None, 
-            path="/", 
-            expires_days=None, 
-            override=False
-        ):
-        """ Sets the given cookie name/value with the given options.
-        """
-        
     
     def set_secure_cookie(name, value, expires_days=30, **kwargs):
         """ Signs and timestamps a cookie so it cannot be forged.
@@ -61,16 +42,53 @@ class IRequestHandler(Interface):
         """
         
     
-    def delete_cookie(name, path="/", domain=None):
-        """ Deletes the cookie with the given name.
+    
+    xsrf_token = Attribute(u'XSRF-prevention token.')
+    def check_xsrf_cookie():
+        """ Verifies that the '_xsrf' cookie matches the '_xsrf' argument.
+        """
+        
+    
+    def xsrf_form_html(self):
+        """An HTML <input/> element to be included with all POST forms.
         """
         
     
     
-    # @@ ...
+    def static_url(self, path):
+        """Returns a static URL for the given relative static file path.
+        """
+        
+    
+    
+    def render_template(self, tmpl_name, **kwargs):
+        """ Render template.
+        """
+        
+    
+    def redirect(self, url, status=302, content_type=None):
+        """ Redirect.
+        """
+        
+    
+    def error(self, status=500, body=u'System Error'):
+        """ Clear response and return error.
+        """
+        
+    
+    def _handle_system_error(self, err):
+        """ Override to handle errors nicely.
+        """
+        
+    
+    def _handle_method_not_found(self, method_name):
+        """ Override to handle 405 nicely.
+        """
+        
+    
     
     def __call__(method_name, *groups):
-        """
+        """ Call the appropriate method to return a response.
         """
         
     
@@ -141,5 +159,16 @@ class IURLMapping(Interface):
     """
     
     mapping = Attribute(u'List of (compiled_regexp, request_handler) tuples')
+    
+
+class IMethodSelector(Interface):
+    """ Selects methods by name.
+    """
+    
+    def select_method(method_name):
+        """ Return a method using `method_name`.
+        """
+        
+    
     
 
