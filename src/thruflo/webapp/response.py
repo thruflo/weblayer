@@ -4,6 +4,10 @@
 """ Response normalising.
 """
 
+__all__ = [
+    'DefaultToJSONResponseNormaliser'
+]
+
 from zope.component import adapts
 from zope.interface import implements
 

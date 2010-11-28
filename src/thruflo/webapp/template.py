@@ -4,6 +4,10 @@
 """ Template rendering.
 """
 
+__all__ = [
+    'MakoTemplateRenderer'
+]
+
 import datetime
 import utils
 

@@ -4,6 +4,10 @@
 """ Method exposing.
 """
 
+__all__ = [
+    'ExposedMethodSelector'
+]
+
 from functools import wraps
 
 from zope.component import adapts

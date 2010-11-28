@@ -1,26 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" Notes:
-  
-  - we want to use paste's parsing, so settings need to get
-    setup in, e.g.: `Bootstrapper().set_settings(settings)`
-  - settings could then be available via a simple 
-    `getUtility(ISettings)`
-  
-  - however, `define()` is also a nice pattern to declare 
-    required settings -- or is it?  do we just simple use
-    an interface?  or do we make it a decorator?
-  - perhaps if we do `define` we could then add the module
-    name as a path, e.g.: `settings.template.directories`
-  
+""" Application settings.
 """
+
+__all__ = [
+    'RequirableApplicationSettings'
+]
 
 from zope.interface import implements
 
 from interfaces import IApplicationSettings
 
-class ApplicationSettings(object):
+class RequirableApplicationSettings(object):
     """ Utility that provides dictionary-like access to 
       global application settings.
       
@@ -115,5 +107,5 @@ class ApplicationSettings(object):
     
 
 
-require_setting = ApplicationSettings.require
-override_setting = ApplicationSettings.override
+require_setting = RequirableApplicationSettings.require
+override_setting = RequirableApplicationSettings.override

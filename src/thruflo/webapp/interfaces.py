@@ -15,7 +15,10 @@ __all__ = [
     'IURLMapping',
     'IMethodSelector',
     'IResponseNormaliser',
-    'IApplicationSettings'
+    'IApplicationSettings',
+    'ICookieWrapper',
+    'IAuthenticationManager',
+    'IXSRFValidator'
 ]
 
 from zope.interface import Interface, Attribute
@@ -35,57 +38,44 @@ class IRequestHandler(Interface):
     """ Takes a request and returns a response.
     """
     
-    def set_secure_cookie(name, value, expires_days=30, **kwargs):
-        """ Signs and timestamps a cookie so it cannot be forged.
-        """
-        
+    request = Attribute(u'Request')
+    response = Attribute(u'Response')
+    settings = Attribute(u'Application settings')
+    template_rendered = Attribute(u'Template renderer')
     
-    def get_secure_cookie(name, include_name=True, value=None):
-        """ Returns the given signed cookie if it validates, or None.
-        """
-        
+    auth = Attribute(u'Authentication manager')
+    cookies = Attribute(u'Cookie wrapper')
+    xsrf = Attribute(u'XSRF validator')
     
-    
-    xsrf_token = Attribute(u'XSRF-prevention token.')
-    def check_xsrf_cookie():
-        """ Verifies that the '_xsrf' cookie matches the '_xsrf' argument.
-        """
-        
-    
-    def xsrf_form_html(self):
-        """An HTML <input/> element to be included with all POST forms.
+    def static_url(path):
+        """ Returns a static URL for the given path.
         """
         
     
     
-    def static_url(self, path):
-        """Returns a static URL for the given relative static file path.
+    def get_argument(name, default=None, strip=False):
+        """ Get request param with single value.
+        """
+        
+    
+    def get_arguments(name, strip=False):
+        """ Get request param with multiple values.
         """
         
     
     
-    def render_template(self, tmpl_name, **kwargs):
+    def render(tmpl_name, **kwargs):
         """ Render template.
         """
         
     
-    def redirect(self, url, status=302, content_type=None):
+    def redirect(url, status=302, content_type=None):
         """ Redirect.
         """
         
     
-    def error(self, status=500, body=u'System Error'):
+    def error(status=500, body=u'System Error'):
         """ Clear response and return error.
-        """
-        
-    
-    def _handle_system_error(self, err):
-        """ Override to handle errors nicely.
-        """
-        
-    
-    def _handle_method_not_found(self, method_name):
-        """ Override to handle 405 nicely.
         """
         
     
@@ -214,6 +204,49 @@ class IApplicationSettings(Interface):
     
     def __iter__():
         """ Iterate.
+        """
+        
+    
+    
+
+class ICookieWrapper(Interface):
+    """ Get and set cookies.
+    """
+    
+    def set(name, value, expires_days=30, **kwargs):
+        """ Set cookie.
+        """
+        
+    
+    def get(name, include_name=True, value=None):
+        """ Get cookie.
+        """
+        
+    
+    def delete(self, name, path="/", domain=None):
+        """ Clear cookie.
+        """
+        
+    
+    
+
+class IAuthenticationManager(Interface):
+    """ @@ placeholder for now ...
+    """
+    
+    is_authenticated = Attribute(u'Boolean -- is there an authenticated user?')
+    current_user = Attribute(u'The authenticated user, or `None`')
+    
+
+class IXSRFValidator(Interface):
+    """ Protects against XSS attacks.
+    """
+    
+    token = Attribute(u'XSRF-prevention token')
+    form_html = Attribute('<input/> element to be included in POST forms.')
+    
+    def validate_request():
+        """ Validate the request.
         """
         
     

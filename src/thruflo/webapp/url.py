@@ -4,6 +4,10 @@
 """ URL mapping.
 """
 
+__all__ = [
+    'SimpleURLMapping'
+]
+
 import re
 
 from zope.interface import implements
