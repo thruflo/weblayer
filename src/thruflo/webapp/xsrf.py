@@ -33,7 +33,6 @@ class XSRFValidator(object):
     def __init__(self, context, xhtml_escape=xhtml_escape):
         self.context = context
         self.cookies = ICookieWrapper(self.context)
-        self.auth = IAuthenticationManager(self.context)
         self._xhtml_escape = xhtml_escape
         
     
@@ -47,8 +46,7 @@ class XSRFValidator(object):
             token = self.cookies.get('_xsrf')
             if not token:
                 token = binascii.b2a_hex(uuid.uuid4().bytes)
-                expires_days = 30 if self.auth.is_authenticated else None
-                self.cookies.set('_xsrf', token, expires_days=expires_days)
+                self.cookies.set('_xsrf', token, expires_days=None)
             self._xsrf_token = token
         return self._xsrf_token
         
