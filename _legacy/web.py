@@ -399,23 +399,6 @@ class RequestHandler(object):
         
     
     
-    def get_argument(self, name, default=None, strip=False):
-        args = self.get_arguments(name, strip=strip)
-        if not args:
-            return default
-        return args[-1]
-        
-    
-    def get_arguments(self, name, strip=False):
-        values = self.request.params.get(name, [])
-        if not bool(isinstance(values, list) or isinstance(values, tuple)):
-           values = [values]
-        if strip:
-            values = [x.strip() for x in values]
-        return values
-        
-    
-    
     def error(self, status=500, body=u'System Error'):
         """Clear response and return error.
         """

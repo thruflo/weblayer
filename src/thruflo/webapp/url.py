@@ -10,7 +10,7 @@ from zope.interface import implements
 
 from interfaces import IURLMapping, IRequestHandler
 
-class URLMapping(object):
+class SimpleURLMapping(object):
     """ Takes a `list_of_tuples` with two items each, compiles the 
       first value in each tuple to a regular expression, makes 
       sure the second implements `IRequestHandler` and provides 

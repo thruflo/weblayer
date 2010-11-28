@@ -6,6 +6,11 @@
 
 from functools import wraps
 
+from zope.component import adapts
+from zope.interface import implements
+
+from interfaces import IRequestHandler, IMethodSelector
+
 def expose(method):
     """ Decorator to expose a request handler method.
     """

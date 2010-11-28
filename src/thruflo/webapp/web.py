@@ -9,17 +9,34 @@
 __all__ = [
     'Request',
     'Response',
-    'RequestHandler'
+    'RequestHandler',
+    'WSGIApplication'
 ]
 
+
+import base64
+import binascii
 import datetime
+import hashlib
+import hmac
+import logging
+import time
+import uuid
+
+from os.path import dirname, join as join_path
 
 import webob
 
-from zope.component import adapts, base
+from zope.component import adapts
 from zope.interface import implements
 
 from interfaces import *
+
+from settings import require_setting
+
+require_setting('cookie_secret')
+require_setting('static_path')
+require_setting('static_url_prefix', default=u'/static/')
 
 class Request(webob.Request):
     """ We use `webob.Request` as our default
@@ -41,22 +58,24 @@ class RequestHandler(object):
     """
     """
     
-    adapts(IRequest, IResponse)
+    adapts(IRequest, IResponse, IApplicationSettings, ITemplateRenderer)
     implements(IRequestHandler)
     
-    def __init__(self, request, response):
+    def __init__(self, request, response, settings, template_renderer):
         self.request = request
         self.response = response
-        self.settings = base.getUtility(ISettings)
-        self.template_renderer = base.getUtility(ITemplateRenderer)
+        self.settings = settings
+        self.template_renderer = template_renderer
         
     
     
     def _cookie_signature(self, *parts):
         h = hmac.new(self.settings["cookie_secret"], digestmod=hashlib.sha1)
-        for part in parts: h.update(part)
+        for part in parts:
+            h.update(part)
         return h.hexdigest()
         
+    
     
     def set_secure_cookie(self, name, value, expires_days=30, **kwargs):
         """Signs and timestamps a cookie so it cannot be forged.
@@ -202,7 +221,7 @@ class RequestHandler(object):
                 hashes[path] = hashlib.md5(f.read()).hexdigest()
                 f.close()
         base = self.request.host_url
-        static_url_prefix = self.settings.get('static_url_prefix', '/static/')
+        static_url_prefix = self.settings.get('static_url_prefix')
         if hashes.get(path):
             return base + static_url_prefix + path + "?v=" + hashes[path][:5]
         else:
@@ -308,6 +327,7 @@ class RequestHandler(object):
         """
         
         method = IMethodSelector(self).select_method(method_name)
+        
         if method is None:
             handler_response = self._handle_method_not_found(method_name)
         else:
@@ -315,20 +335,80 @@ class RequestHandler(object):
                 handler_response = method(*groups)
             except Exception, err:
                 handler_response = self._handle_system_error(err)
+            
+        return IResponseNormaliser(self).normalise(handler_response)
         
-        if IResponse.providedBy(handler_response):
-            self.response = handler_response
-        elif isinstance(handler_response, str):
-            self.response.body = handler_response
-        elif isinstance(handler_response, unicode):
-            self.response.unicode_body = handler_response
-        elif handler_response is None: # leave self.response alone
-            pass
-        else: # assume it's json data
-            self.response.content_type = 'application/json; charset=UTF-8'
-            self.response.unicode_body = utils.json_encode(handler_response)
+    
+    
+
+class WSGIApplication(object):
+    """ Implementation of a callable WSGI application
+      that uses a URL mapping to pass requests on.
+    """
+    
+    adapts(IURLMapping, IApplicationSettings, ITemplateRenderer)
+    implements(IWSGIApplication)
+    
+    def __init__(
+            self,
+            url_mapping,
+            settings,
+            template_renderer,
+            request_class=Request,
+            response_class=Response,
+            default_content_type='text/html; charset=UTF-8'
+        ):
+        self._url_mapping = url_mapping
+        self._settings = settings
+        self._template_renderer = template_renderer
+        self._request_class = request_class
+        self._response_class = response_class
+        self._default_content_type = default_content_type
         
-        return self.response
+    
+    def __call__(self, environ, start_response):
+        """ Checks the url mapping for a match against the
+          incoming request path.  If it finds one, instantiates
+          the corresponding request handler and calls it with
+          the request method and the match groups.
+          
+          If calling the handler errors, returns a minimalist
+          500 response.
+          
+          If no match is found, returns a minimalist 404 response.
+          
+        """
+        
+        handler = None
+        groups = ()
+        
+        request = self._request_class(environ)
+        response = self._response_class(
+            status=200, 
+            content_type=self._default_content_type
+        )
+        
+        for regexp, handler_class in self._url_mapping.mapping:
+            match = regexp.match(request.path)
+            if match:
+                handler = handler_class(
+                    request, 
+                    response, 
+                    self._settings,
+                    self._template_renderer
+                )
+                groups = match.groups()
+                break
+            
+        if handler:
+            try:
+                response = handler(environ['REQUEST_METHOD'], *groups)
+            except Exception, err:
+                response.status = 500
+        else: # to handle 404 nicely, define a catch all url handler
+            response.status = 404
+        
+        return response(environ, start_response)
         
     
     

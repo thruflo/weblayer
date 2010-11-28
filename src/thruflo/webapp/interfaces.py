@@ -12,7 +12,10 @@ __all__ = [
     'IRequest',
     'IResponse',
     'ITemplateRenderer',
-    'IURLMapping'
+    'IURLMapping',
+    'IMethodSelector',
+    'IResponseNormaliser',
+    'IApplicationSettings'
 ]
 
 from zope.interface import Interface, Attribute
@@ -167,6 +170,50 @@ class IMethodSelector(Interface):
     
     def select_method(method_name):
         """ Return a method using `method_name`.
+        """
+        
+    
+    
+
+class IResponseNormaliser(Interface):
+    """ Normalise the response provided by a 
+      request handler method.
+    """
+    
+    def normalise(handler_response):
+        """ Update self.context.response and return it.
+        """
+        
+    
+    
+
+class IApplicationSettings(Interface):
+    """ Provides dictionary-like access to global 
+      application settings.
+    """
+    
+    def __getitem__(name):
+        """ Get item.
+        """
+        
+    
+    def __setitem__(name, value):
+        """ Set item.
+        """
+        
+    
+    def __delitem__(name):
+        """ Delete item.
+        """
+        
+    
+    def __contains__(name):
+        """ Contains item.
+        """
+        
+    
+    def __iter__():
+        """ Iterate.
         """
         
     
