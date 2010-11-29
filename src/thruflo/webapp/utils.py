@@ -181,7 +181,7 @@ def xhtml_escape(value):
     
 
 def url_escape(value):
-    """ Returns a URL-encoded version of the given value.
+    u""" Returns a URL-encoded version of the given value.
       
       Runs the value through `urllib.quote_plus`::
       
@@ -277,7 +277,7 @@ def json_decode(value, **kwargs):
 
 
 def generate_hash(algorithm='sha1', s=None):
-    """ Generates a hexdigest hash string.  
+    u""" Generates a hexdigest hash string.  
       
       By default, the hash is `random` and uses the 
       `hashlib.sha1` algorithm::

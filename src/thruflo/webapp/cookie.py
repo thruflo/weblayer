@@ -24,8 +24,80 @@ from utils import encode_to_utf8
 require_setting('cookie_secret', help='a long, random sequence of bytes')
 
 def _time_independent_equals(a, b):
+    """ Logically equal to `a == b`::
+      
+          >>> _time_independent_equals('a', 'a')
+          True
+          >>> _time_independent_equals('b', u'b')
+          True
+          >>> _time_independent_equals('a', 'b')
+          False
+          >>> _time_independent_equals('abc', 'acb')
+          False
+      
+      As long as you give it basestrings::
+      
+          >>> _time_independent_equals(None, [])
+          Traceback (most recent call last):
+          ...
+          ValueError: `None` must be a `basestring`
+          >>> _time_independent_equals('a', [])
+          Traceback (most recent call last):
+          ...
+          ValueError: `[]` must be a `basestring`
+      
+      But, interestingly, not vulnerable to `timing attacks`_::
+      
+          >>> range_ = range(5000)
+          >>> a = 'abcdefghijklmnopqrstuvwxyz0'
+          >>> b = '0abcdefghijklmnopqrstuvwxyz'
+          >>> c = 'abcdefghijklmnopqrstuvwxyz0'
+          >>> d = 'abcdefghijklmnopqrstuvwxyz1'
+      
+      Running the function with strings that fail to match at the start
+      or at the end takes pretty much the same amount of time::
+      
+          >>> t1 = time.time()
+          >>> for i in range_:
+          ...     result = _time_independent_equals(a, b)
+          ...
+          >>> l1 = time.time() - t1
+          >>> t2 = time.time()
+          >>> for i in range_:
+          ...     result = _time_independent_equals(c, d)
+          ...
+          >>> l2 = time.time() - t2
+          >>> difference = l1 > l2 and l1 - l2 or l2 - l1
+          >>> difference_as_percentage_of_time = difference / l1 * 100
+          >>> difference_as_percentage_of_time < 3
+          True
+      
+      As opposed to the native python implementation of `a == b`::
+      
+          >>> t1 = time.time()
+          >>> for i in range_:
+          ...     result = a == b
+          ...
+          >>> l1 = time.time() - t1
+          >>> t2 = time.time()
+          >>> for i in range_:
+          ...     result = c == d
+          ...
+          >>> l2 = time.time() - t2
+          >>> difference = l1 > l2 and l1 - l2 or l2 - l1
+          >>> difference_as_percentage_of_time = difference / l1 * 100
+          >>> difference_as_percentage_of_time < 15
+          False
+          
+      .. _`timing attacks`: http://seb.dbzteam.org/crypto/python-oauth-timing-hmac.pdf
+      
     """
-    """
+    
+    if not isinstance(a, basestring):
+        raise ValueError(u'`{}` must be a `basestring`'.format(a))
+    
+    if not isinstance(b, basestring):
+        raise ValueError(u'`{}` must be a `basestring`'.format(b))
     
     if len(a) != len(b):
         return False
@@ -96,6 +168,8 @@ class SecureCookieWrapper(object):
         
         max_age = None
         if expires_days:
+            if not isinstance(expires_days, int):
+                raise TypeError(u'{} must be an `int`'.format(expires_days))
             max_age = expires_days * 24 * 60 * 60
         
         return self.context.response.set_cookie(
@@ -106,21 +180,21 @@ class SecureCookieWrapper(object):
         )
         
     
-    def get(self, name, include_name=True, value=None):
+    def get(self, name, value=None):
         """ Returns the given signed cookie if it validates, or None.
         """
         
-        if value is None: 
-            value = self.request.cookies.get(name, None)
+        if value is None:
+            value = self.context.request.cookies.get(name, None)
         
-        if not value:
+        if value is None:
             return None
         
         parts = value.split("|")
         if len(parts) != 3: 
             return None
         
-        args = include_name and (name, parts[0], parts[1]) or (parts[0], parts[1])
+        args = (name, parts[0], parts[1])
         signature = _generate_cookie_signature(self._cookie_secret, *args)
         
         if not _time_independent_equals(parts[2], signature):
