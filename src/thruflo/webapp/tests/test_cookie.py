@@ -13,8 +13,40 @@ from mock import Mock
 from thruflo.webapp.cookie import SecureCookieWrapper
 from thruflo.webapp.cookie import _generate_cookie_signature
 
+class TestInitCookie(unittest.TestCase):
+    """ Test the logic of initialising a SecureCookieWrapper.
+    """
+    
+    def setUp(self):
+        self.context = Mock()
+        self.context.settings = dict()
+        self.context.settings['cookie_secret'] = ''
+        self.cookie_wrapper = SecureCookieWrapper(self.context)
+        
+    
+    
+    def test_init_context(self):
+        """ `self.context` is available as `self.context` within
+          the `SecureCookieWrapper` instance.
+        """
+        
+        self.assertTrue(self.cookie_wrapper.context == self.context)
+        
+    
+    
+    def test_init_context(self):
+        """ `cookie_secret` is available as `self._cookie_secret` within
+          the `SecureCookieWrapper` instance.
+        """
+        
+        cs = self.context.settings['cookie_secret']
+        self.assertTrue(self.cookie_wrapper._cookie_secret == cs)
+        
+    
+    
+
 class TestSetCookie(unittest.TestCase):
-    """ 
+    """ Test the logic of setting a secure cookie.
     """
     
     def setUp(self):
@@ -114,13 +146,10 @@ class TestSetCookie(unittest.TestCase):
     
 
 class TestGetCookie(unittest.TestCase):
-    """ 
+    """ Test the logic of getting a secure cookie.
     """
     
     def setUp(self):
-        """
-        """
-        
         self.context = Mock()
         self.context.settings = dict()
         self.context.settings['cookie_secret'] = ''
@@ -251,13 +280,10 @@ class TestGetCookie(unittest.TestCase):
     
 
 class TestDeleteCookie(unittest.TestCase):
-    """ 
+    """ Test the logic of deleting a cookie.
     """
     
     def setUp(self):
-        """
-        """
-        
         self.context = Mock()
         self.context.settings = dict()
         self.context.settings['cookie_secret'] = ''

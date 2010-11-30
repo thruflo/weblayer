@@ -10,7 +10,7 @@ from mock import Mock
 from thruflo.webapp.template import MakoTemplateRenderer
 
 class TestMakoTemplateRenderer(unittest.TestCase):
-    """ 
+    """ Test the logic of the mako template renderer.
     """
     
     def setUp(self):
@@ -32,11 +32,10 @@ class TestMakoTemplateRenderer(unittest.TestCase):
         
     
     def test_init_built_ins(self):
-        """ `build_ins` are available as `self.build_ins` within
+        """ `built_ins` are available as `self.built_ins` within
           the `MakoTemplateRenderer` instance.
         """
         
-        print self.template_renderer.built_ins
         self.assertTrue(self.template_renderer.built_ins == {'d': 'e'})
         
     
