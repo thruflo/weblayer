@@ -12,6 +12,7 @@ import base64
 import datetime
 import hashlib
 import hmac
+import logging
 import time
 
 from zope.component import adapts
@@ -194,6 +195,11 @@ class SecureCookieWrapper(object):
         if len(parts) != 3: 
             return None
         
+        timestamp = int(parts[1])
+        if timestamp < time.time() - 31 * 86400:
+            logging.warning("Expired cookie %r", value)
+            return None
+        
         args = (name, parts[0], parts[1])
         signature = _generate_cookie_signature(self._cookie_secret, *args)
         
@@ -201,19 +207,14 @@ class SecureCookieWrapper(object):
             logging.warning("Invalid cookie signature %r", value)
             return None
         
-        timestamp = int(parts[1])
-        if timestamp < time.time() - 31 * 86400:
-            logging.warning("Expired cookie %r", value)
-            return None
-        
         try:
             return base64.b64decode(parts[0])
-        except:
+        except TypeError:
             return None
         
     
     def delete(self, name, path="/", domain=None):
-        """ Convienience method to clear a cookie.
+        """ Convenience method to clear a cookie.
         """
         
         self.context.response.set_cookie(

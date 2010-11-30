@@ -4,10 +4,14 @@
 """
 """
 
+from datetime import timedelta
+import time
+
 import unittest
 from mock import Mock
 
 from thruflo.webapp.cookie import SecureCookieWrapper
+from thruflo.webapp.cookie import _generate_cookie_signature
 
 class TestSetCookie(unittest.TestCase):
     """ 
@@ -144,7 +148,7 @@ class TestGetCookie(unittest.TestCase):
     
     def test_split_value(self):
         """ If the cookie value doesn't split into three parts,
-          delimited by returns `None`.
+          delimited by '|' returns `None`.
         """
         
         value = Mock()
@@ -155,7 +159,139 @@ class TestGetCookie(unittest.TestCase):
         self.assertTrue(result is None)
         
     
+    def test_timestamp_expired(self):
+        """ If the timestamp is more than 31 days old, returns `None`.
+        """
+        
+        t = time.time()
+        too_old = str(int(t - 32 * 24 * 60 * 60))
+        
+        cs = self.context.settings['cookie_secret']
+        sig = _generate_cookie_signature(cs, 'name', 'dmFsdWU=', too_old)
+        value = 'dmFsdWU=|{}|{}'.format(too_old, sig)
+        
+        result = self.cookie_wrapper.get('name', value=value)
+        self.assertTrue(result is None)
+        
     
-    # @@ ...
+    
+    def test_signature_doesnt_match(self):
+        """ If the signature doesn't match, returns `None`.
+        """
+        
+        t = time.time()
+        ts = str(int(t))
+        
+        value = 'dmFsdWU=|{}|{}'.format(ts, 'not the right sig')
+        
+        result = self.cookie_wrapper.get('name', value=value)
+        self.assertTrue(result is None)
+        
+    
+    def test_value_is_base64_decodable(self):
+        """ If the signature matches, the value comes back
+          run through `base64.b64decode`.  If it can't be
+          decoded, it raises a TypeError.
+        """
+        
+        t = time.time()
+        ts = str(int(t))
+        
+        cs = self.context.settings['cookie_secret']
+        sig = _generate_cookie_signature(cs, 'name', 'a', ts)
+        value = 'a|{}|{}'.format(ts, sig)
+        
+        result = self.cookie_wrapper.get('name', value=value)
+        self.assertTrue(result is None)
+        
+    
+    def test_get_value(self):
+        """ If the signature matches, the value comes back
+          run through `base64.b64decode`.
+        """
+        
+        t = time.time()
+        ts = str(int(t))
+        
+        cs = self.context.settings['cookie_secret']
+        sig = _generate_cookie_signature(cs, 'name', 'dmFsdWU=', ts)
+        value = 'dmFsdWU=|{}|{}'.format(ts, sig)
+        
+        result = self.cookie_wrapper.get('name', value=value)
+        self.assertTrue(result == 'value')
+        
+    
+    def test_delete(self):
+        """ Calls `self.context.response.set_cookie` with
+          `expires=datetime.timedelta(days=-5)`.
+        """
+        
+        self.cookie_wrapper.delete('name')
+        args = self.context.response.set_cookie.call_args[0]
+        kwargs = self.context.response.set_cookie.call_args[1]
+        self.assertTrue(args[0] == 'name')
+        self.assertTrue(kwargs['expires'] == timedelta(days=-5))
+        
+    
+    def test_delete_path_domain_defaults(self):
+        """ `path` defaults to '/' and domain defaults to `None`.
+        """
+        
+        self.cookie_wrapper.delete('name')
+        kwargs = self.context.response.set_cookie.call_args[1]
+        self.assertTrue(kwargs['path'] == '/')
+        self.assertTrue(kwargs['domain'] is None)
+        
+        self.cookie_wrapper.delete('name', path='/foo', domain='bar')
+        kwargs = self.context.response.set_cookie.call_args[1]
+        self.assertTrue(kwargs['path'] == '/foo')
+        self.assertTrue(kwargs['domain'] == 'bar')
+        
+    
+    
+
+class TestDeleteCookie(unittest.TestCase):
+    """ 
+    """
+    
+    def setUp(self):
+        """
+        """
+        
+        self.context = Mock()
+        self.context.settings = dict()
+        self.context.settings['cookie_secret'] = ''
+        self.cookie_wrapper = SecureCookieWrapper(self.context)
+        
+    
+    
+    def test_delete(self):
+        """ Calls `self.context.response.set_cookie` with
+          `expires=datetime.timedelta(days=-5)`.
+        """
+        
+        self.cookie_wrapper.delete('name')
+        args = self.context.response.set_cookie.call_args[0]
+        kwargs = self.context.response.set_cookie.call_args[1]
+        self.assertTrue(args[0] == 'name')
+        self.assertTrue(kwargs['expires'] == timedelta(days=-5))
+        
+    
+    
+    def test_delete_defaults(self):
+        """ `path` defaults to '/' and domain defaults to `None`.
+        """
+        
+        self.cookie_wrapper.delete('name')
+        kwargs = self.context.response.set_cookie.call_args[1]
+        self.assertTrue(kwargs['path'] == '/')
+        self.assertTrue(kwargs['domain'] is None)
+        
+        self.cookie_wrapper.delete('name', path='/foo', domain='bar')
+        kwargs = self.context.response.set_cookie.call_args[1]
+        self.assertTrue(kwargs['path'] == '/foo')
+        self.assertTrue(kwargs['domain'] == 'bar')
+        
+    
     
 
