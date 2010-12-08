@@ -62,7 +62,6 @@ class TestExpose(unittest.TestCase):
     
     
 
-
 class TestExposedMethodSelector(unittest.TestCase):
     """ Test the logic of the ExposedMethodSelector.
     """

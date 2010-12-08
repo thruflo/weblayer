@@ -69,6 +69,8 @@ class RequestHandler(object):
         self.cookies = ICookieWrapper(self)
         self.xsrf = IXSRFValidator(self)
         
+        self._method_selector = IMethodSelector(self)
+        
     
     
     def get_static_url(self, path):
@@ -187,8 +189,7 @@ class RequestHandler(object):
         """
         """
         
-        method = IMethodSelector(self).select_method(method_name)
-        
+        method = self._method_selector.select_method(method_name)
         if method is None:
             handler_response = self._handle_method_not_found(method_name)
         else:
@@ -201,8 +202,9 @@ class RequestHandler(object):
                     handler_response = method(*groups)
                 except Exception, err:
                     handler_response = self._handle_system_error(err)
-                
-        return IResponseNormaliser(self).normalise(handler_response)
+        
+        normaliser = IResponseNormaliser(self.response)
+        return normaliser.normalise(handler_response)
         
     
     

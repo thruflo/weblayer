@@ -1,10 +1,35 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" Method exposing.
+""" Use the `@expose` decorator to explictly expose methods of
+  a request handler::
+  
+      >>> @expose('get')
+      ... class MockHandler(object):
+      ...     implements(IRequestHandler)
+      ...     
+      ...     def get(self):
+      ...         pass
+      ...     
+      ...     def post(self):
+      ...         pass
+      ...     
+      ... 
+      >>> handler = MockHandler()
+  
+  This then works in tandem with the `ExposedMethodSelector`
+  implementation of `IMethodSelector`::
+  
+      >>> selector = ExposedMethodSelector(handler)
+      >>> selector.select_method('POST') # returns None
+      >>> selector.select_method('_do_something_bad') # returns None
+      >>> selector.select_method('GET') == handler.get
+      True
+  
 """
 
 __all__ = [
+    'expose',
     'ExposedMethodSelector'
 ]
 
@@ -14,14 +39,7 @@ from zope.interface import implements
 from interfaces import IRequestHandler, IMethodSelector
 
 class expose(object):
-    """ Decorator to expose a request handler's methods, e.g.:
-      
-          @expose('get', 'put', 'delete')
-          class MyHandler(...)
-              ...
-              
-          
-      
+    """ Decorator to expose a request handler's methods.
     """
     
     def __init__(self, *method_names):
