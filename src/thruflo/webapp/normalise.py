@@ -1,7 +1,48 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" Response normalising.
+""" IResponseNormaliser implementation.
+  
+  Adapts a response object::
+  
+      >>> from mock import Mock
+      >>> response = Mock()
+      >>> normaliser = DefaultToJSONResponseNormaliser(response)
+      >>> normaliser.response == response
+      True
+  
+  Provides a `normalise` method that takes a variety of values 
+  (intended to be the return values of request handler method 
+  calls) and uses them to update and or replace the original
+  response and then return it::
+  
+      >>> class MockResponse(object):
+      ...     implements(IResponse)
+      ... 
+      >>> mock_response = MockResponse()
+      >>> r = normaliser.normalise(mock_response)
+      >>> r == mock_response
+      True
+      >>> r = normaliser.normalise('a')
+      >>> r.body == 'a'
+      True
+      >>> r = normaliser.normalise(u'a')
+      >>> r.unicode_body == u'a'
+      True
+  
+  This implementation's default behaviour for stuff it can't
+  identify as a response or a basestring is to try to JSON
+  encode it::
+  
+      >>> r = normaliser.normalise({'a': u'b'})
+      >>> r.content_type == normaliser._json_content_type
+      True
+      >>> r.unicode_body
+      u'{"a": "b"}'
+  
+  All this then allows request handler methods to return strings, 
+  data and / or response objects naturally.
+  
 """
 
 __all__ = [
@@ -71,7 +112,7 @@ class DefaultToJSONResponseNormaliser(object):
         
     
     def normalise(self, handler_response):
-        """ Update and return self.context.response appropriately.
+        """ Update and return self.response appropriately.
           
           If `handler_response` implements `IResponse` then
           just use that::

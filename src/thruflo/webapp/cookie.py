@@ -18,7 +18,7 @@ import time
 from zope.component import adapts
 from zope.interface import implements
 
-from interfaces import IRequestHandler, ICookieWrapper
+from interfaces import IRequestHandler, ISecureCookieWrapper
 from settings import require_setting
 from utils import encode_to_utf8
 
@@ -150,7 +150,7 @@ class SecureCookieWrapper(object):
     """
     
     adapts(IRequestHandler)
-    implements(ICookieWrapper)
+    implements(ISecureCookieWrapper)
     
     def __init__(self, context):
         self.context = context

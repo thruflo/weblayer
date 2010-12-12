@@ -12,13 +12,12 @@ __all__ = [
     'IRequest',
     'IResponse',
     'ITemplateRenderer',
-    'IURLMapping',
+    'IPathRouter',
     'IMethodSelector',
     'IResponseNormaliser',
-    'IApplicationSettings',
-    'ICookieWrapper',
-    'IAuthenticationManager',
-    'IXSRFValidator'
+    'ISettings',
+    'ISecureCookieWrapper',
+    'IAuthenticationManager'
 ]
 
 from zope.interface import Interface, Attribute
@@ -47,12 +46,6 @@ class IRequestHandler(Interface):
     cookies = Attribute(u'Cookie wrapper')
     xsrf = Attribute(u'XSRF validator')
     
-    def static_url(path):
-        """ Returns a static URL for the given path.
-        """
-        
-    
-    
     def get_argument(name, default=None, strip=False):
         """ Get request param with single value.
         """
@@ -60,6 +53,27 @@ class IRequestHandler(Interface):
     
     def get_arguments(name, strip=False):
         """ Get request param with multiple values.
+        """
+        
+    
+    
+    def get_static_url(path):
+        """ Returns a static URL for the given path.
+        """
+        
+    
+    def get_xsrf_token():
+        """ Returns XSRF-prevention token
+        """
+        
+    
+    def get_xsrf_form_html():
+        """ Returns <input/> element to be included in POST forms.
+        """
+        
+    
+    def validate_xsrf():
+        """ Validate the request.
         """
         
     
@@ -147,7 +161,7 @@ class ITemplateRenderer(Interface):
     
     
 
-class IURLMapping(Interface):
+class IPathRouter(Interface):
     """ Maps urls to request handlers.
     """
     
@@ -177,7 +191,7 @@ class IResponseNormaliser(Interface):
     
     
 
-class IApplicationSettings(Interface):
+class ISettings(Interface):
     """ Provides dictionary-like access to global 
       application settings.
     """
@@ -209,7 +223,7 @@ class IApplicationSettings(Interface):
     
     
 
-class ICookieWrapper(Interface):
+class ISecureCookieWrapper(Interface):
     """ Get and set cookies.
     """
     
@@ -236,19 +250,5 @@ class IAuthenticationManager(Interface):
     
     is_authenticated = Attribute(u'Boolean -- is there an authenticated user?')
     current_user = Attribute(u'The authenticated user, or `None`')
-    
-
-class IXSRFValidator(Interface):
-    """ Protects against XSS attacks.
-    """
-    
-    token = Attribute(u'XSRF-prevention token')
-    form_html = Attribute('<input/> element to be included in POST forms.')
-    
-    def validate_request():
-        """ Validate the request.
-        """
-        
-    
     
 

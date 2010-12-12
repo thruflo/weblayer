@@ -1,18 +1,67 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" A simple URL mapping implementation.
+""" IPathRouter implementation that uses regexp patterns.
+  
+  Say, for example, you have some request handlers::
+  
+      >>> class DummyIndex(object):
+      ...     implements(IRequestHandler)
+      ... 
+      >>> class Dummy404(object):
+      ...     implements(IRequestHandler)
+      ... 
+  
+  You can then map request paths to them using a simple list 
+  of two item tuples::
+  
+      >>> mapping = [(
+      ...         # string or compiled regexp pattern to match
+      ...         # against the request path
+      ...         r'/',
+      ...         # class the request should be handled by
+      ...         DummyIndex
+      ...     ), (
+      ...         r'(.*)',
+      ...         Dummy404
+      ...     )
+      ... ]
+      >>> path_router = RegExpPathRouter(mapping)
+  
+  And use the path router to get handlers for request paths::
+  
+      >>> path_router.match('/') == (DummyIndex, ())
+      True
+  
+  Returning the handler and the match groups if any::
+  
+      >>> path_router.match('/foobar') == (Dummy404, ('/foobar',))
+      True
+  
+  The mapping items are looked up in order::
+  
+      >>> mapping.reverse()
+      >>> path_router = RegExpPathRouter(mapping)
+      >>> path_router.match('/') == (Dummy404, ('/',))
+      True
+  
+  If the path doesn't match, returns `(None, None)`::
+  
+      >>> path_router = RegExpPathRouter([])
+      >>> path_router.match('/')
+      (None, None)
+  
 """
 
 __all__ = [
-    'SimpleURLMapping'
+    'RegExpPathRouter'
 ]
 
 import re
 
 from zope.interface import implements
 
-from interfaces import IURLMapping, IRequestHandler
+from interfaces import IPathRouter, IRequestHandler
 
 _RE_TYPE = type(re.compile(r''))
 def _compile_top_and_tailed(string_or_compiled_pattern):
@@ -64,17 +113,13 @@ def _compile_top_and_tailed(string_or_compiled_pattern):
     
 
 
-
-class SimpleURLMapping(object):
-    """ Provides a `mapping` of compiled regular expressions 
-      to request handlers.
+class RegExpPathRouter(object):
+    """ Routes paths to request handlers using regexp patterns.
     """
     
-    implements(IURLMapping)
+    implements(IPathRouter)
     
-    mapping = []
-    
-    def __init__(self, raw_mapping, compile=_compile_top_and_tailed):
+    def __init__(self, raw_mapping, compile_=_compile_top_and_tailed):
         """ Takes a list of raw regular expressions mapped to request 
           handler classes, compiles the regular expressions and 
           provides `.mapping`.
@@ -90,37 +135,39 @@ class SimpleURLMapping(object):
               ...         MockHandler
               ...     )
               ... ]
-              >>> um = SimpleURLMapping(raw_mapping, compile=mock_compile)
-              >>> isinstance(um.mapping, list)
+              >>> path_router = RegExpPathRouter(raw_mapping, compile_=mock_compile)
+              >>> isinstance(path_router._mapping, list)
               True
-              >>> isinstance(um.mapping[0], tuple)
+              >>> isinstance(path_router._mapping[0], tuple)
               True
-              >>> um.mapping[0][1] == MockHandler
+              >>> path_router._mapping[0][1] == MockHandler
               True
-          
-          As long as `raw_mapping` can be unpacked into pairs of items::
-          
-              >>> raw_mapping = [('a')]
-              >>> SimpleURLMapping(raw_mapping) #doctest: +ELLIPSIS
-              Traceback (most recent call last):
-              ...
-              ValueError: need more than 1 value to unpack
           
           The first item of each pair is passed to `compile`::
           
               >>> mock_compile.call_args[0][0] == r'/foo'
               True
-              >>> um.mapping[0][0] == mock_compile.return_value
+              >>> path_router._mapping[0][0] == mock_compile.return_value
               True
           
-          Iff the second item implements `IRequestHandler`::
+          As long as `raw_mapping` can be unpacked into pairs of items::
           
-              >>> SimpleURLMapping([(r'/foo', Mock)]) #doctest: +ELLIPSIS
+              >>> raw_mapping = [('a')]
+              >>> RegExpPathRouter(raw_mapping) #doctest: +ELLIPSIS
+              Traceback (most recent call last):
+              ...
+              ValueError: need more than 1 value to unpack
+          
+          And the second item implements `IRequestHandler`::
+          
+              >>> RegExpPathRouter([(r'/foo', Mock)]) #doctest: +ELLIPSIS
               Traceback (most recent call last):
               ...
               TypeError: `<class ... must implement ....IRequestHandler>`
           
         """
+        
+        self._mapping = []
         
         for regexp, handler_class in raw_mapping:
             if not IRequestHandler.implementedBy(handler_class):
@@ -129,7 +176,23 @@ class SimpleURLMapping(object):
                     IRequestHandler
                 )
                 raise TypeError(error_msg)
-            self.mapping.append((compile(regexp), handler_class))
+            
+            self._mapping.append((compile_(regexp), handler_class))
+            
+        
+    
+    def match(self, path):
+        """ Iterate through self._mapping.  If the path matches an item, 
+          return the handler class and the `re` `match` object's groups, 
+          otherwise return `(None, None)`.
+        """
+        
+        for regexp, handler_class in self._mapping:
+            match = regexp.match(path)
+            if match:
+                return handler_class, match.groups()
+        
+        return None, None
         
     
     

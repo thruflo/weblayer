@@ -10,7 +10,7 @@ __all__ = [
 
 from zope.interface import implements
 
-from interfaces import IApplicationSettings
+from interfaces import ISettings
 
 class RequirableApplicationSettings(object):
     """ Utility that provides dictionary-like access to 
@@ -22,7 +22,7 @@ class RequirableApplicationSettings(object):
       
     """
     
-    implements(IApplicationSettings)
+    implements(ISettings)
     
     __required_settings__ = {}
     

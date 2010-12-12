@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" Use the `@expose` decorator to explictly expose methods of
-  a request handler::
+""" Use the `@expose` decorator to expose request handler methods::
   
       >>> @expose('get')
       ... class MockHandler(object):

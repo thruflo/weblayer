@@ -7,8 +7,6 @@
 """
 
 __all__ = [
-    'Request',
-    'Response',
     'RequestHandler',
     'WSGIApplication'
 ]
@@ -25,38 +23,39 @@ import webob
 from zope.component import adapts
 from zope.interface import implements
 
+from base import Request, Response
 from interfaces import *
-from utils import generate_hash
+from utils import generate_hash, xhtml_escape
 from settings import require_setting
 
 require_setting('check_xsrf', default=True)
 require_setting('static_path')
 require_setting('static_url_prefix', default=u'/static/')
 
-class Request(webob.Request):
-    """ We use `webob.Request` as our default
-      `IRequest` implementation.
+class XSRFError(ValueError):
+    """ Raised when xsrf validation fails.
     """
-    
-    implements(IRequest)
     
 
-class Response(webob.Response):
-    """ We use `webob.Response` as our default
-      `IResponse` implementation.
-    """
-    
-    implements(IResponse)
-    
 
 class RequestHandler(object):
     """
     """
     
-    adapts(IRequest, IResponse, IApplicationSettings, ITemplateRenderer)
+    adapts(IRequest, IResponse, ISettings, ITemplateRenderer)
     implements(IRequestHandler)
     
-    def __init__(self, request, response, settings, template_renderer):
+    def __init__(
+            self, 
+            request,
+            response,
+            settings,
+            template_renderer,
+            AuthenticationManager=None,
+            SecureCookieWrapper=None,
+            MethodSelector=None,
+            ResponseNormaliser=None
+        ):
         """
         """
         
@@ -65,13 +64,38 @@ class RequestHandler(object):
         self.settings = settings
         self.template_renderer = template_renderer
         
-        self.auth = IAuthenticationManager(self)
-        self.cookies = ICookieWrapper(self)
-        self.xsrf = IXSRFValidator(self)
+        if AuthenticationManager is None:
+            self.auth = IAuthenticationManager(self)
+        else:
+            self.auth = AuthenticationManager(self)
+        if SecureCookieWrapper is None:
+            self.cookies = ISecureCookieWrapper(self)
+        else:
+            self.cookies = SecureCookieWrapper(self)
+        if MethodSelector is None:
+            self._method_selector = IMethodSelector(self)
+        else:
+            self._method_selector = MethodSelector(self)
         
-        self._method_selector = IMethodSelector(self)
+        self.ResponseNormaliser = ResponseNormaliser
         
     
+    
+    def get_argument(self, name, default=None, strip=False):
+        args = self.get_arguments(name, strip=strip)
+        if not args:
+            return default
+        return args[-1]
+        
+    
+    def get_arguments(self, name, strip=False):
+        values = self.request.params.get(name, [])
+        if not bool(isinstance(values, list) or isinstance(values, tuple)):
+           values = [values]
+        if strip:
+            values = [x.strip() for x in values]
+        return values
+        
     
     def get_static_url(self, path):
         """ Returns a static URL for the given relative 
@@ -100,21 +124,49 @@ class RequestHandler(object):
             return base + static_url_prefix + path
         
     
-    
-    def get_argument(self, name, default=None, strip=False):
-        args = self.get_arguments(name, strip=strip)
-        if not args:
-            return default
-        return args[-1]
+    def get_xsrf_token(self):
+        """ The XSRF-prevention token for the current user/session.
+        """
+        
+        if not hasattr(self, '_xsrf_token'):
+            token = self.cookies.get('_xsrf')
+            if not token:
+                token = generate_hash()
+                self.cookies.set('_xsrf', token, expires_days=None)
+            self._xsrf_token = token
+        return self._xsrf_token
         
     
-    def get_arguments(self, name, strip=False):
-        values = self.request.params.get(name, [])
-        if not bool(isinstance(values, list) or isinstance(values, tuple)):
-           values = [values]
-        if strip:
-            values = [x.strip() for x in values]
-        return values
+    def get_xsrf_form_html(self):
+        """ An HTML <input/> element to be included with 
+          all POST forms.
+        """
+        
+        if not hasattr(self, '_xsrf_form_html'):
+            v = self._xhtml_escape(self.get_xsrf_token())
+            tag = u'<input type="hidden" name="_xsrf" value="{}"/>'
+            self._xsrf_form_html = tag.format(v)
+        return self._xsrf_form_html
+        
+    
+    def validate_xsrf(self):
+        """ Raise an `XSRFError` if the '_xsrf' argument isn't present
+          or if it doesn't match the '_xsrf'.
+        """
+        
+        if self.context.request.method != "POST":
+            return
+        
+        if self.request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return
+            
+        request_token = self.context.get_argument('_xsrf', None)
+        if request_token is None:
+            raise XSRFError(u'`_xsrf` argument missing from POST')
+            
+        if self.get_xsrf_token() != request_token:
+            raise XSRFError(u'XSRF cookie does not match POST argument')
+            
         
     
     
@@ -190,6 +242,7 @@ class RequestHandler(object):
         """
         
         method = self._method_selector.select_method(method_name)
+        
         if method is None:
             handler_response = self._handle_method_not_found(method_name)
         else:
@@ -203,7 +256,11 @@ class RequestHandler(object):
                 except Exception, err:
                     handler_response = self._handle_system_error(err)
         
-        normaliser = IResponseNormaliser(self.response)
+        if self.ResponseNormaliser is None:
+            normaliser = IResponseNormaliser(self.response)
+        else:
+            normaliser = self.ResponseNormaliser(self.response)
+        
         return normaliser.normalise(handler_response)
         
     
@@ -214,7 +271,7 @@ class WSGIApplication(object):
       that uses a URL mapping to pass requests on.
     """
     
-    adapts(IURLMapping, IApplicationSettings, ITemplateRenderer)
+    adapts(IPathRouter, ISettings, ITemplateRenderer)
     implements(IWSGIApplication)
     
     def __init__(
@@ -240,15 +297,13 @@ class WSGIApplication(object):
           the corresponding request handler and calls it with
           the request method and the match groups.
           
-          If calling the handler errors, returns a minimalist
-          500 response.
+          If calling the handler errors (which is shouldn't normally
+          do -- the handler should catch the error), returns a 
+          minimalist 500 response.
           
           If no match is found, returns a minimalist 404 response.
           
         """
-        
-        handler = None
-        groups = ()
         
         request = self._request_class(environ)
         response = self._response_class(
@@ -256,19 +311,14 @@ class WSGIApplication(object):
             content_type=self._default_content_type
         )
         
-        for regexp, handler_class in self._url_mapping.mapping:
-            match = regexp.match(request.path)
-            if match:
-                handler = handler_class(
-                    request, 
-                    response, 
-                    self._settings,
-                    self._template_renderer
-                )
-                groups = match.groups()
-                break
-            
-        if handler:
+        handler_class, groups = self._url_mapping.match(request.path)
+        if handler_class is not None:
+            handler = handler_class(
+                request, 
+                response, 
+                self._settings,
+                self._template_renderer
+            )
             try:
                 response = handler(environ['REQUEST_METHOD'], *groups)
             except Exception, err:
