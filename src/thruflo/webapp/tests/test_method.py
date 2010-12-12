@@ -4,6 +4,7 @@
 """
 """
 
+import venusian
 import unittest
 from mock import Mock
 
@@ -13,51 +14,56 @@ from thruflo.webapp.interfaces import IRequestHandler
 from thruflo.webapp.method import expose
 from thruflo.webapp.method import ExposedMethodSelector
 
-class TestExpose(unittest.TestCase):
-    """ Test the logic of the `@expose('method_name', ...)` decorator.
+class MockHandler(object):
+    """ Mock that the venusian scanner should pick up.
     """
     
-    def test_expose_methods(self):
-        """ method names are in `class_.__exposed_methods__`.
+    implements(IRequestHandler)
+    
+    @expose
+    def yes(self):
+        """ This method should be exposed.
         """
-        
-        @expose('a', 'b', 'c')
-        class Handler(Mock):
-            implements(IRequestHandler)
-            
-        
-        
-        self.assertTrue(
-            Handler.__exposed_methods__ == ['a', 'b', 'c']
-        )
         
     
-    def test_expose_multiple_times(self):
-        """ Method name only appears once, no matter how many
-          times it's exposed.
+    def no(self):
+        """ This method should not be exposed.
         """
-        
-        @expose('a', 'b', 'b')
-        class Handler(Mock):
-            implements(IRequestHandler)
-            
-        
-        expose('a')(Handler)
-        
-        self.assertTrue(
-            Handler.__exposed_methods__ == ['a', 'b']
-        )
         
     
-    def test_class_implementes_IRequestHandler(self):
-        """ Iff `class_` implements `IRequestHandler`.
+    
+
+
+class TestIntegration(unittest.TestCase):
+    """ Test the @expose decorator.
+    """
+    
+    def setUp(self):
+        """ Scan the module to actually execute the decorator.
         """
         
-        self.assertRaises(
-            TypeError,
-            expose('a', 'b', 'c'),
-            Mock
-        )
+        from thruflo.webapp.tests import test_method
+        scanner = venusian.Scanner()
+        scanner.scan(test_method, categories=('thruflo',))
+        self.handler = MockHandler()
+        
+    
+    
+    def test_scanned_yes(self):
+        """ `MockHandler.yes` should be exposed.
+        """
+        
+        s = ExposedMethodSelector(self.handler)
+        self.assertTrue(s.select_method('YES') == self.handler.yes)
+        
+    
+    
+    def test_scanned_no(self):
+        """ `MockHandler.no` should not be exposed.
+        """
+        
+        s = ExposedMethodSelector(self.handler)
+        self.assertTrue(s.select_method('NO') is None)
         
     
     

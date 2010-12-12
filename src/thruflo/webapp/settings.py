@@ -1,21 +1,30 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+raise NotImplementedError(
+    """ settings.py is currently in a bit of a mess.
+      
+      The previous impl had classmethods, a global __required_settings__
+      and the items going in to the __init__
+      
+      It seems that perhaps we should instantiate an empty settings
+      object, pass it to the venusian scanner, add the required
+      settings to a single instance and then pass in the parsed
+      items.
+      
+      The second question is whether then to use functions, decorators
+      or both to populate the required settings.  Perhaps it makes
+      sense to provide both?
+      
+      The current doctests and test_settings are mid work...
+    """
+)
+
 """ Settings that can be required on a module by module basis.
-  
-      >>> # doctest setup
-      >>> RequirableSettings.__required_settings__ = {} 
   
   For example, say your application code needs to know the value
   of a particular webservice api key.  You can require it by
-  writing this as module level (e.g.: call the function just below
-  your module level imports)::
-  
-      >>> # import blah, baz ...
-      >>> 
-      >>> require_setting('foobar_api_key')
-      >>>
-      >>> # ... carry on with your module
+  writing `require_setting('foobar_api_key')` at module level.
   
   Then, when you initiate `RequirableSettings`, if you pass in
   a value for `foobar_api_key`, great::
@@ -58,6 +67,8 @@ __all__ = [
     'RequirableSettings'
 ]
 
+import venusian
+
 from zope.interface import implements
 
 from interfaces import ISettings
@@ -66,10 +77,9 @@ class RequirableSettings(object):
     """ Utility that provides dictionary-like access to 
       global application settings.
       
-      Provides `require` and `override` classmethods that
-      can be used to declare required settings and their
-      potential default values.
-      
+      Do not use the `_require` and `_override` classmethods directly.  
+      Instead, use the `require_setting` and `override_setting`
+      functions below, in tandem with a `venusian` scan.
     """
     
     implements(ISettings)
@@ -84,6 +94,10 @@ class RequirableSettings(object):
           
               >>> s = {'a': ('a', u'help msg a'), 'b': ('b', u'help msg b')}
               >>> RequirableSettings.__required_settings__ = s
+              >>> settings = RequirableSettings()
+              Traceback (most recent call last):
+              ...
+              TypeError: __init__() takes exactly 2 arguments (1 given)
               >>> settings = RequirableSettings({'a': 'foobar'})
               >>> settings['a']
               'foobar'
@@ -119,7 +133,6 @@ class RequirableSettings(object):
             self[k] = v
             
         
-    
     
     def __getitem__(self, name):
         """ Get item::
@@ -182,7 +195,7 @@ class RequirableSettings(object):
         
     
     def __iter__(self):
-        """ Contains item::
+        """ Iterate through items::
           
               >>> RequirableSettings.__required_settings__ = {}
               >>> settings = RequirableSettings({'a': 'foobar', 'b': ''})
@@ -198,13 +211,13 @@ class RequirableSettings(object):
     
     
     @classmethod
-    def require(cls, name, default=None, help=u''):
+    def _require(cls, name, default=None, help=u''):
         """ Require an application setting.
           
           Defaults to None::
           
               >>> RequirableSettings.__required_settings__ = {}
-              >>> RequirableSettings.require('a')
+              >>> RequirableSettings._require('a')
               >>> RequirableSettings.__required_settings__['a']
               (None, u'')
           
@@ -216,21 +229,21 @@ class RequirableSettings(object):
           
           You can call `require` as many times as you like::
           
-              >>> RequirableSettings.require('a')
-              >>> RequirableSettings.require('a')
-              >>> RequirableSettings.require('a')
-              >>> RequirableSettings.require('a')
+              >>> RequirableSettings._require('a')
+              >>> RequirableSettings._require('a')
+              >>> RequirableSettings._require('a')
+              >>> RequirableSettings._require('a')
               >>> RequirableSettings.__required_settings__['a']
               (None, u'')
           
           But you can't require the same setting *with different values*::
           
-              >>> RequirableSettings.require('a')
-              >>> RequirableSettings.require('a', default='a')
+              >>> RequirableSettings._require('a')
+              >>> RequirableSettings._require('a', default='a')
               Traceback (most recent call last):
               ...
               KeyError: u'a is already defined'
-              >>> RequirableSettings.require('a', help=u'elephants')
+              >>> RequirableSettings._require('a', help=u'elephants')
               Traceback (most recent call last):
               ...
               KeyError: u'a is already defined'
@@ -249,30 +262,30 @@ class RequirableSettings(object):
         
     
     @classmethod
-    def override(cls, name, default=None, help=u''):
+    def _override(cls, name, default=None, help=u''):
         """ Require a setting regardless of whether it has already
           been required or not.
           
           Defaults to None::
           
               >>> RequirableSettings.__required_settings__ = {}
-              >>> RequirableSettings.override('a')
+              >>> RequirableSettings._override('a')
               >>> RequirableSettings.__required_settings__['a']
               (None, u'')
           
           Unless passed in::
           
-              >>> RequirableSettings.override('b', default='b', help=u'help msg')
+              >>> RequirableSettings._override('b', default='b', help=u'help msg')
               >>> RequirableSettings.__required_settings__['b']
               ('b', u'help msg')
           
           With `override`, you can require the same settings twice with 
           different values::
           
-              >>> RequirableSettings.override('a', default='a')
+              >>> RequirableSettings._override('a', default='a')
               >>> RequirableSettings.__required_settings__['a']
               ('a', u'')
-              >>> RequirableSettings.override('a', help=u'elephants')
+              >>> RequirableSettings._override('a', help=u'elephants')
               >>> RequirableSettings.__required_settings__['a']
               (None, u'elephants')
               
@@ -285,5 +298,31 @@ class RequirableSettings(object):
     
 
 
-require_setting = RequirableSettings.require
-override_setting = RequirableSettings.override
+def _a_harmless_function():
+    pass
+    
+
+def require_setting(name, default=None, help=u'', venusian=venusian):
+    """
+    """
+    
+    def callback(*args):
+        return RequirableSettings._require(name, default=None, help=u'')
+        
+    
+    venusian.attach(_a_harmless_function, callback, category='thruflo')
+    
+
+def override_setting(name, default=None, help=u'', venusian=venusian):
+    """
+    """
+    
+    def callback(*args):
+        return RequirableSettings._override(name, default=None, help=u'')
+        
+    
+    
+    venusian.attach(_a_harmless_function, callback, category='thruflo')
+    
+
+

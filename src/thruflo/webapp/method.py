@@ -3,27 +3,30 @@
 
 """ Use the `@expose` decorator to expose request handler methods::
   
-      >>> @expose('get')
-      ... class MockHandler(object):
+      >>> class MockHandler(object):
       ...     implements(IRequestHandler)
       ...     
+      ...     @expose
       ...     def get(self):
       ...         pass
       ...     
-      ...     def post(self):
-      ...         pass
-      ...     
       ... 
+  
+  Then, once we've executed a `venusian` scan (which we fake here
+  see `./tests/test_method.py` for an integration test)::
+  
+      >>> _expose('get', MockHandler)
+  
+  This works in tandem with the `ExposedMethodSelector`::
+  
       >>> handler = MockHandler()
-  
-  This then works in tandem with the `ExposedMethodSelector`
-  implementation of `IMethodSelector`::
-  
       >>> selector = ExposedMethodSelector(handler)
       >>> selector.select_method('POST') # returns None
       >>> selector.select_method('_do_something_bad') # returns None
-      >>> selector.select_method('GET') == handler.get
-      True
+      >>> selector.select_method('GET') #doctest: +ELLIPSIS
+      <bound method MockHandler.get ...>
+  
+  To (only) allow `MockHandler` to only accept 'GET' requests.
   
 """
 
@@ -32,42 +35,71 @@ __all__ = [
     'ExposedMethodSelector'
 ]
 
+import venusian
+
 from zope.component import adapts
 from zope.interface import implements
 
 from interfaces import IRequestHandler, IMethodSelector
 
-class expose(object):
+def _expose(method_name, class_):
+    """ Ensures `method_name` is in `class_.__exposed_methods__` 
+      iff `class_` implements `IRequestHandler`.
+      
+          >>> from mock import Mock
+          >>> class Handler(Mock):
+          ...     implements(IRequestHandler)
+          ... 
+      
+      Method names are in `class_.__exposed_methods__`::
+      
+          >>> _expose('a', Handler)
+          >>> Handler.__exposed_methods__
+          ['a']
+      
+      Method name only appears once, no matter how many
+      times it's exposed::
+          
+          >>> _expose('a', Handler)
+          >>> _expose('b', Handler)
+          >>> _expose('b', Handler)
+          >>> Handler.__exposed_methods__
+          ['a', 'b']
+      
+      Iff `class_` implements `IRequestHandler`::
+          
+          >>> _expose('b', Mock) #doctest: +ELLIPSIS
+          Traceback (most recent call last):
+          ...
+          TypeError: `<class ... must implement ....IRequestHandler>`
+      
+    """
+    
+    if not IRequestHandler.implementedBy(class_):
+        error_msg = u'`{}` must implement `{}`'.format(
+            class_,
+            IRequestHandler
+        )
+        raise TypeError(error_msg)
+    
+    if not hasattr(class_, '__exposed_methods__'):
+        class_.__exposed_methods__ = []
+    
+    if not method_name in class_.__exposed_methods__:
+        class_.__exposed_methods__.append(method_name)
+    
+
+def expose(method, venusian=venusian):
     """ Decorator to expose a request handler's methods.
     """
     
-    def __init__(self, *method_names):
-        self.method_names = method_names
+    def callback(scanner, name, ob):
+        return _expose(method.__name__, ob)
         
     
     
-    def __call__(self, class_):
-        """ Ensures `self.method_names` are in `class_.__exposed_methods__`
-          iff `class_` implements `IRequestHandler`.
-        """
-        
-        if not IRequestHandler.implementedBy(class_):
-            error_msg = u'`{}` must implement `{}`'.format(
-                class_,
-                IRequestHandler
-            )
-            raise TypeError(error_msg)
-        
-        if not hasattr(class_, '__exposed_methods__'):
-            class_.__exposed_methods__ = []
-        
-        for method_name in self.method_names:
-            if not method_name in class_.__exposed_methods__:
-                class_.__exposed_methods__.append(method_name)
-            
-        return class_
-        
-    
+    venusian.attach(method, callback, category='thruflo')
+    return method
     
 
 

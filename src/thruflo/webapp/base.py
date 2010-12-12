@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" Webase our request handling on `webob.Response`
+""" We base our request handling on `webob.Response`
   and response generation on `webob.Request`.
 """
 
@@ -17,14 +17,14 @@ from zope.interface import implements
 from interfaces import IRequest, IResponse
 
 class Request(webob.Request):
-    """ `IRequest` implementation.
+    """ `IRequest` implementation using `webob.Request`.
     """
     
     implements(IRequest)
     
 
 class Response(webob.Response):
-    """ `IResponse` implementation.
+    """ `IResponse` implementation using `webob.Response`.
     """
     
     implements(IResponse)
