@@ -1,69 +1,72 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-raise NotImplementedError(
-    """ settings.py is currently in a bit of a mess.
-      
-      The previous impl had classmethods, a global __required_settings__
-      and the items going in to the __init__
-      
-      It seems that perhaps we should instantiate an empty settings
-      object, pass it to the venusian scanner, add the required
-      settings to a single instance and then pass in the parsed
-      items.
-      
-      The second question is whether then to use functions, decorators
-      or both to populate the required settings.  Perhaps it makes
-      sense to provide both?
-      
-      The current doctests and test_settings are mid work...
-    """
-)
-
-""" Settings that can be required on a module by module basis.
+""" Require specific settings to be provided to the application
+  by declaring the dependency at a module, class or function level.
   
   For example, say your application code needs to know the value
-  of a particular webservice api key.  You can require it by
-  writing `require_setting('foobar_api_key')` at module level.
+  of a particular webservice api key.  You can require it by 
+  calling the `require_setting` method at module level::
   
-  Then, when you initiate `RequirableSettings`, if you pass in
-  a value for `foobar_api_key`, great::
+      >>> require_setting('api_key')
   
-      >>> s = RequirableSettings({'foobar_api_key': '123'})
-      >>> s['foobar_api_key']
+  Or by decorating a class or function (*not* a method)::
+  
+      >>> @require('api_key')
+      ... class Foo(object): pass
+      ... 
+      >>> @require('api_key')
+      ... def foo(self): pass
+      ... 
+  
+  Then, once we've executed a `venusian` scan (which we fake here
+  see `./tests/test_settings.py` for real integration tests)::
+  
+      >>> settings = RequirableSettings()
+      >>> settings._require('api_key') # never call this directly!
+  
+  You can call the `RequirableSettings` instance with the settings
+  provided.  If you pass in a value for `api_key`, great, otherwise, 
+  you'll get a `KeyError`::
+  
+      >>> settings({})
+      Traceback (most recent call last):
+      ...
+      KeyError: u'Required setting `api_key` () is missing'
+      >>> settings({'api_key': '123'})
+      >>> settings['api_key']
       '123'
   
-  Otherwise, you'll get a `KeyError`::
+  You can specify default values and help strings ala:
   
-      >>> s = RequirableSettings({})
-      Traceback (most recent call last):
-      ...
-      KeyError: u'Required setting `foobar_api_key` () is missing'
+      require_setting('baz', default='blah', help=u'what is this?')
+      settings({'api_key': '123'})
+      # settings['baz'] would be 'blah'
+  
+  You can't require the same setting twice with different values:
+  
+      require_setting('baz', default='something else')
+      # would raise a KeyError
+  
+  Unless you explicitly use `override_setting`:
+  
+      override_setting('baz', default='something else')
+      settings({'api_key': '123'})
+      # settings['baz'] would be 'something else'
+  
+  Which is also available as the `@override` decorator:
+  
+      @override('api_key', default="...")
+      class Foo(object): pass
       
-  You can specify default values and help strings::
-  
-      >>> require_setting('baz', default='blah', help=u'what is this?')
-      >>> s = RequirableSettings({'foobar_api_key': '123'})
-      >>> s['baz']
-      'blah'
-  
-  You can't require the same setting twice with different values::
-  
-      >>> require_setting('baz', default='something else')
-      Traceback (most recent call last):
-      ...
-      KeyError: u'baz is already defined'
-  
-  Unless you explicitly use `override_setting`::
-  
-      >>> override_setting('baz', default='something else')
-      >>> s = RequirableSettings({'foobar_api_key': '123'})
-      >>> s['baz']
-      'something else'
   
 """
 
 __all__ = [
+    'require',
+    'override',
+    'require_setting',
+    'override_setting',
     'RequirableSettings'
 ]
 
@@ -73,72 +76,125 @@ from zope.interface import implements
 
 from interfaces import ISettings
 
+def _a_harmless_function():
+    """ Function to hang the `require_setting` and `override_setting`
+      `venusian` callbacks off.
+    """
+    
+
+def require_setting(
+        name, 
+        default=None, 
+        help=u'', 
+        wrapped=_a_harmless_function,
+        venusian=venusian
+    ):
+    """ Call this at module level to require a setting.
+    """
+    
+    def callback(scanner, *args):
+        import logging
+        logging.warning('require_setting.callback {}'.format(name))
+        return scanner.settings._require(name, default=default, help=help)
+        
+    
+    venusian.attach(wrapped, callback, category='thruflo')
+    
+
+def override_setting(
+        name, 
+        default=None, 
+        help=u'', 
+        wrapped=_a_harmless_function, 
+        venusian=venusian
+    ):
+    """ Call this at module level to override a setting.
+    """
+    
+    def callback(scanner, *args):
+        return scanner.settings._override(name, default=default, help=help)
+        
+    
+    
+    venusian.attach(wrapped, callback, category='thruflo')
+    
+
+
+class require(object):
+    """ Decorator to require a setting.
+    """
+    
+    def __init__(self, name, default=None, help=u''):
+        self._name = name
+        self._default = default
+        self._help = help
+        
+    
+    def __call__(self, wrapped, require_setting=require_setting):
+        """
+        """
+        
+        require_setting(
+            self._name, 
+            default=self._default, 
+            help=self._help, 
+            wrapped=wrapped
+        )
+        return wrapped
+        
+    
+    
+
+class override(object):
+    """ Decorator to require a setting.
+    """
+    
+    def __init__(self, name, default=None, help=u''):
+        self._name = name
+        self._default = default
+        self._help = help
+        
+    
+    
+    def __call__(self, wrapped, override_setting=override_setting):
+        """
+        """
+        
+        override_setting(
+            self._name, 
+            default=self._default, 
+            help=self._help,
+            wrapped=wrapped
+        )
+        
+        return wrapped
+        
+    
+    
+
+
 class RequirableSettings(object):
     """ Utility that provides dictionary-like access to 
       global application settings.
       
-      Do not use the `_require` and `_override` classmethods directly.  
+      Do not use the `_require` and `_override` methods directly.  
       Instead, use the `require_setting` and `override_setting`
       functions below, in tandem with a `venusian` scan.
     """
     
     implements(ISettings)
     
-    __required_settings__ = {}
-    
-    def __init__(self, items):
-        """ `items` are checked against `__required_settings__`.
-          If any required settings are missing, if they were declared
-          with a default value, the setting is set up with the
-          default value::
-          
-              >>> s = {'a': ('a', u'help msg a'), 'b': ('b', u'help msg b')}
-              >>> RequirableSettings.__required_settings__ = s
-              >>> settings = RequirableSettings()
-              Traceback (most recent call last):
-              ...
-              TypeError: __init__() takes exactly 2 arguments (1 given)
-              >>> settings = RequirableSettings({'a': 'foobar'})
-              >>> settings['a']
-              'foobar'
-              >>> settings['b']
-              'b'
-          
-          Otherwise we throw a KeyError.
-              
-              >>> s = {'a': (None, u'help msg a'), 'b': ('b', u'help msg b')}
-              >>> RequirableSettings.__required_settings__ = s
-              >>> RequirableSettings({})
-              Traceback (most recent call last):
-              ...
-              KeyError: u'Required setting `a` (help msg a) is missing'
-          
-        """
-        
+    def __init__(self):
+        self.__required_settings__ = {}
         self._items = {}
         
-        missing = []
-        for k, v in self.__required_settings__.iteritems():
-            if not k in items:
-                default = v[0]
-                if default is not None:
-                    self[k] = default
-                else:
-                    msg = u'Required setting `{}` ({}) is missing'.format(k, v[1])
-                    missing.append(msg)
-        if missing:
-            raise KeyError(u', '.join(missing))
-            
-        for k, v in items.iteritems():
-            self[k] = v
-            
-        
+    
     
     def __getitem__(self, name):
         """ Get item::
           
-              >>> RequirableSettings.__required_settings__ = {}
-              >>> settings = RequirableSettings({'a': 'foobar'})
+              >>> settings = RequirableSettings()
+              >>> settings({'a': 'foobar'})
               >>> settings['a']
               'foobar'
           
@@ -150,8 +206,7 @@ class RequirableSettings(object):
     def __setitem__(self, name, value):
         """ Set item::
           
-              >>> RequirableSettings.__required_settings__ = {}
-              >>> settings = RequirableSettings({'a': 'foobar'})
+              >>> settings = RequirableSettings()
               >>> settings['a'] = 'baz'
               >>> settings['a']
               'baz'
@@ -164,8 +219,8 @@ class RequirableSettings(object):
     def __delitem__(self, name):
         """ Delete item::
           
-              >>> RequirableSettings.__required_settings__ = {}
-              >>> settings = RequirableSettings({'a': 'foobar'})
+              >>> settings = RequirableSettings()
+              >>> settings({'a': 'foobar'})
               >>> settings['a']
               'foobar'
               >>> del settings['a']
@@ -182,8 +237,8 @@ class RequirableSettings(object):
     def __contains__(self, name):
         """ Contains item::
           
-              >>> RequirableSettings.__required_settings__ = {}
-              >>> settings = RequirableSettings({'a': 'foobar'})
+              >>> settings = RequirableSettings()
+              >>> settings({'a': 'foobar'})
               >>> 'a' in settings
               True
               >>> 'b' in settings
@@ -197,8 +252,8 @@ class RequirableSettings(object):
     def __iter__(self):
         """ Iterate through items::
           
-              >>> RequirableSettings.__required_settings__ = {}
-              >>> settings = RequirableSettings({'a': 'foobar', 'b': ''})
+              >>> settings = RequirableSettings()
+              >>> settings({'a': 'foobar', 'b': ''})
               >>> for k in settings:
               ...     k
               'a'
@@ -210,119 +265,136 @@ class RequirableSettings(object):
         
     
     
-    @classmethod
-    def _require(cls, name, default=None, help=u''):
+    def _require(self, name, default=None, help=u''):
         """ Require an application setting.
           
           Defaults to None::
           
-              >>> RequirableSettings.__required_settings__ = {}
-              >>> RequirableSettings._require('a')
-              >>> RequirableSettings.__required_settings__['a']
+              >>> settings = RequirableSettings()
+              >>> settings._require('a')
+              >>> settings.__required_settings__['a']
               (None, u'')
           
           Unless passed in::
           
-              >>> RequirableSettings.require('b', default='b', help=u'help msg')
-              >>> RequirableSettings.__required_settings__['b']
+              >>> settings._require('b', default='b', help=u'help msg')
+              >>> settings.__required_settings__['b']
               ('b', u'help msg')
           
           You can call `require` as many times as you like::
           
-              >>> RequirableSettings._require('a')
-              >>> RequirableSettings._require('a')
-              >>> RequirableSettings._require('a')
-              >>> RequirableSettings._require('a')
-              >>> RequirableSettings.__required_settings__['a']
-              (None, u'')
+              >>> settings = RequirableSettings()
+              >>> settings._require('a')
+              >>> settings._require('a')
+              >>> settings._require('a')
+              >>> settings.__required_settings__
+              {'a': (None, u'')}
           
           But you can't require the same setting *with different values*::
           
-              >>> RequirableSettings._require('a')
-              >>> RequirableSettings._require('a', default='a')
-              Traceback (most recent call last):
-              ...
-              KeyError: u'a is already defined'
-              >>> RequirableSettings._require('a', help=u'elephants')
+              >>> settings._require('a', default='a')
               Traceback (most recent call last):
               ...
               KeyError: u'a is already defined'
           
-          This allows for multiple module level imports to sail through
-          but hopefully helps catch user error where the same setting
-          is defined twice (@@ this could be enforced rather more
-          stringently...).
+          Whether that means the default value (above) or the help message::
+          
+              >>> settings._require('a', help=u'elephants')
+              Traceback (most recent call last):
+              ...
+              KeyError: u'a is already defined'
+          
         """
         
-        if name in cls.__required_settings__:
-            if cls.__required_settings__[name] != (default, help):
+        import logging
+        logging.warning('settings._require({})'.format(name))
+        
+        if name in self.__required_settings__:
+            if self.__required_settings__[name] != (default, help):
                 raise KeyError(u'{} is already defined'.format(name))
         
-        cls.__required_settings__[name] = (default, help)
+        self.__required_settings__[name] = (default, help)
         
     
-    @classmethod
-    def _override(cls, name, default=None, help=u''):
+    def _override(self, name, default=None, help=u''):
         """ Require a setting regardless of whether it has already
           been required or not.
           
           Defaults to None::
           
-              >>> RequirableSettings.__required_settings__ = {}
-              >>> RequirableSettings._override('a')
-              >>> RequirableSettings.__required_settings__['a']
+              >>> settings = RequirableSettings()
+              >>> settings._override('a')
+              >>> settings.__required_settings__['a']
               (None, u'')
           
           Unless passed in::
           
-              >>> RequirableSettings._override('b', default='b', help=u'help msg')
-              >>> RequirableSettings.__required_settings__['b']
+              >>> settings._override('b', default='b', help=u'help msg')
+              >>> settings.__required_settings__['b']
               ('b', u'help msg')
           
           With `override`, you can require the same settings twice with 
           different values::
           
-              >>> RequirableSettings._override('a', default='a')
-              >>> RequirableSettings.__required_settings__['a']
+              >>> settings._override('a', default='a')
+              >>> settings.__required_settings__['a']
               ('a', u'')
-              >>> RequirableSettings._override('a', help=u'elephants')
-              >>> RequirableSettings.__required_settings__['a']
+              >>> settings._override('a', help=u'elephants')
+              >>> settings.__required_settings__['a']
               (None, u'elephants')
-              
           
         """
         
-        cls.__required_settings__[name] = (default, help)
+        self.__required_settings__[name] = (default, help)
         
     
     
-
-
-def _a_harmless_function():
-    pass
-    
-
-def require_setting(name, default=None, help=u'', venusian=venusian):
-    """
-    """
-    
-    def callback(*args):
-        return RequirableSettings._require(name, default=None, help=u'')
+    def __call__(self, items):
+        """ `items` are checked against `self.__required_settings__`.
+          If any required settings are missing, if they were declared
+          with a default value, the setting is set up with the
+          default value::
+          
+              >>> settings = RequirableSettings()
+              >>> reqs = {'a': ('a', u'help msg a'), 'b': ('b', u'help msg b')}
+              >>> settings.__required_settings__ = reqs
+              >>> settings()
+              Traceback (most recent call last):
+              ...
+              TypeError: __call__() takes exactly 2 arguments (1 given)
+              >>> settings({'a': 'foobar'})
+              >>> settings['a']
+              'foobar'
+              >>> settings['b']
+              'b'
+          
+          Otherwise we throw a KeyError.
+          
+              >>> reqs = {'a': (None, u'help msg a'), 'b': ('b', u'help msg b')}
+              >>> settings.__required_settings__ = reqs
+              >>> settings({})
+              Traceback (most recent call last):
+              ...
+              KeyError: u'Required setting `a` (help msg a) is missing'
+          
+        """
+        
+        missing = []
+        for k, v in self.__required_settings__.iteritems():
+            if not k in items:
+                default = v[0]
+                if default is not None:
+                    self[k] = default
+                else:
+                    msg = u'Required setting `{}` ({}) is missing'.format(k, v[1])
+                    missing.append(msg)
+        if missing:
+            raise KeyError(u', '.join(missing))
+        
+        for k, v in items.iteritems():
+            self[k] = v
+            
         
     
-    venusian.attach(_a_harmless_function, callback, category='thruflo')
     
-
-def override_setting(name, default=None, help=u'', venusian=venusian):
-    """
-    """
-    
-    def callback(*args):
-        return RequirableSettings._override(name, default=None, help=u'')
-        
-    
-    
-    venusian.attach(_a_harmless_function, callback, category='thruflo')
-    
-
 
