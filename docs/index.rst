@@ -21,12 +21,6 @@ Indices and tables
 Modules
 =======
 
-thruflo.webapp.web
--------------------
-
-.. automodule:: thruflo.webapp.web
-   :members:
-
 thruflo.webapp.auth
 -------------------
 
@@ -55,17 +49,17 @@ thruflo.webapp.interfaces
 -------------------------
 
 .. automodule:: thruflo.webapp.interfaces
-.. autointerface:: thruflo.webapp.interfaces.IWSGIApplication
-.. autointerface:: thruflo.webapp.interfaces.IRequestHandler
-.. autointerface:: thruflo.webapp.interfaces.IRequest
-.. autointerface:: thruflo.webapp.interfaces.IResponse
-.. autointerface:: thruflo.webapp.interfaces.ISettings
-.. autointerface:: thruflo.webapp.interfaces.ITemplateRenderer
-.. autointerface:: thruflo.webapp.interfaces.IPathRouter
+.. autointerface:: thruflo.webapp.interfaces.IAuthenticationManager
 .. autointerface:: thruflo.webapp.interfaces.IMethodSelector
+.. autointerface:: thruflo.webapp.interfaces.IPathRouter
+.. autointerface:: thruflo.webapp.interfaces.IRequest
+.. autointerface:: thruflo.webapp.interfaces.IRequestHandler
+.. autointerface:: thruflo.webapp.interfaces.IResponse
 .. autointerface:: thruflo.webapp.interfaces.IResponseNormaliser
 .. autointerface:: thruflo.webapp.interfaces.ISecureCookieWrapper
-.. autointerface:: thruflo.webapp.interfaces.IAuthenticationManager
+.. autointerface:: thruflo.webapp.interfaces.ISettings
+.. autointerface:: thruflo.webapp.interfaces.ITemplateRenderer
+.. autointerface:: thruflo.webapp.interfaces.IWSGIApplication
 
 thruflo.webapp.method
 ---------------------
@@ -101,4 +95,10 @@ thruflo.webapp.utils
 --------------------
 
 .. automodule:: thruflo.webapp.utils
+   :members:
+
+thruflo.webapp.web
+-------------------
+
+.. automodule:: thruflo.webapp.web
    :members:
