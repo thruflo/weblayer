@@ -1,1 +1,5 @@
-# @@ we need to provide a base bootstrapper
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+""" @@ we need to provide a bootstrapper.
+"""

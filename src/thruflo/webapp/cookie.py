@@ -70,7 +70,7 @@ def _time_independent_equals(a, b):
           >>> l2 = time.time() - t2
           >>> difference = l1 > l2 and l1 - l2 or l2 - l1
           >>> difference_as_percentage_of_time = difference / l1 * 100
-          >>> difference_as_percentage_of_time < 7
+          >>> difference_as_percentage_of_time < 10
           True
       
       As opposed to the native python implementation of `a == b`::

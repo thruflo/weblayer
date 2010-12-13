@@ -58,7 +58,6 @@
   
       @override('api_key', default="...")
       class Foo(object): pass
-      
   
 """
 

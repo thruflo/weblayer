@@ -14,7 +14,7 @@ from zope.interface import implements
 from interfaces import IRequestHandler, IAuthenticationManager
 
 class TrivialAuthenticationManager(object):
-    """ Uses `self.context.request.remote_user`.
+    """ Uses `self.context.request.remote_user` .
     """
     
     adapts(IRequestHandler)

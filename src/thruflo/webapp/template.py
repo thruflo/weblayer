@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" Template rendering.
+""" ITemplateRenderer implementation that uses `Mako`.
 """
 
 __all__ = [
