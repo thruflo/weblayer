@@ -10,7 +10,7 @@ from mock import Mock
 from thruflo.webapp.template import MakoTemplateRenderer
 
 class TestMakoTemplateRenderer(unittest.TestCase):
-    """ Test the logic of the mako template renderer.
+    """ Test the logic of the `MakoTemplateRenderer`.
     """
     
     def setUp(self):
