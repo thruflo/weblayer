@@ -14,14 +14,9 @@ from thruflo.webapp.settings import RequirableSettings
 from thruflo.webapp.settings import require, require_setting
 from thruflo.webapp.settings import override, override_setting
 
-def test_wrapper():
-    pass
-
-
-require_setting('test_module', wrapped=test_wrapper)
+require_setting('test_module')
 
 @require('test_function')
-@require('test_override_function', default='something')
 def foo(): # pragma: no cover
     pass
 
@@ -31,6 +26,8 @@ class Foo(object):
     pass
     
 
+
+require_setting('test_override_function', default='something')
 
 class TestIntegration(unittest.TestCase):
     """ Test requiring and overriding settings.

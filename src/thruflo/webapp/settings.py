@@ -69,53 +69,87 @@ __all__ = [
     'RequirableSettings'
 ]
 
+import inspect
 import venusian
 
 from zope.interface import implements
 
 from interfaces import ISettings
 
-def _a_harmless_function():
-    """ Function to hang the `require_setting` and `override_setting`
-      `venusian` callbacks off.
-    """
-    
+_HANGER_NAME = '__thruflo_require_settings_venusian_hanger__'
 
-def require_setting(
-        name, 
-        default=None, 
-        help=u'', 
-        wrapped=_a_harmless_function,
-        venusian=venusian
-    ):
+def require_setting(name, default=None, help=u''):
     """ Call this at module level to require a setting.
+      
+      Works just like a decorator, defering the real work
+      until the callback is called by a `venusian` scan.
+      
+      However, because it's *not* a decorator, we need to
+      do a little dance...
+      
     """
     
-    def callback(scanner, *args):
-        import logging
-        logging.warning('require_setting.callback {}'.format(name))
-        return scanner.settings._require(name, default=default, help=help)
-        
+    # the first step is to get the module we're being called in
+    calling_mod = inspect.getmodule(inspect.stack()[1][0])
     
-    venusian.attach(wrapped, callback, category='thruflo')
+    # ignore when `None` (e.g.: if called from a doctest)
+    if calling_mod is not None:
+        # make sure it has a harmless function at
+        # `calling_mod.__thruflo_require_settings_venusian_hanger__`
+        def _hanger(): pass
+        
+        if not hasattr(calling_mod, _HANGER_NAME):
+            setattr(calling_mod, _HANGER_NAME, _hanger)
+        
+        # defer the real business
+        def callback(scanner, *args):
+            return scanner.settings._require(
+                name, 
+                default=default, 
+                help=help
+            )
+        
+        
+        # and, crucially, hang the callback off the *calling module*
+        venusian.attach(
+            getattr(calling_mod, _HANGER_NAME),
+            callback,
+            category='thruflo'
+        )
     
 
-def override_setting(
-        name, 
-        default=None, 
-        help=u'', 
-        wrapped=_a_harmless_function, 
-        venusian=venusian
-    ):
+def override_setting(name, default=None, help=u''):
     """ Call this at module level to override a setting.
     """
     
-    def callback(scanner, *args):
-        return scanner.settings._override(name, default=default, help=help)
+    # the first step is to get the module we're being called in
+    calling_mod = inspect.getmodule(inspect.stack()[1][0])
+    
+    # ignore when `None` (e.g.: if called from a doctest)
+    if calling_mod is not None:
+        # make sure it has a harmless function at
+        # `calling_mod.__thruflo_require_settings_venusian_hanger__`
+        def _hanger(): pass
         
+        if not hasattr(calling_mod, _HANGER_NAME):
+            setattr(calling_mod, _HANGER_NAME, _hanger)
+        
+        # defer the real business
+        def callback(scanner, *args):
+            return scanner.settings._override(
+                name, 
+                default=default, 
+                help=help
+            )
+        
+        
+        # and, crucially, hang the callback off the *calling module*
+        venusian.attach(
+            getattr(calling_mod, _HANGER_NAME),
+            callback,
+            category='thruflo'
+        )
     
-    
-    venusian.attach(wrapped, callback, category='thruflo')
     
 
 
@@ -129,16 +163,19 @@ class require(object):
         self._help = help
         
     
-    def __call__(self, wrapped, require_setting=require_setting):
+    def __call__(self, wrapped):
         """
         """
         
-        require_setting(
-            self._name, 
-            default=self._default, 
-            help=self._help, 
-            wrapped=wrapped
-        )
+        def callback(scanner, *args):
+            return scanner.settings._require(
+                self._name, 
+                default=self._default, 
+                help=self._help
+            )
+            
+        
+        venusian.attach(wrapped, callback, category='thruflo')
         return wrapped
         
     
@@ -155,17 +192,19 @@ class override(object):
         
     
     
-    def __call__(self, wrapped, override_setting=override_setting):
+    def __call__(self, wrapped):
         """
         """
         
-        override_setting(
-            self._name, 
-            default=self._default, 
-            help=self._help,
-            wrapped=wrapped
-        )
+        def callback(scanner, *args):
+            return scanner.settings._override(
+                self._name, 
+                default=self._default, 
+                help=self._help
+            )
+            
         
+        venusian.attach(wrapped, callback, category='thruflo')
         return wrapped
         
     
@@ -304,9 +343,6 @@ class RequirableSettings(object):
               KeyError: u'a is already defined'
           
         """
-        
-        import logging
-        logging.warning('settings._require({})'.format(name))
         
         if name in self.__required_settings__:
             if self.__required_settings__[name] != (default, help):
