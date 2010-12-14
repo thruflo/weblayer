@@ -113,3 +113,42 @@ class TestIntegration(unittest.TestCase):
     
     
 
+class TestVenusian(unittest.TestCase):
+    """ See http://bit.ly/dIKcX9, specifically the bit that says
+      
+      > This has the effect that double-registrations will never 
+      be performed.
+      
+      `thruflo.webapp.settings` is our equivalent of that article's 
+      `config.py`, this module is `app.py` and `.fixtures.scan` 
+      is like `app2.py`.
+    """
+    
+    def test_double_import(self):
+        """ `app2` imports `app`, which means the `require_setting`
+          above would be run twice if we executed them on import.
+          
+          That would throw a KeyError (as we see in the next test).
+        """
+        
+        from thruflo.webapp.tests import test_settings
+        from thruflo.webapp.tests import test_settings
+        from thruflo.webapp.tests.fixtures import double_import
+        
+        settings = RequirableSettings()
+        scanner = venusian.Scanner(settings=settings)
+        
+        scanner.scan(test_settings, categories=('thruflo',))
+        scanner.scan(double_import, categories=('thruflo',))
+        
+        settings({
+            'test_module': 'some value',
+            'test_function': 'some value',
+            'test_class': 'some value'
+        })
+        self.assertTrue(settings['test_module'] == 'some value')
+        
+    
+    
+
+

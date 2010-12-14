@@ -87,7 +87,7 @@ def _time_independent_equals(a, b):
           >>> l2 = time.time() - t2
           >>> difference = l1 > l2 and l1 - l2 or l2 - l1
           >>> difference_as_percentage_of_time = difference / l1 * 100
-          >>> difference_as_percentage_of_time < 15
+          >>> difference_as_percentage_of_time < 10
           False
           
       .. _`timing attacks`: http://seb.dbzteam.org/crypto/python-oauth-timing-hmac.pdf

@@ -182,7 +182,7 @@ class require(object):
     
 
 class override(object):
-    """ Decorator to require a setting.
+    """ Decorator to override a setting.
     """
     
     def __init__(self, name, default=None, help=u''):
