@@ -5,7 +5,7 @@
 """
 
 __all__ = [
-    'SecureCookieWrapper'
+    'SignedSecureCookieWrapper'
 ]
 
 import base64
@@ -144,7 +144,7 @@ def _generate_cookie_signature(cookie_secret, *parts):
     
 
 
-class SecureCookieWrapper(object):
+class SignedSecureCookieWrapper(object):
     """ Adapts a request handler to provide methods to get 
       and set cookies that can't be forged.
     """

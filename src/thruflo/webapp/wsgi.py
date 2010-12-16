@@ -10,8 +10,9 @@ __all__ = [
 
 from zope.interface import implements
 
+from base import Request, Response
 from component import registry
-from interfaces import IWSGIApplication
+from interfaces import IPathRouter, IWSGIApplication
 
 class WSGIApplication(object):
     """ Implementation of a callable WSGI application that 
@@ -33,17 +34,17 @@ class WSGIApplication(object):
         """
         
         if path_router is None:
-            self._path_router = registry.lookup('path_router')
+            self._path_router = registry.getUtility(IPathRouter)
         else:
             self._path_router = path_router
         
         if request_class is None:
-            self._Request = registry.lookup('request_class')
+            self._Request = Request
         else:
             self._Request = request_class
         
         if response_class is None:
-            self._Response = registry.lookup('response_class')
+            self._Response = Response
         else:
             self._Response = response_class
         

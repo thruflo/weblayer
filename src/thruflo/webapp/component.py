@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" `Component registry <http://docs.repoze.org/component>`_.
+""" `Component registry <http://pypi.python.org/pypi/zope.component>`_.
 """
 
-from repoze.component import Registry
-registry = Registry()
+from zope.component.registry import Components
+registry = Components('thruflo.webapp')

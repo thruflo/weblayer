@@ -5,7 +5,7 @@
 """
 
 __all__ = [
-    'RequestHandler'
+    'Handler'
 ]
 
 from os.path import dirname, join as join_path
@@ -16,8 +16,16 @@ from zope.interface import implements
 from component import registry
 
 from interfaces import IRequest, IResponse, IRequestHandler
-from settings import require
+from interfaces import ISettings, ITemplateRenderer
+from interfaces import IAuthenticationManager, ISecureCookieWrapper
+from interfaces import IMethodSelector, IResponseNormaliser
+
+from settings import require_setting
 from utils import generate_hash, xhtml_escape
+
+require_setting('check_xsrf', default=True)
+require_setting('static_path')
+require_setting('static_url_prefix', default=u'/static/')
 
 class XSRFError(ValueError):
     """ Raised when xsrf validation fails.
@@ -25,10 +33,7 @@ class XSRFError(ValueError):
     
 
 
-@require('static_path')
-@require('static_url_prefix', default=u'/static/')
-@require('check_xsrf', default=True)
-class RequestHandler(object):
+class Handler(object):
     """
     """
     
@@ -53,38 +58,29 @@ class RequestHandler(object):
         self.response = response
         
         if settings is None:
-            settings = registry.lookup('settings')
+            settings = registry.getUtility(ISettings)
+        self.settings = settings
+        
         if template_renderer is None:
-            template_renderer = registry.lookup('template_renderer')
-            
+            template_renderer = registry.getUtility(ITemplateRenderer)
+        self.template_renderer = template_renderer
+        
         if authentication_manager_adapter is None:
-            authentication_manager_adapter = registry.lookup(
-                'authentication_manager', 
-                'request_handler'
-            )
-        self.auth = authentication_manager_adapter(self)
+            self.auth = registry.getAdapter(self, IAuthenticationManager)
+        else:
+            self.auth = authentication_manager_adapter(self)
         
         if secure_cookie_wrapper_adapter is None:
-            secure_cookie_wrapper_adapter = registry.lookup(
-                'secure_cookie_wrapper', 
-                'request_handler'
-            )
-        self.cookies = secure_cookie_wrapper_adapter(self)
+            self.cookies = registry.getAdapter(self, ISecureCookieWrapper)
+        else:
+            self.cookies = secure_cookie_wrapper_adapter(self)
         
         if method_selector_adapter is None:
-            method_selector_adapter = registry.lookup(
-                'method_selector', 
-                'request_handler'
-            )
-        self._method_selector = method_selector_adapter(self)
-        
-        if response_normaliser_adapter is None:
-            self._ResponseNormaliser = registry.lookup(
-                'response_normaliser', 
-                'response'
-            )
+            self._method_selector = registry.getAdapter(self, IMethodSelector)
         else:
-            self._ResponseNormaliser = response_normaliser_adapter
+            self._method_selector = method_selector_adapter(self)
+        
+        self._response_normaliser_adapter = _response_normaliser_adapter
         
     
     
@@ -110,9 +106,9 @@ class RequestHandler(object):
         """
         
         if not hasattr(RequestHandler, "_static_hashes"):
-            RequestHandler._static_hashes = {}
+            Handler._static_hashes = {}
         
-        hashes = RequestHandler._static_hashes
+        hashes = Handler._static_hashes
         if path not in hashes:
             file_path = join_path(self.settings["static_path"], path)
             try:
@@ -263,7 +259,16 @@ class RequestHandler(object):
                 except Exception, err:
                     handler_response = self._handle_system_error(err)
         
-        response_normaliser = self._ResponseNormaliser(self.response)
+        if self._response_normaliser_adapter is None:
+            response_normaliser = registry.getAdapter(
+                self.response, 
+                IResponseNormaliser
+            )
+        else:
+            response_normaliser = self._response_normaliser_adapter(
+                self.response
+            )
+        
         return response_normaliser.normalise(handler_response)
         
     
