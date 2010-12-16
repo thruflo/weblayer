@@ -36,6 +36,7 @@ setup(
     install_requires=[
         'zope.interface >= 3.6, < 4.0',
         'zope.component >= 3.10, < 4.0',
+        'repoze.component >= 0.4, < 0.5',
         'venusian', # ' >= 4.0, < 5.0',
         'webob >= 1.0, < 2.0',
         'Mako >= 0.3, < 0.4'

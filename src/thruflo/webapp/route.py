@@ -119,7 +119,7 @@ class RegExpPathRouter(object):
     
     implements(IPathRouter)
     
-    def __init__(self, raw_mapping, compile_=_compile_top_and_tailed):
+    def __init__(self, raw_mapping, compile_=None):
         """ Takes a list of raw regular expressions mapped to request 
           handler classes, compiles the regular expressions and 
           provides `.mapping`.
@@ -166,6 +166,8 @@ class RegExpPathRouter(object):
               TypeError: `<class ... must implement ....IRequestHandler>`
           
         """
+        
+        compile_ = compile_ is None and _compile_top_and_tailed or compile_
         
         self._mapping = []
         

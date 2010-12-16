@@ -53,7 +53,7 @@ from zope.component import adapts
 from zope.interface import implements
 
 from interfaces import IResponse, IResponseNormaliser
-from utils import json_encode
+from utils import json_encode as utils_json_encode
 
 class DefaultToJSONResponseNormaliser(object):
     """ Adapter to normalise a response.
@@ -65,8 +65,8 @@ class DefaultToJSONResponseNormaliser(object):
     def __init__(
             self, 
             response, 
-            json_content_type='application/json; charset=UTF-8',
-            json_encode=json_encode
+            json_encode=None,
+            json_content_type='application/json; charset=UTF-8'
         ):
         """ Initialise a `DefaultToJSONResponseNormaliser`::
           
@@ -107,8 +107,11 @@ class DefaultToJSONResponseNormaliser(object):
         """
         
         self.response = response
+        if json_encode is None:
+            self._json_encode = utils_json_encode
+        else:
+            self._json_encode = json_encode
         self._json_content_type = json_content_type
-        self._json_encode = json_encode
         
     
     def normalise(self, handler_response):

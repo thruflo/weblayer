@@ -32,8 +32,8 @@ class MakoTemplateRenderer(object):
     def __init__(
             self, 
             directories,
-            built_ins=DEFAULT_BUILT_INS,
-            TemplateLookupClass=TemplateLookup,
+            built_ins=None,
+            template_lookup_class=None,
             module_directory='/tmp/mako_modules',
             input_encoding='utf-8', 
             output_encoding='utf-8', 
@@ -43,8 +43,12 @@ class MakoTemplateRenderer(object):
         """
         """
         
-        self.built_ins = built_ins
-        self.template_lookup = TemplateLookupClass(
+        self.built_ins = built_ins is None and DEFAULT_BUILT_INS or built_ins
+        
+        if template_lookup_class is None:
+            template_lookup_class = TemplateLookup
+        
+        self.template_lookup = template_lookup_class(
             directories=directories,
             module_directory=module_directory,
             input_encoding=input_encoding, 

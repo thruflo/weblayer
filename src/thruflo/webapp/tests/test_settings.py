@@ -120,7 +120,7 @@ class TestVenusian(unittest.TestCase):
       be performed.
       
       `thruflo.webapp.settings` is our equivalent of that article's 
-      `config.py`, this module is `app.py` and `.fixtures.scan` 
+      `config.py`, this module is `app.py` and `.fixtures.double_import` 
       is like `app2.py`.
     """
     
