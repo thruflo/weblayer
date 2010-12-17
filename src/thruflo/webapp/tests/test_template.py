@@ -26,7 +26,7 @@ class TestMakoTemplateRenderer(unittest.TestCase):
             directories=['a', 'b'],
             module_directory='c',
             built_ins={'d': 'e'},
-            TemplateLookupClass=self.template_lookup_class,
+            template_lookup_class=self.template_lookup_class,
             foo='bar'
         )
         

@@ -5,7 +5,7 @@
 """
 
 __all__ = [
-    'WSGIApplication'
+    'Application'
 ]
 
 from zope.interface import implements
@@ -14,7 +14,7 @@ from base import Request, Response
 from component import registry
 from interfaces import IPathRouter, IWSGIApplication
 
-class WSGIApplication(object):
+class Application(object):
     """ Implementation of a callable WSGI application that 
       accepts requests and uses a path router to select
       a request handler to handle them.
@@ -52,14 +52,13 @@ class WSGIApplication(object):
         
     
     def __call__(self, environ, start_response):
-        """ Checks the url mapping for a match against the
-          incoming request path.  If it finds one, instantiates
-          the corresponding request handler and calls it with
-          the request method and the match groups.
+        """ Checks the path router for a match against the incoming request
+          path.  If it finds one, instantiates the corresponding request 
+          handler and calls it with the request method and the match groups.
           
-          If calling the handler errors (which is shouldn't normally
-          do -- the handler should catch the error), returns a 
-          minimalist 500 response.
+          If calling the handler errors (which is shouldn't normally do -- 
+          the handler should catch the error), returns a minimalist 500 
+          response.
           
           If no match is found, returns a minimalist 404 response.
           
@@ -73,7 +72,7 @@ class WSGIApplication(object):
             handler = handler_class(request, response)
             try:
                 response = handler(environ['REQUEST_METHOD'], *groups)
-            except Exception, err: # handler should catch all exceptions
+            except Exception: # handler should catch all exceptions
                 response.status = 500
         else: # to handle 404 nicely, define a catch all url handler
             response.status = 404

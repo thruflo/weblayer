@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""
+""" Unit tests for `thruflo.webapp.cookie`.
 """
 
 from datetime import timedelta
@@ -10,24 +10,24 @@ import time
 import unittest
 from mock import Mock
 
-from thruflo.webapp.cookie import SecureCookieWrapper
+from thruflo.webapp.cookie import SignedSecureCookieWrapper
 from thruflo.webapp.cookie import _generate_cookie_signature
 
 class TestInitCookie(unittest.TestCase):
-    """ Test the logic of initialising a SecureCookieWrapper.
+    """ Test the logic of initialising a SignedSecureCookieWrapper.
     """
     
     def setUp(self):
         self.context = Mock()
         self.context.settings = dict()
         self.context.settings['cookie_secret'] = ''
-        self.cookie_wrapper = SecureCookieWrapper(self.context)
+        self.cookie_wrapper = SignedSecureCookieWrapper(self.context)
         
     
     
     def test_init_context(self):
         """ `self.context` is available as `self.context` within
-          the `SecureCookieWrapper` instance.
+          the `SignedSecureCookieWrapper` instance.
         """
         
         self.assertTrue(self.cookie_wrapper.context == self.context)
@@ -36,7 +36,7 @@ class TestInitCookie(unittest.TestCase):
     
     def test_init_context(self):
         """ `cookie_secret` is available as `self._cookie_secret` within
-          the `SecureCookieWrapper` instance.
+          the `SignedSecureCookieWrapper` instance.
         """
         
         cs = self.context.settings['cookie_secret']
@@ -54,7 +54,7 @@ class TestSetCookie(unittest.TestCase):
         self.context.response = Mock()
         self.context.settings = dict()
         self.context.settings['cookie_secret'] = ''
-        self.cookie_wrapper = SecureCookieWrapper(self.context)
+        self.cookie_wrapper = SignedSecureCookieWrapper(self.context)
         
     
     def test_name(self):
@@ -153,7 +153,7 @@ class TestGetCookie(unittest.TestCase):
         self.context = Mock()
         self.context.settings = dict()
         self.context.settings['cookie_secret'] = ''
-        self.cookie_wrapper = SecureCookieWrapper(self.context)
+        self.cookie_wrapper = SignedSecureCookieWrapper(self.context)
         
     
     def test_get_name(self):
@@ -287,7 +287,7 @@ class TestDeleteCookie(unittest.TestCase):
         self.context = Mock()
         self.context.settings = dict()
         self.context.settings['cookie_secret'] = ''
-        self.cookie_wrapper = SecureCookieWrapper(self.context)
+        self.cookie_wrapper = SignedSecureCookieWrapper(self.context)
         
     
     

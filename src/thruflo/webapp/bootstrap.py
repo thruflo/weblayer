@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" Helper class to simplify bootstrapping the application
-  using imperative configuration.
+""" Helper class to simplify bootstrapping the application.
 """
 
 import venusian
@@ -26,7 +25,7 @@ class Bootstrapper(object):
             self, 
             packages=None, 
             extra_categories=None, 
-            scan_defaults=True
+            scan_defaults=True,
             settings=None
         ):
         """ Run a `venusian` scan on packages.  Include `thruflo.webapp` 
@@ -124,7 +123,7 @@ class Bootstrapper(object):
         
     
     
-    def __init__(self, settings={}, url_mapping=[], template_directories):
+    def __init__(self, settings={}, url_mapping=[]):
         """
         """
         
@@ -135,5 +134,4 @@ class Bootstrapper(object):
         
     
     
-
 
