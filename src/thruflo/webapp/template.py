@@ -14,7 +14,11 @@ import utils
 from zope.interface import implements
 from mako.lookup import TemplateLookup
 
-from interfaces import ITemplateRenderer
+from component import registry
+from interfaces import ISettings, ITemplateRenderer
+from settings import require_setting
+
+require_setting('template_directories')
 
 DEFAULT_BUILT_INS = {
     "escape": utils.xhtml_escape,
@@ -31,7 +35,7 @@ class MakoTemplateRenderer(object):
     
     def __init__(
             self, 
-            directories,
+            directories=None,
             built_ins=None,
             template_lookup_class=None,
             module_directory='/tmp/mako_modules',
@@ -42,6 +46,10 @@ class MakoTemplateRenderer(object):
         ):
         """
         """
+        
+        if directories is None:
+            settings = registry.getUtility(ISettings)
+            directories = settings['template_directories']
         
         self.built_ins = built_ins is None and DEFAULT_BUILT_INS or built_ins
         

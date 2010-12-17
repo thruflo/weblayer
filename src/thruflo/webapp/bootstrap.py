@@ -18,8 +18,6 @@ from route import RegExpPathRouter
 from settings import require_setting, RequirableSettings
 from template import MakoTemplateRenderer
 
-require_setting('template_directories')
-
 class Bootstrapper(object):
     """
     """
@@ -73,57 +71,56 @@ class Bootstrapper(object):
           here to override (or simply register overrides later).
         """
         
-        if path_router is None:
-            path_router = RegExpPathRouter(self._url_mapping)
-        registry.registerUtility(path_router, IPathRouter)
+        if path_router is not False:
+            if path_router is None:
+                path_router = RegExpPathRouter(self._url_mapping)
+            registry.registerUtility(path_router, IPathRouter)
         
-        if settings is None:
-            settings = self._settings(self._user_settings)
-        registry.registerUtility(settings, ISettings)
+        if settings is not False:
+            if settings is None:
+                settings = self._settings(self._user_settings)
+            registry.registerUtility(settings, ISettings)
         
-        if template_renderer is None:
-            if not 'template_directories' in settings:
-                raise KeyError(
-                    """ The default template renderer instantiation requires
-                      the settings implementation to provide __get_itenm__
-                      access to a list of 'template_directories'.
-                    """
-                )
-            template_directories = settings['template_directories']
-            template_renderer = MakoTemplateRenderer(template_directories)
-        registry.registerUtility(template_renderer, ITemplateRenderer)
+        if template_renderer is not False:
+            if template_renderer is None:
+                template_renderer = MakoTemplateRenderer()
+            registry.registerUtility(template_renderer, ITemplateRenderer)
         
-        if AuthenticationManager is None:
-            AuthenticationManager = TrivialAuthenticationManager
-        registry.registerAdapter(
-            AuthenticationManager, 
-            adapts=[IRequestHandler],
-            provides=IAuthenticationManager
-        )
+        if AuthenticationManager is not False:
+            if AuthenticationManager is None:
+                AuthenticationManager = TrivialAuthenticationManager
+            registry.registerAdapter(
+                AuthenticationManager, 
+                adapts=[IRequestHandler],
+                provides=IAuthenticationManager
+            )
         
-        if SecureCookieWrapper is None:
-            SecureCookieWrapper = SignedSecureCookieWrapper
-        registry.registerAdapter(
-            SecureCookieWrapper, 
-            adapts=[IRequestHandler],
-            provides=ISecureCookieWrapper
-        )
+        if SecureCookieWrapper is not False:
+            if SecureCookieWrapper is None:
+                SecureCookieWrapper = SignedSecureCookieWrapper
+            registry.registerAdapter(
+                SecureCookieWrapper, 
+                adapts=[IRequestHandler],
+                provides=ISecureCookieWrapper
+            )
         
-        if MethodSelector is None:
-            MethodSelector = ExposedMethodSelector
-        registry.registerAdapter(
-            MethodSelector, 
-            adapts=[IRequestHandler],
-            provides=IMethodSelector
-        )
+        if MethodSelector is not False:
+            if MethodSelector is None:
+                MethodSelector = ExposedMethodSelector
+            registry.registerAdapter(
+                MethodSelector, 
+                adapts=[IRequestHandler],
+                provides=IMethodSelector
+            )
         
-        if ResponseNormaliser is None:
-            ResponseNormaliser = DefaultToJSONResponseNormaliser
-        registry.registerAdapter(
-            ResponseNormaliser, 
-            adapts=[IResponse],
-            provides=IResponseNormaliser
-        )
+        if ResponseNormaliser is not False:
+            if ResponseNormaliser is None:
+                ResponseNormaliser = DefaultToJSONResponseNormaliser
+            registry.registerAdapter(
+                ResponseNormaliser, 
+                adapts=[IResponse],
+                provides=IResponseNormaliser
+            )
         
     
     
