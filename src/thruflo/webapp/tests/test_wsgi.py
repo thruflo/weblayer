@@ -7,6 +7,7 @@
 import unittest
 from mock import Mock
 
+from thruflo.webapp.interfaces import IPathRouter
 import thruflo.webapp.wsgi
 
 class TestInitApplication(unittest.TestCase):
@@ -15,10 +16,10 @@ class TestInitApplication(unittest.TestCase):
     
     def setUp(self):
         # monkey patch the component registry
-        mock_registry = Mock()
-        mock_registry.getUtility = Mock()
-        mock_registry.getUtility.return_value = 42
-        thruflo.webapp.wsgi.registry = mock_registry
+        self.mock_registry = Mock()
+        self.mock_registry.getUtility = Mock()
+        self.mock_registry.getUtility.return_value = 42
+        thruflo.webapp.wsgi.registry = self.mock_registry
         # monkey patch the `Request` and `Response` classes
         thruflo.webapp.wsgi.Request = 42
         thruflo.webapp.wsgi.Response = 42
@@ -44,6 +45,7 @@ class TestInitApplication(unittest.TestCase):
         
         
         app = thruflo.webapp.wsgi.Application()
+        self.mock_registry.getUtility.assert_called_with(IPathRouter)
         self.assertTrue(app._path_router == 42)
         
         app = thruflo.webapp.wsgi.Application(path_router=None)

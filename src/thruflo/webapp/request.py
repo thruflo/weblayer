@@ -8,6 +8,7 @@ __all__ = [
     'Handler'
 ]
 
+import threading
 from os.path import dirname, join as join_path
 
 from zope.component import adapts
@@ -34,11 +35,13 @@ class XSRFError(ValueError):
 
 
 class Handler(object):
-    """
+    """ A request handler (aka view class) implementation.
     """
     
     adapts(IRequest, IResponse)
     implements(IRequestHandler)
+    
+    _static_hashes = {}
     
     def __init__(
             self, 
@@ -80,11 +83,35 @@ class Handler(object):
         else:
             self._method_selector = method_selector_adapter(self)
         
-        self._response_normaliser_adapter = _response_normaliser_adapter
+        self._response_normaliser_adapter = response_normaliser_adapter
         
     
     
     def get_argument(self, name, default=None, strip=False):
+        """ Get a single value for an argument from the request, no matter
+          whether it came from the query string or form body::
+          
+              >>> from mock import Mock
+              >>> handler = Handler(
+              ...     '', '',
+              ...     settings='', 
+              ...     template_renderer='',
+              ...     authentication_manager_adapter=Mock(),
+              ...     secure_cookie_wrapper_adapter=Mock(),
+              ...     method_selector_adapter=Mock()
+              ... )
+              >>> handler.get_arguments = Mock()
+              >>> handler.get_arguments.return_value = []
+              >>> handler.get_argument('foo')
+              >>> handler.get_arguments.return_value = ['a', 'b']
+              >>> handler.get_argument('foo')
+              'b'
+              >>> handler.get_arguments.assert_called_with('foo', strip=False)
+              >>> arg = handler.get_argument('foo', strip=True)
+              >>> handler.get_arguments.assert_called_with('foo', strip=True)
+          
+        """
+        
         args = self.get_arguments(name, strip=strip)
         if not args:
             return default
@@ -92,6 +119,35 @@ class Handler(object):
         
     
     def get_arguments(self, name, strip=False):
+        """ Get a list of values for an argument from the request, no matter
+          whether it came from the query string or form body::
+          
+              >>> from mock import Mock
+              >>> request = Mock()
+              >>> handler = Handler(
+              ...     request, 
+              ...     '',
+              ...     settings='', 
+              ...     template_renderer='',
+              ...     authentication_manager_adapter=Mock(),
+              ...     secure_cookie_wrapper_adapter=Mock(),
+              ...     method_selector_adapter=Mock()
+              ... )
+              >>> request.params.get.return_value = ['a', 'b']
+              >>> handler.get_arguments('foo')
+              ['a', 'b']
+              >>> request.params.get.assert_called_with('foo', [])
+              >>> request.params.get.return_value = [' a ', ' b ']
+              >>> handler.get_arguments('foo')
+              [' a ', ' b ']
+              >>> handler.get_arguments('foo', strip=True)
+              ['a', 'b']
+              >>> request.params.get.return_value = 'a'
+              >>> handler.get_arguments('foo')
+              ['a']
+          
+        """
+        
         values = self.request.params.get(name, [])
         if not bool(isinstance(values, list) or isinstance(values, tuple)):
            values = [values]
@@ -100,31 +156,27 @@ class Handler(object):
         return values
         
     
-    def get_static_url(self, path):
+    def get_static_url(cls, path):
         """ Returns a static URL for the given relative 
           static file path.
         """
         
-        if not hasattr(RequestHandler, "_static_hashes"):
-            Handler._static_hashes = {}
-        
-        hashes = Handler._static_hashes
-        if path not in hashes:
+        if path not in Handler._static_hashes:
             file_path = join_path(self.settings["static_path"], path)
             try:
-                f = open(file_path)
+                sock = open(file_path)
             except IOError:
-                logging.error("Could not open static file %r", path)
-                hashes[path] = None
+                logging.error(u'Could not open static file {}'.format(path))
+                Handler._static_hashes[path] = None
             else:
-                hashes[path] = generate_hash(s=f.read())
-                f.close()
+                Handler._static_hashes[path] = generate_hash(s=sock.read())
+                sock.close()
         base = self.request.host_url
-        static_url_prefix = self.settings['static_url_prefix']
+        prefix = self.settings['static_url_prefix']
         if hashes.get(path):
-            return base + static_url_prefix + path + "?v=" + hashes[path][:5]
+            return u'{}{}{}?v={}'.format(base, prefix, path, hashes[path][:5])
         else:
-            return base + static_url_prefix + path
+            return u'{}{}{}'.format(base, prefix, path)
         
     
     def get_xsrf_token(self):
