@@ -442,15 +442,6 @@ class TestHandlerMethods(unittest.TestCase):
         
         self.assertTrue(self.handler._xsrf_token == 'digest')
     
-    
-    """
-    if not hasattr(self, '_xsrf_form_html'):
-        escaped = xhtml_escape(self.xsrf_token)
-        tag = u'<input type="hidden" name="_xsrf" value="{}" />'
-        self._xsrf_form_html = tag.format(escaped)
-    return self._xsrf_form_html
-    """
-    
     def test_xsrf_input_returns__xsrf_input(self):
         """ If `self._xsrf_input` then return it.
         """
@@ -458,7 +449,6 @@ class TestHandlerMethods(unittest.TestCase):
         self.handler._xsrf_input = '<input />'
         self.assertTrue(self.handler.xsrf_input == '<input />')
         
-    
     
     def test_xsrf_input_tag_from_token(self):
         """ Return input tag with escaped `self.xsrf_token` as value
@@ -475,5 +465,6 @@ class TestHandlerMethods(unittest.TestCase):
         )
         xhtml_escape.assert_called_with('digest & sons')
         
+    
     
 
