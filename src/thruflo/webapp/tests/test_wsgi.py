@@ -8,6 +8,7 @@ import unittest
 from mock import Mock
 
 from thruflo.webapp.interfaces import IPathRouter
+from thruflo.webapp.wsgi import Application
 import thruflo.webapp.wsgi
 
 class TestInitApplication(unittest.TestCase):
@@ -15,41 +16,29 @@ class TestInitApplication(unittest.TestCase):
     """
     
     def setUp(self):
-        # monkey patch the component registry
-        self.mock_registry = Mock()
-        self.mock_registry.getUtility = Mock()
-        self.mock_registry.getUtility.return_value = 42
-        thruflo.webapp.wsgi.registry = self.mock_registry
+        self.settings = Mock()
+        self.path_router = Mock()
+        self.Request = Mock()
+        self.Response = Mock()
         # monkey patch the `Request` and `Response` classes
-        thruflo.webapp.wsgi.Request = 42
-        thruflo.webapp.wsgi.Response = 42
+        thruflo.webapp.wsgi.Request = self.Request
+        thruflo.webapp.wsgi.Response = self.Response
+        
+    
+    def test_settings(self):
+        """ `settings` is available as `self._settings`.
+        """
+        
+        app = Application(self.settings, self.path_router)
+        self.assertTrue(app._settings == self.settings)
         
     
     def test_path_router(self):
-        """ If `path_router` is not None, it's available as 
-          `self._path_router`.
+        """ `path_router` is available as `self._path_router`.
         """
         
-        app = thruflo.webapp.wsgi.Application(path_router=42)
-        self.assertTrue(app._path_router == 42)
-        
-        app = thruflo.webapp.wsgi.Application(path_router='elephants')
-        self.assertTrue(app._path_router == 'elephants')
-        
-    
-    def test_path_router_from_registry(self):
-        """ If `path_router` is None, which is the default, 
-          `self._path_router` is looked up via the component registry.
-        """
-        
-        
-        
-        app = thruflo.webapp.wsgi.Application()
-        self.mock_registry.getUtility.assert_called_with(IPathRouter)
-        self.assertTrue(app._path_router == 42)
-        
-        app = thruflo.webapp.wsgi.Application(path_router=None)
-        self.assertTrue(app._path_router == 42)
+        app = Application(self.settings, self.path_router)
+        self.assertTrue(app._path_router == self.path_router)
         
     
     def test_request_class(self):
@@ -57,11 +46,13 @@ class TestInitApplication(unittest.TestCase):
           `self._Request`.
         """
         
-        app = thruflo.webapp.wsgi.Application(request_class=42)
-        self.assertTrue(app._Request == 42)
-        
-        app = thruflo.webapp.wsgi.Application(request_class='elephants')
-        self.assertTrue(app._Request == 'elephants')
+        request_class = object()
+        app = Application(
+            self.settings, 
+            self.path_router, 
+            request_class=request_class
+        )
+        self.assertTrue(app._Request == request_class)
         
     
     def test_request_class_from_base(self):
@@ -69,11 +60,11 @@ class TestInitApplication(unittest.TestCase):
           `self._Request` defaults to `base.Request`.
         """
         
-        app = thruflo.webapp.wsgi.Application()
-        self.assertTrue(app._Request == 42)
+        app = Application(self.settings, self.path_router)
+        self.assertTrue(app._Request == self.Request)
         
-        app = thruflo.webapp.wsgi.Application(request_class=None)
-        self.assertTrue(app._Request == 42)
+        app = Application(self.settings, self.path_router, request_class=None)
+        self.assertTrue(app._Request == self.Request)
         
     
     def test_response_class(self):
@@ -81,11 +72,13 @@ class TestInitApplication(unittest.TestCase):
           `self._Response`.
         """
         
-        app = thruflo.webapp.wsgi.Application(response_class=42)
-        self.assertTrue(app._Response == 42)
-        
-        app = thruflo.webapp.wsgi.Application(response_class='elephants')
-        self.assertTrue(app._Response == 'elephants')
+        response_class = object()
+        app = Application(
+            self.settings, 
+            self.path_router, 
+            response_class=response_class
+        )
+        self.assertTrue(app._Response == response_class)
         
     
     def test_response_class_from_base(self):
@@ -93,11 +86,11 @@ class TestInitApplication(unittest.TestCase):
           `self._Response` defaults to `base.Response`.
         """
         
-        app = thruflo.webapp.wsgi.Application()
-        self.assertTrue(app._Response == 42)
+        app = Application(self.settings, self.path_router)
+        self.assertTrue(app._Response == self.Response)
         
-        app = thruflo.webapp.wsgi.Application(request_class=None)
-        self.assertTrue(app._Response == 42)
+        app = Application(self.settings, self.path_router, request_class=None)
+        self.assertTrue(app._Response == self.Response)
         
     
     def test_content_type(self):
@@ -105,10 +98,14 @@ class TestInitApplication(unittest.TestCase):
           unless `default_content_type` is passed in.
         """
         
-        app = thruflo.webapp.wsgi.Application()
+        app = Application(self.settings, self.path_router)
         self.assertTrue(app._content_type == 'text/html; charset=UTF-8')
         
-        app = thruflo.webapp.wsgi.Application(default_content_type='elephants')
+        app = Application(
+            self.settings, 
+            self.path_router, 
+            default_content_type='elephants'
+        )
         self.assertTrue(app._content_type == 'elephants')
         
     
@@ -119,6 +116,7 @@ class TestCallApplication(unittest.TestCase):
     """
     
     def setUp(self):
+        self.settings = {'foo': 'bar'}
         self.environ = {'REQUEST_METHOD': 'FOO'}
         self.handler_class = Mock()
         self.handler_instance = Mock()
@@ -137,8 +135,9 @@ class TestCallApplication(unittest.TestCase):
         self.response_instance = Mock()
         self.response_instance.return_value = 'minimal response'
         self.Response.return_value = self.response_instance
-        self.app = thruflo.webapp.wsgi.Application(
-            path_router=self.path_router,
+        self.app = Application(
+            self.settings,
+            self.path_router,
             request_class=self.Request,
             response_class=self.Response,
             default_content_type='content type'
@@ -194,14 +193,16 @@ class TestCallApplication(unittest.TestCase):
         self.assertTrue(response == 'minimal response')
         
     
-    def test_handler_class_init_with_request_and_response(self):
-        """ `handler` is initialised with `request` and `response`.
+    def test_handler_class_init_with_args(self):
+        """ `handler` is initialised with `request`, `response` and 
+          `settings`.
         """
         
         response = self.app(self.environ, 'start response')
         self.handler_class.assert_called_with(
             self.request_instance, 
-            self.response_instance
+            self.response_instance,
+            self.settings
         )
         
     

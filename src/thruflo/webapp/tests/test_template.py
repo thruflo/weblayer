@@ -17,13 +17,14 @@ class TestMakoTemplateRenderer(unittest.TestCase):
         """
         """
         
+        self.settings = {'template_directories': ['a', 'b']}
         self.template_lookup_class = Mock()
         self.template_lookup_instance = Mock()
         self.template = Mock()
         self.template_lookup_class.return_value = self.template_lookup_instance
         self.template_lookup_instance.get_template.return_value = self.template
         self.template_renderer = MakoTemplateRenderer(
-            directories=['a', 'b'],
+            self.settings,
             module_directory='c',
             built_ins={'d': 'e'},
             template_lookup_class=self.template_lookup_class,

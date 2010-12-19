@@ -18,29 +18,35 @@ class TestInitCookie(unittest.TestCase):
     """
     
     def setUp(self):
-        self.context = Mock()
-        self.context.settings = dict()
-        self.context.settings['cookie_secret'] = ''
-        self.cookie_wrapper = SignedSecureCookieWrapper(self.context)
+        self.request = Mock()
+        self.response = Mock()
+        self.settings = {'cookie_secret': 'psst'}
+        self.cookie_wrapper = SignedSecureCookieWrapper(
+            self.request,
+            self.response,
+            self.settings
+        )
         
     
-    
-    def test_init_context(self):
-        """ `self.context` is available as `self.context` within
-          the `SignedSecureCookieWrapper` instance.
+    def test_request(self):
+        """ `request` is available as `self.request`.
         """
         
-        self.assertTrue(self.cookie_wrapper.context == self.context)
+        self.assertTrue(self.cookie_wrapper.request == self.request)
         
     
-    
-    def test_init_context(self):
-        """ `cookie_secret` is available as `self._cookie_secret` within
-          the `SignedSecureCookieWrapper` instance.
+    def test_response(self):
+        """ `response` is available as `self.response`.
         """
         
-        cs = self.context.settings['cookie_secret']
-        self.assertTrue(self.cookie_wrapper._cookie_secret == cs)
+        self.assertTrue(self.cookie_wrapper.response == self.response)
+        
+    
+    def test_cookie_secret(self):
+        """ `settings['cookie_secret']` is available as `self._cookie_secret`.
+        """
+        
+        self.assertTrue(self.cookie_wrapper._cookie_secret == 'psst')
         
     
     
@@ -50,11 +56,14 @@ class TestSetCookie(unittest.TestCase):
     """
     
     def setUp(self):
-        self.context = Mock()
-        self.context.response = Mock()
-        self.context.settings = dict()
-        self.context.settings['cookie_secret'] = ''
-        self.cookie_wrapper = SignedSecureCookieWrapper(self.context)
+        self.request = Mock()
+        self.response = Mock()
+        self.settings = {'cookie_secret': ''}
+        self.cookie_wrapper = SignedSecureCookieWrapper(
+            self.request,
+            self.response,
+            self.settings
+        )
         
     
     def test_name(self):
@@ -63,7 +72,7 @@ class TestSetCookie(unittest.TestCase):
         """
         
         self.cookie_wrapper.set('name', 'value')
-        args = self.context.response.set_cookie.call_args[0]
+        args = self.response.set_cookie.call_args[0]
         self.assertTrue(args[0] == 'name')
         
     
@@ -82,7 +91,7 @@ class TestSetCookie(unittest.TestCase):
         """
         
         self.cookie_wrapper.set('name', 'value', timestamp='1')
-        kwargs = self.context.response.set_cookie.call_args[1]
+        kwargs = self.response.set_cookie.call_args[1]
         value = 'dmFsdWU=|1|7bcc09ebef2f6c967201709ed3cbeac3e4cb2872'
         self.assertTrue(kwargs['value'] == value)
         
@@ -101,7 +110,7 @@ class TestSetCookie(unittest.TestCase):
         """
         
         self.cookie_wrapper.set('name', 'value', expires_days=5)
-        kwargs = self.context.response.set_cookie.call_args[1]
+        kwargs = self.response.set_cookie.call_args[1]
         five_days_as_seconds = 5 * 24 * 60 * 60
         self.assertTrue(kwargs['max_age'] == five_days_as_seconds)
         
@@ -112,7 +121,7 @@ class TestSetCookie(unittest.TestCase):
         """
         
         self.cookie_wrapper.set('name', 'value', expires_days=None)
-        kwargs = self.context.response.set_cookie.call_args[1]
+        kwargs = self.response.set_cookie.call_args[1]
         self.assertTrue(kwargs['max_age'] == None)
         
     
@@ -122,7 +131,7 @@ class TestSetCookie(unittest.TestCase):
         """
         
         self.cookie_wrapper.set('name', 'value', expires_days=None)
-        kwargs = self.context.response.set_cookie.call_args[1]
+        kwargs = self.response.set_cookie.call_args[1]
         self.assertTrue(kwargs['max_age'] == None)
         self.assertRaises(
             TypeError,
@@ -139,7 +148,7 @@ class TestSetCookie(unittest.TestCase):
         """
         
         self.cookie_wrapper.set('name', 'value', foo='bar')
-        kwargs = self.context.response.set_cookie.call_args[1]
+        kwargs = self.response.set_cookie.call_args[1]
         self.assertTrue(kwargs['foo'] == 'bar')
         
     
@@ -150,10 +159,14 @@ class TestGetCookie(unittest.TestCase):
     """
     
     def setUp(self):
-        self.context = Mock()
-        self.context.settings = dict()
-        self.context.settings['cookie_secret'] = ''
-        self.cookie_wrapper = SignedSecureCookieWrapper(self.context)
+        self.request = Mock()
+        self.response = Mock()
+        self.settings = {'cookie_secret': ''}
+        self.cookie_wrapper = SignedSecureCookieWrapper(
+            self.request,
+            self.response,
+            self.settings
+        )
         
     
     def test_get_name(self):
@@ -161,17 +174,16 @@ class TestGetCookie(unittest.TestCase):
           `self.context.request.cookies`.
         """
         
-        self.context.request.cookies = Mock()
-        self.context.request.cookies.get.return_value = None
+        self.request.cookies.get.return_value = None
         self.cookie_wrapper.get('name')
-        self.context.request.cookies.get.assert_called_with('name', None)
+        self.request.cookies.get.assert_called_with('name', None)
         
     
     def test_not_present(self):
         """ If the cookie doesn't exist, returns `None`.
         """
         
-        self.context.request.cookies.get.return_value = None
+        self.request.cookies.get.return_value = None
         self.assertTrue(self.cookie_wrapper.get('name') is None)
         
     
@@ -195,14 +207,13 @@ class TestGetCookie(unittest.TestCase):
         t = time.time()
         too_old = str(int(t - 32 * 24 * 60 * 60))
         
-        cs = self.context.settings['cookie_secret']
+        cs = self.settings['cookie_secret']
         sig = _generate_cookie_signature(cs, 'name', 'dmFsdWU=', too_old)
         value = 'dmFsdWU=|{}|{}'.format(too_old, sig)
         
         result = self.cookie_wrapper.get('name', value=value)
         self.assertTrue(result is None)
         
-    
     
     def test_signature_doesnt_match(self):
         """ If the signature doesn't match, returns `None`.
@@ -226,7 +237,7 @@ class TestGetCookie(unittest.TestCase):
         t = time.time()
         ts = str(int(t))
         
-        cs = self.context.settings['cookie_secret']
+        cs = self.settings['cookie_secret']
         sig = _generate_cookie_signature(cs, 'name', 'a', ts)
         value = 'a|{}|{}'.format(ts, sig)
         
@@ -242,7 +253,7 @@ class TestGetCookie(unittest.TestCase):
         t = time.time()
         ts = str(int(t))
         
-        cs = self.context.settings['cookie_secret']
+        cs = self.settings['cookie_secret']
         sig = _generate_cookie_signature(cs, 'name', 'dmFsdWU=', ts)
         value = 'dmFsdWU=|{}|{}'.format(ts, sig)
         
@@ -256,8 +267,8 @@ class TestGetCookie(unittest.TestCase):
         """
         
         self.cookie_wrapper.delete('name')
-        args = self.context.response.set_cookie.call_args[0]
-        kwargs = self.context.response.set_cookie.call_args[1]
+        args = self.response.set_cookie.call_args[0]
+        kwargs = self.response.set_cookie.call_args[1]
         self.assertTrue(args[0] == 'name')
         self.assertTrue(kwargs['expires'] == timedelta(days=-5))
         
@@ -267,12 +278,12 @@ class TestGetCookie(unittest.TestCase):
         """
         
         self.cookie_wrapper.delete('name')
-        kwargs = self.context.response.set_cookie.call_args[1]
+        kwargs = self.response.set_cookie.call_args[1]
         self.assertTrue(kwargs['path'] == '/')
         self.assertTrue(kwargs['domain'] is None)
         
         self.cookie_wrapper.delete('name', path='/foo', domain='bar')
-        kwargs = self.context.response.set_cookie.call_args[1]
+        kwargs = self.response.set_cookie.call_args[1]
         self.assertTrue(kwargs['path'] == '/foo')
         self.assertTrue(kwargs['domain'] == 'bar')
         
@@ -284,12 +295,15 @@ class TestDeleteCookie(unittest.TestCase):
     """
     
     def setUp(self):
-        self.context = Mock()
-        self.context.settings = dict()
-        self.context.settings['cookie_secret'] = ''
-        self.cookie_wrapper = SignedSecureCookieWrapper(self.context)
+        self.request = Mock()
+        self.response = Mock()
+        self.settings = {'cookie_secret': ''}
+        self.cookie_wrapper = SignedSecureCookieWrapper(
+            self.request,
+            self.response,
+            self.settings
+        )
         
-    
     
     def test_delete(self):
         """ Calls `self.context.response.set_cookie` with
@@ -297,24 +311,23 @@ class TestDeleteCookie(unittest.TestCase):
         """
         
         self.cookie_wrapper.delete('name')
-        args = self.context.response.set_cookie.call_args[0]
-        kwargs = self.context.response.set_cookie.call_args[1]
+        args = self.response.set_cookie.call_args[0]
+        kwargs = self.response.set_cookie.call_args[1]
         self.assertTrue(args[0] == 'name')
         self.assertTrue(kwargs['expires'] == timedelta(days=-5))
         
-    
     
     def test_delete_defaults(self):
         """ `path` defaults to '/' and domain defaults to `None`.
         """
         
         self.cookie_wrapper.delete('name')
-        kwargs = self.context.response.set_cookie.call_args[1]
+        kwargs = self.response.set_cookie.call_args[1]
         self.assertTrue(kwargs['path'] == '/')
         self.assertTrue(kwargs['domain'] is None)
         
         self.cookie_wrapper.delete('name', path='/foo', domain='bar')
-        kwargs = self.context.response.set_cookie.call_args[1]
+        kwargs = self.response.set_cookie.call_args[1]
         self.assertTrue(kwargs['path'] == '/foo')
         self.assertTrue(kwargs['domain'] == 'bar')
         

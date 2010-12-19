@@ -69,7 +69,7 @@ class Application(object):
         
         handler_class, groups = self._path_router.match(request.path)
         if handler_class is not None:
-            handler = handler_class(request, response, settings)
+            handler = handler_class(request, response, self._settings)
             try:
                 response = handler(environ['REQUEST_METHOD'], *groups)
             except Exception: # handler should catch all exceptions

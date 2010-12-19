@@ -314,6 +314,7 @@ def generate_hash(algorithm='sha256', s=None, block_size=512):
           >>> from StringIO import StringIO
           >>> sock = StringIO()
           >>> sock.write('abc')
+          >>> sock.seek(0)
           >>> s8 = generate_hash(s=sock)
           >>> s9 = generate_hash(s='abc')
           >>> s8 == s9

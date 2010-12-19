@@ -59,13 +59,24 @@ class TestInitApplication(unittest.TestCase):
         thruflo.webapp.request.registry = self.mock_registry
         
     
-    def test_requires_request_and_response(self):
-        """ Must pass in `request` and `response`.
+    def test_requires_args(self):
+        """ Must pass in `request`, `response` and `settings`.
         """
         
         self.assertRaises(
             TypeError,
             thruflo.webapp.request.Handler
+        )
+        self.assertRaises(
+            TypeError,
+            thruflo.webapp.request.Handler,
+            ''
+        )
+        self.assertRaises(
+            TypeError,
+            thruflo.webapp.request.Handler,
+            '',
+            ''
         )
         
     
@@ -73,7 +84,7 @@ class TestInitApplication(unittest.TestCase):
         """ `request` is available as `self.request`.
         """
         
-        handler = thruflo.webapp.request.Handler('req', '')
+        handler = thruflo.webapp.request.Handler('req', '', '')
         self.assertTrue(handler.request == 'req')
         
     
@@ -81,80 +92,70 @@ class TestInitApplication(unittest.TestCase):
         """ `response` is available as `self.response`.
         """
         
-        handler = thruflo.webapp.request.Handler('', 'resp')
+        handler = thruflo.webapp.request.Handler('', 'resp', '')
         self.assertTrue(handler.response == 'resp')
         
     
-    def test_settings(self):
-        """ If `settings` is not None, it's available as 
-          `self.settings`.
+    def test_adapts_settings(self):
+        """ `settings` is available as self.settings`.
         """
         
-        handler = thruflo.webapp.request.Handler('', '', settings=42)
-        self.assertTrue(handler.settings == 42)
+        handler = thruflo.webapp.request.Handler('', '', 'settings')
+        self.assertTrue(handler.settings == 'settings')
         
     
-    def test_settings_from_registry(self):
-        """ If `settings` is None, which is the default, 
-          `self.settings` is looked up via the component registry.
-        """
-        
-        handler = thruflo.webapp.request.Handler('', '')
-        
-        self.assertTrue(
-            _was_called_with(
-                self.mock_registry.getUtility, 
-                IRequirableSettings
-            )
-        )
-        self.assertTrue(handler.settings == 'utility')
-        
-        handler = thruflo.webapp.request.Handler('', '', settings=None)
-        self.assertTrue(handler.settings == 'utility')
-        
-    
-    def test_template_renderer(self):
-        """ If `template_renderer` is not None, it's available as 
+    def test_template_renderer_adapter(self):
+        """ If `template_renderer_adapter` is not None, it's called with
+          `self.settings` and the return value is available as 
           `self.template_renderer`.
         """
         
-        handler = thruflo.webapp.request.Handler('', '', template_renderer=42)
-        self.assertTrue(handler.template_renderer == 42)
+        handler = thruflo.webapp.request.Handler(
+            '', 
+            '', 
+            '',
+            template_renderer_adapter=self.adapter
+        )
+        self.adapter.assert_called_with(handler.settings)
+        self.assertTrue(handler.template_renderer == 'adapted')
         
     
-    def test_template_renderer_from_registry(self):
+    def test_template_renderer_adapter_from_registry(self):
         """ If `template_renderer` is None, which is the default, 
           `self.template_renderer` is looked up via the component registry.
         """
         
-        handler = thruflo.webapp.request.Handler('', '')
+        handler = thruflo.webapp.request.Handler('', '', '')
         self.assertTrue(
             _was_called_with(
-                self.mock_registry.getUtility, 
+                self.mock_registry.getAdapter, 
+                '',
                 ITemplateRenderer
             )
         )
-        self.assertTrue(handler.template_renderer == 'utility')
+        self.assertTrue(handler.template_renderer == 'adapted from registry')
         
         handler = thruflo.webapp.request.Handler(
             '', 
             '', 
-            template_renderer=None
+            '', 
+            template_renderer_adapter=None
         )
-        self.assertTrue(handler.template_renderer == 'utility')
+        self.assertTrue(handler.template_renderer == 'adapted from registry')
         
     
     def test_authentication_manager_adapter(self):
         """ If `authentication_manager_adapter` is not None, it's called
-          with `self` and the return value is available as `self.auth`.
+          with `self.request` and the return value is available as `self.auth`.
         """
         
         handler = thruflo.webapp.request.Handler(
             '', 
             '', 
+            '',
             authentication_manager_adapter=self.adapter
         )
-        self.adapter.assert_called_with(handler)
+        self.adapter.assert_called_with(handler.request)
         self.assertTrue(handler.auth == 'adapted')
         
     
@@ -163,18 +164,19 @@ class TestInitApplication(unittest.TestCase):
           `self.auth` is looked up via the component registry.
         """
         
-        handler = thruflo.webapp.request.Handler('', '')
+        handler = thruflo.webapp.request.Handler('', '', '')
         
         self.assertTrue(
             _was_called_with(
                 self.mock_registry.getAdapter,
-                handler,
+                handler.request,
                 IAuthenticationManager
             )
         )
         self.assertTrue(handler.auth == 'adapted from registry')
         
         handler = thruflo.webapp.request.Handler(
+            '', 
             '', 
             '', 
             authentication_manager_adapter=None
@@ -190,9 +192,14 @@ class TestInitApplication(unittest.TestCase):
         handler = thruflo.webapp.request.Handler(
             '', 
             '', 
+            '', 
             secure_cookie_wrapper_adapter=self.adapter
         )
-        self.adapter.assert_called_with(handler)
+        self.adapter.assert_called_with(
+            handler.request, 
+            handler.response, 
+            handler.settings
+        )
         self.assertTrue(handler.cookies == 'adapted')
         
     
@@ -201,12 +208,14 @@ class TestInitApplication(unittest.TestCase):
           `self.cookies` is looked up via the component registry.
         """
         
-        handler = thruflo.webapp.request.Handler('', '')
+        handler = thruflo.webapp.request.Handler('', '', '')
         
         self.assertTrue(
             _was_called_with(
                 self.mock_registry.getAdapter,
-                handler,
+                handler.request, 
+                handler.response, 
+                handler.settings,
                 ISecureCookieWrapper
             )
         )
@@ -214,7 +223,8 @@ class TestInitApplication(unittest.TestCase):
         
         handler = thruflo.webapp.request.Handler(
             '', 
-            '',
+            '', 
+            '', 
             secure_cookie_wrapper_adapter=None
         )
         self.assertTrue(handler.cookies == 'adapted from registry')
@@ -228,6 +238,7 @@ class TestInitApplication(unittest.TestCase):
         handler = thruflo.webapp.request.Handler(
             '', 
             '', 
+            '', 
             method_selector_adapter=self.adapter
         )
         self.adapter.assert_called_with(handler)
@@ -239,7 +250,7 @@ class TestInitApplication(unittest.TestCase):
           `self.auth` is looked up via the component registry.
         """
         
-        handler = thruflo.webapp.request.Handler('', '')
+        handler = thruflo.webapp.request.Handler('', '', '')
         
         self.assertTrue(
             _was_called_with(
@@ -253,6 +264,7 @@ class TestInitApplication(unittest.TestCase):
         handler = thruflo.webapp.request.Handler(
             '', 
             '', 
+            '', 
             method_selector_adapter=None
         )
         self.assertTrue(handler._method_selector == 'adapted from registry')
@@ -263,12 +275,13 @@ class TestInitApplication(unittest.TestCase):
           as `self.response_normaliser_adapter`.
         """
         
-        handler = thruflo.webapp.request.Handler('', '')
+        handler = thruflo.webapp.request.Handler('', '', '')
         self.assertTrue(handler._response_normaliser_adapter is None)
         
         handler = thruflo.webapp.request.Handler(
             '', 
-            '',
+            '', 
+            '', 
             response_normaliser_adapter=42
         )
         self.assertTrue(handler._response_normaliser_adapter == 42)
