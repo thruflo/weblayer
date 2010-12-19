@@ -8,6 +8,7 @@ __all__ = [
     'MemoryCachedStaticURLGenerator'
 ]
 
+import logging
 from os.path import join
 
 from zope.component import adapts
@@ -132,6 +133,63 @@ class MemoryCachedStaticURLGenerator(object):
         """ Expand the request `path` into a `file_path`, check to see if
           it exists, if it does, hash it and store the `digest` against
           the `path` in the `_cache`.
+          
+              >>> from mock import Mock
+              >>> from StringIO import StringIO
+              >>> request = Mock()
+              >>> join_path = Mock()
+              >>> join_path.return_value = '/var/www/static/foo.js'
+              >>> open_file = Mock()
+              >>> sock = StringIO()
+              >>> open_file.return_value = sock
+              >>> generate_hash = Mock()
+              >>> generate_hash.return_value = 'digest'
+              >>> settings = {
+              ...     'static_path': '/var/www/static', 
+              ...     'static_url_prefix': u'/static/'
+              ... }
+              >>> static = MemoryCachedStaticURLGenerator(
+              ...     request, 
+              ...     settings,
+              ...     join_path_=join_path,
+              ...     open_file_=open_file,
+              ...     generate_hash_=generate_hash
+              ... )
+              >>> static._cache_path('/foo.js')
+          
+          `path` is expanded into `file_path` by `join_path`::
+          
+              >>> join_path.assert_called_with('/var/www/static', '/foo.js')
+          
+          If `file_path` exists::
+          
+              >>> open_file.assert_called_with('/var/www/static/foo.js')
+          
+          It's hashed::
+          
+              >>> generate_hash.assert_called_with(s=sock)
+          
+          The hash is cached::
+          
+              >>> static._cache['/foo.js']
+              'digest'
+          
+          Unless the file_path can't be opened::
+          
+              >>> def open_file(file_path):
+              ...     raise IOError
+              ... 
+              >>> static = MemoryCachedStaticURLGenerator(
+              ...     request, 
+              ...     settings,
+              ...     join_path_=join_path,
+              ...     open_file_=open_file,
+              ...     generate_hash_=generate_hash
+              ... )
+              >>> static._cache_path('/foo.js')
+              >>> static._cache['/foo.js'] is None
+              True
+          
         """
         
         file_path = self._join_path(self._static_path, path)
@@ -147,7 +205,41 @@ class MemoryCachedStaticURLGenerator(object):
         
     
     def get_url(self, path, snip_digest_at=7):
-        """ Get a fully expanded url for the given static resource `path`.
+        """ Get a fully expanded url for the given static resource `path`::
+          
+              >>> from mock import Mock
+              >>> request = Mock()
+              >>> request.host_url = 'http://static.foo.com'
+              >>> settings = {}
+              >>> settings['static_path'] = '/var/www/static'
+              >>> settings['static_url_prefix'] = u'/static/'
+              >>> MemoryCachedStaticURLGenerator._cache = {}
+              >>> static = MemoryCachedStaticURLGenerator(
+              ...     request, 
+              ...     settings
+              ... )
+              >>> static._cache_path = Mock()
+          
+          If `path` isn't in `self._cache`, calls `self._cache_path(path)`::
+          
+              >>> url = static.get_url('foo')
+              >>> static._cache_path.assert_called_with('foo')
+          
+          If the digest is `None`, just joins the host url, prefix and path::
+          
+              >>> static._cache['foo'] = None
+              >>> static.get_url('foo')
+              u'http://static.foo.com/static/foo'
+          
+          Else also appends `?v=' plus upto the first `snip_digest_at` chars 
+          of the digest, which defaults to `7`::
+          
+              >>> static._cache['foo'] = 'abcdefghijkl'
+              >>> static.get_url('foo', snip_digest_at=4)
+              u'http://static.foo.com/static/foo?v=abcd'
+              >>> static.get_url('foo')
+              u'http://static.foo.com/static/foo?v=abcdefg'
+          
         """
         
         if not path in self._cache:
