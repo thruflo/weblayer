@@ -109,32 +109,9 @@ class Handler(object):
         self._response_normaliser_adapter = response_normaliser_adapter
         
     
-    
     def get_argument(self, name, default=None, strip=False):
         """ Get a single value for an argument from the request, no matter
-          whether it came from the query string or form body::
-          
-              >>> from mock import Mock
-              >>> handler = Handler(
-              ...     '', 
-              ...     '',
-              ...     '', 
-              ...     template_renderer_adapter=Mock(),
-              ...     static_url_generator_adapter=Mock(),
-              ...     authentication_manager_adapter=Mock(),
-              ...     secure_cookie_wrapper_adapter=Mock(),
-              ...     method_selector_adapter=Mock()
-              ... )
-              >>> handler.get_arguments = Mock()
-              >>> handler.get_arguments.return_value = []
-              >>> handler.get_argument('foo')
-              >>> handler.get_arguments.return_value = ['a', 'b']
-              >>> handler.get_argument('foo')
-              'b'
-              >>> handler.get_arguments.assert_called_with('foo', strip=False)
-              >>> arg = handler.get_argument('foo', strip=True)
-              >>> handler.get_arguments.assert_called_with('foo', strip=True)
-          
+          whether it came from the query string or form body.
         """
         
         args = self.get_arguments(name, strip=strip)
@@ -146,32 +123,6 @@ class Handler(object):
     def get_arguments(self, name, strip=False):
         """ Get a list of values for an argument from the request, no matter
           whether it came from the query string or form body::
-          
-              >>> from mock import Mock
-              >>> request = Mock()
-              >>> handler = Handler(
-              ...     request, 
-              ...     '',
-              ...     '', 
-              ...     template_renderer_adapter=Mock(),
-              ...     static_url_generator_adapter=Mock(),
-              ...     authentication_manager_adapter=Mock(),
-              ...     secure_cookie_wrapper_adapter=Mock(),
-              ...     method_selector_adapter=Mock()
-              ... )
-              >>> request.params.get.return_value = ['a', 'b']
-              >>> handler.get_arguments('foo')
-              ['a', 'b']
-              >>> request.params.get.assert_called_with('foo', [])
-              >>> request.params.get.return_value = [' a ', ' b ']
-              >>> handler.get_arguments('foo')
-              [' a ', ' b ']
-              >>> handler.get_arguments('foo', strip=True)
-              ['a', 'b']
-              >>> request.params.get.return_value = 'a'
-              >>> handler.get_arguments('foo')
-              ['a']
-          
         """
         
         values = self.request.params.get(name, [])

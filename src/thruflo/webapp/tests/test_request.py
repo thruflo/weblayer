@@ -40,8 +40,9 @@ from thruflo.webapp.interfaces import ISecureCookieWrapper
 from thruflo.webapp.interfaces import IMethodSelector, IResponseNormaliser
 
 import thruflo.webapp.request
+from thruflo.webapp.request import Handler
 
-class TestInitApplication(unittest.TestCase):
+class TestInitHandler(unittest.TestCase):
     """ Test the logic of `Handler.__init__`.
     """
     
@@ -65,16 +66,16 @@ class TestInitApplication(unittest.TestCase):
         
         self.assertRaises(
             TypeError,
-            thruflo.webapp.request.Handler
+            Handler
         )
         self.assertRaises(
             TypeError,
-            thruflo.webapp.request.Handler,
+            Handler,
             ''
         )
         self.assertRaises(
             TypeError,
-            thruflo.webapp.request.Handler,
+            Handler,
             '',
             ''
         )
@@ -84,7 +85,7 @@ class TestInitApplication(unittest.TestCase):
         """ `request` is available as `self.request`.
         """
         
-        handler = thruflo.webapp.request.Handler('req', '', '')
+        handler = Handler('req', '', '')
         self.assertTrue(handler.request == 'req')
         
     
@@ -92,7 +93,7 @@ class TestInitApplication(unittest.TestCase):
         """ `response` is available as `self.response`.
         """
         
-        handler = thruflo.webapp.request.Handler('', 'resp', '')
+        handler = Handler('', 'resp', '')
         self.assertTrue(handler.response == 'resp')
         
     
@@ -100,7 +101,7 @@ class TestInitApplication(unittest.TestCase):
         """ `settings` is available as self.settings`.
         """
         
-        handler = thruflo.webapp.request.Handler('', '', 'settings')
+        handler = Handler('', '', 'settings')
         self.assertTrue(handler.settings == 'settings')
         
     
@@ -110,7 +111,7 @@ class TestInitApplication(unittest.TestCase):
           `self.template_renderer`.
         """
         
-        handler = thruflo.webapp.request.Handler(
+        handler = Handler(
             '', 
             '', 
             '',
@@ -125,7 +126,7 @@ class TestInitApplication(unittest.TestCase):
           `self.template_renderer` is looked up via the component registry.
         """
         
-        handler = thruflo.webapp.request.Handler('', '', '')
+        handler = Handler('', '', '')
         self.assertTrue(
             _was_called_with(
                 self.mock_registry.getAdapter, 
@@ -135,7 +136,7 @@ class TestInitApplication(unittest.TestCase):
         )
         self.assertTrue(handler.template_renderer == 'adapted from registry')
         
-        handler = thruflo.webapp.request.Handler(
+        handler = Handler(
             '', 
             '', 
             '', 
@@ -149,7 +150,7 @@ class TestInitApplication(unittest.TestCase):
           with `self.request` and the return value is available as `self.auth`.
         """
         
-        handler = thruflo.webapp.request.Handler(
+        handler = Handler(
             '', 
             '', 
             '',
@@ -164,7 +165,7 @@ class TestInitApplication(unittest.TestCase):
           `self.auth` is looked up via the component registry.
         """
         
-        handler = thruflo.webapp.request.Handler('', '', '')
+        handler = Handler('', '', '')
         
         self.assertTrue(
             _was_called_with(
@@ -175,7 +176,7 @@ class TestInitApplication(unittest.TestCase):
         )
         self.assertTrue(handler.auth == 'adapted from registry')
         
-        handler = thruflo.webapp.request.Handler(
+        handler = Handler(
             '', 
             '', 
             '', 
@@ -189,7 +190,7 @@ class TestInitApplication(unittest.TestCase):
           with `self` and the return value is available as `self.cookies`.
         """
         
-        handler = thruflo.webapp.request.Handler(
+        handler = Handler(
             '', 
             '', 
             '', 
@@ -208,7 +209,7 @@ class TestInitApplication(unittest.TestCase):
           `self.cookies` is looked up via the component registry.
         """
         
-        handler = thruflo.webapp.request.Handler('', '', '')
+        handler = Handler('', '', '')
         
         self.assertTrue(
             _was_called_with(
@@ -221,7 +222,7 @@ class TestInitApplication(unittest.TestCase):
         )
         self.assertTrue(handler.cookies == 'adapted from registry')
         
-        handler = thruflo.webapp.request.Handler(
+        handler = Handler(
             '', 
             '', 
             '', 
@@ -235,7 +236,7 @@ class TestInitApplication(unittest.TestCase):
           and the return value is available as `self._method_selector`.
         """
         
-        handler = thruflo.webapp.request.Handler(
+        handler = Handler(
             '', 
             '', 
             '', 
@@ -250,7 +251,7 @@ class TestInitApplication(unittest.TestCase):
           `self.auth` is looked up via the component registry.
         """
         
-        handler = thruflo.webapp.request.Handler('', '', '')
+        handler = Handler('', '', '')
         
         self.assertTrue(
             _was_called_with(
@@ -261,7 +262,7 @@ class TestInitApplication(unittest.TestCase):
         )
         self.assertTrue(handler._method_selector == 'adapted from registry')
         
-        handler = thruflo.webapp.request.Handler(
+        handler = Handler(
             '', 
             '', 
             '', 
@@ -275,16 +276,132 @@ class TestInitApplication(unittest.TestCase):
           as `self.response_normaliser_adapter`.
         """
         
-        handler = thruflo.webapp.request.Handler('', '', '')
+        handler = Handler('', '', '')
         self.assertTrue(handler._response_normaliser_adapter is None)
         
-        handler = thruflo.webapp.request.Handler(
+        handler = Handler(
             '', 
             '', 
             '', 
             response_normaliser_adapter=42
         )
         self.assertTrue(handler._response_normaliser_adapter == 42)
+        
+    
+    
+
+class TestHandlerMethods(unittest.TestCase):
+    """ Test the logic of `Handler` methods.
+    """
+    
+    def setUp(self):
+        self.request = Mock()
+        self.response = Mock()
+        self.settings = {}
+        self.template_renderer_adapter = Mock()
+        self.static_url_generator_adapter = Mock()
+        self.authentication_manager_adapter = Mock()
+        self.secure_cookie_wrapper_adapter = Mock()
+        self.method_selector_adapter = Mock()
+        self.handler = Handler(
+            self.request,
+            self.response,
+            self.settings,
+            template_renderer_adapter=self.template_renderer_adapter,
+            static_url_generator_adapter=self.static_url_generator_adapter,
+            authentication_manager_adapter=self.authentication_manager_adapter,
+            secure_cookie_wrapper_adapter=self.secure_cookie_wrapper_adapter,
+            method_selector_adapter=self.method_selector_adapter
+        )
+        
+    
+    
+    def test_get_argument_calls_get_arguments(self):
+        """ `get_argument` calls `get_arguments` with `strip` defaulting to
+          `False`.
+        """
+        
+        self.handler.get_arguments = Mock()
+        self.handler.get_arguments.return_value = []
+        self.handler.get_argument('foo')
+        self.handler.get_arguments.assert_called_with('foo', strip=False)
+        
+    
+    def test_get_argument_strip(self):
+        """ `strip` is passed through.
+        """
+        
+        self.handler.get_arguments = Mock()
+        self.handler.get_arguments.return_value = []
+        self.handler.get_argument('foo', strip=True)
+        self.handler.get_arguments.assert_called_with('foo', strip=True)
+        
+    
+    def test_get_argument_return_value(self):
+        """ `get_argument` returns the last item from the list `get_arguments`
+          returns.
+        """
+        
+        self.handler.get_arguments = Mock()
+        self.handler.get_arguments.return_value = ['a', 'b']
+        self.assertTrue(self.handler.get_argument('foo') == 'b')
+        
+    
+    def test_get_argument_default(self):
+        """ Unless get_arguments returns `[]` in which case `get_argument`
+          returns `default` which defaults to `None`.
+        """
+        
+        self.handler.get_arguments = Mock()
+        self.handler.get_arguments.return_value = []
+        self.assertTrue(self.handler.get_argument('foo') is None)
+        self.assertTrue(
+            self.handler.get_argument('foo', default='abc') == 'abc'
+        )
+        
+    
+    
+    def test_get_arguments_calls_get_arguments(self):
+        """ `get_argument` calls `request.params.get`.
+        """
+        
+        self.handler.get_arguments('foo')
+        self.request.params.get.assert_called_with('foo', [])
+        
+    
+    def test_get_arguments_calls_wraps_single_value(self):
+        """ If `request.params.get` returns a single value, wraps it in 
+          a `list`.
+        """
+        
+        self.request.params.get.return_value = 'a'
+        self.assertTrue(self.handler.get_arguments('foo') == ['a'])
+        
+    
+    def test_get_arguments_calls_multiple_value(self):
+        """ If `request.params.get` returns a list, returns it.
+        """
+        
+        self.request.params.get.return_value = ['a', 'b']
+        self.assertTrue(self.handler.get_arguments('foo') == ['a', 'b'])
+        
+    
+    def test_get_arguments_doesnt_strip(self):
+        """ Doesn't strip by default.
+        """
+        
+        self.request.params.get.return_value = [' a ', ' b ']
+        self.assertTrue(self.handler.get_arguments('foo') == [' a ', ' b '])
+        
+    
+    def test_get_arguments_unless_told_to_strip(self):
+        """ Strips if told to.
+        """
+        
+        self.request.params.get.return_value = [' a ', ' b ']
+        self.assertTrue(
+            self.handler.get_arguments('foo', strip=True) == ['a', 'b']
+        )
         
     
     
