@@ -360,7 +360,6 @@ class TestHandlerMethods(unittest.TestCase):
         )
         
     
-    
     def test_get_arguments_calls_get_arguments(self):
         """ `get_argument` calls `request.params.get`.
         """
@@ -404,5 +403,77 @@ class TestHandlerMethods(unittest.TestCase):
         )
         
     
+    
+    def test_xsrf_token_returns__xsrf_token(self):
+        """ If `self._xsrf_token` then return it.
+        """
+        
+        self.handler._xsrf_token = 'foobar'
+        self.assertTrue(self.handler.xsrf_token == 'foobar')
+        
+    
+    def test_xsrf_token_tries_cookies(self):
+        """ Otherwise first tries `self.cookies`.
+        """
+        
+        self.handler.cookies.get.return_value = 'something'
+        self.assertTrue(self.handler.xsrf_token == 'something')
+        self.handler.cookies.get.assert_called_with('_xsrf')
+        
+    
+    def test_xsrf_token_generate(self):
+        """ Then generates a new token and sets it as the cookie value
+          and caches it as self._xsrf_token.
+        """
+        
+        generate_hash = Mock()
+        generate_hash.return_value = 'digest'
+        thruflo.webapp.request.generate_hash = generate_hash
+        
+        self.handler.cookies.get.return_value = None
+        self.assertTrue(self.handler.xsrf_token == 'digest')
+        generate_hash.assert_called_with()
+        
+        self.handler.cookies.set.assert_called_with(
+            '_xsrf',
+            'digest',
+            expires_days=None
+        )
+        
+        self.assertTrue(self.handler._xsrf_token == 'digest')
+    
+    
+    """
+    if not hasattr(self, '_xsrf_form_html'):
+        escaped = xhtml_escape(self.xsrf_token)
+        tag = u'<input type="hidden" name="_xsrf" value="{}" />'
+        self._xsrf_form_html = tag.format(escaped)
+    return self._xsrf_form_html
+    """
+    
+    def test_xsrf_input_returns__xsrf_input(self):
+        """ If `self._xsrf_input` then return it.
+        """
+        
+        self.handler._xsrf_input = '<input />'
+        self.assertTrue(self.handler.xsrf_input == '<input />')
+        
+    
+    
+    def test_xsrf_input_tag_from_token(self):
+        """ Return input tag with escaped `self.xsrf_token` as value
+          and cache it as self._xsrf_input.
+        """
+        
+        xhtml_escape = Mock()
+        xhtml_escape.return_value = 'digest &amp; sons'
+        thruflo.webapp.request.xhtml_escape = xhtml_escape
+        self.handler._xsrf_token = 'digest & sons'
+        self.assertTrue(
+            self.handler.xsrf_input == 
+            u'<input type="hidden" name="_xsrf" value="digest &amp; sons" />'
+        )
+        xhtml_escape.assert_called_with('digest & sons')
+        
     
 

@@ -109,6 +109,7 @@ class Handler(object):
         self._response_normaliser_adapter = response_normaliser_adapter
         
     
+    
     def get_argument(self, name, default=None, strip=False):
         """ Get a single value for an argument from the request, no matter
           whether it came from the query string or form body.
@@ -133,7 +134,9 @@ class Handler(object):
         return values
         
     
-    def get_xsrf_token(self):
+    
+    @property
+    def xsrf_token(self):
         """ The XSRF-prevention token for the current user/session.
         """
         
@@ -146,16 +149,16 @@ class Handler(object):
         return self._xsrf_token
         
     
-    def get_xsrf_form_html(self):
-        """ An HTML <input/> element to be included with 
-          all POST forms.
+    @property
+    def xsrf_input(self):
+        """ An HTML <input /> element to be included with all POST forms.
         """
         
-        if not hasattr(self, '_xsrf_form_html'):
-            v = self._xhtml_escape(self.get_xsrf_token())
-            tag = u'<input type="hidden" name="_xsrf" value="{}"/>'
-            self._xsrf_form_html = tag.format(v)
-        return self._xsrf_form_html
+        if not hasattr(self, '_xsrf_input'):
+            escaped = xhtml_escape(self.xsrf_token)
+            tag = u'<input type="hidden" name="_xsrf" value="{}" />'
+            self._xsrf_input = tag.format(escaped)
+        return self._xsrf_input
         
     
     def validate_xsrf(self):
