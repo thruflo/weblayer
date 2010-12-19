@@ -14,7 +14,8 @@ from cookie import SignedSecureCookieWrapper
 from method import ExposedMethodSelector
 from normalise import DefaultToJSONResponseNormaliser
 from route import RegExpPathRouter
-from settings import require_setting, RequirableSettings
+from settings import RequirableSettings
+from static import MemoryCachedStaticURLGenerator
 from template import MakoTemplateRenderer
 
 class Bootstrapper(object):
@@ -58,32 +59,37 @@ class Bootstrapper(object):
     
     def setup_components(
             self, 
-            path_router=None,
             settings=None,
-            template_renderer=None,
+            path_router=None,
+            TemplateRenderer=None,
             AuthenticationManager=None, 
             SecureCookieWrapper=None, 
+            StaticURLGenerator=None,
             MethodSelector=None,
             ResponseNormaliser=None
         ):
         """ Setup component registrations. Pass in alternative implementations
-          here to override (or simply register overrides later).
+          here to override, or `False` to avoid registering a component.
         """
+        
+        if settings is not False:
+            if settings is None:
+                settings = self._settings(self._user_settings)
+            registry.registerUtility(settings, IRequirableSettings)
         
         if path_router is not False:
             if path_router is None:
                 path_router = RegExpPathRouter(self._url_mapping)
             registry.registerUtility(path_router, IPathRouter)
         
-        if settings is not False:
-            if settings is None:
-                settings = self._settings(self._user_settings)
-            registry.registerUtility(settings, ISettings)
-        
-        if template_renderer is not False:
-            if template_renderer is None:
-                template_renderer = MakoTemplateRenderer()
-            registry.registerUtility(template_renderer, ITemplateRenderer)
+        if TemplateRenderer is not False:
+            if TemplateRenderer is None:
+                TemplateRenderer = MakoTemplateRenderer
+            registry.registerAdapter(
+                TemplateRenderer, 
+                adapts=[IRequirableSettings],
+                provides=ITemplateRenderer
+            )
         
         if AuthenticationManager is not False:
             if AuthenticationManager is None:
@@ -94,12 +100,21 @@ class Bootstrapper(object):
                 provides=IAuthenticationManager
             )
         
+        if StaticURLGenerator is not False:
+            if StaticURLGenerator is None:
+                StaticURLGenerator = MemoryCachedStaticURLGenerator
+            registry.registerAdapter(
+                MemoryCachedStaticURLGenerator, 
+                adapts=[IRequest, IRequirableSettings],
+                provides=IStaticURLGenerator
+            )
+        
         if SecureCookieWrapper is not False:
             if SecureCookieWrapper is None:
                 SecureCookieWrapper = SignedSecureCookieWrapper
             registry.registerAdapter(
                 SecureCookieWrapper, 
-                adapts=[IRequestHandler],
+                adapts=[IRequest, IResponse, IRequirableSettings],
                 provides=ISecureCookieWrapper
             )
         
@@ -121,6 +136,7 @@ class Bootstrapper(object):
                 provides=IResponseNormaliser
             )
         
+        return settings, path_router
     
     
     def __init__(self, settings={}, url_mapping=[]):

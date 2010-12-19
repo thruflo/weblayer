@@ -74,7 +74,7 @@ import venusian
 
 from zope.interface import implements
 
-from interfaces import ISettings
+from interfaces import IRequirableSettings
 
 _HANGER_NAME = '__thruflo_require_settings_venusian_hanger__'
 
@@ -220,7 +220,7 @@ class RequirableSettings(object):
       functions below, in tandem with a `venusian` scan.
     """
     
-    implements(ISettings)
+    implements(IRequirableSettings)
     
     def __init__(self):
         self.__required_settings__ = {}

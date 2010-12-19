@@ -34,7 +34,7 @@ def _was_called_with(m, *args, **kwargs):
     
 
 
-from thruflo.webapp.interfaces import ISettings, ITemplateRenderer
+from thruflo.webapp.interfaces import IRequirableSettings, ITemplateRenderer
 from thruflo.webapp.interfaces import IAuthenticationManager
 from thruflo.webapp.interfaces import ISecureCookieWrapper
 from thruflo.webapp.interfaces import IMethodSelector, IResponseNormaliser
@@ -104,7 +104,7 @@ class TestInitApplication(unittest.TestCase):
         self.assertTrue(
             _was_called_with(
                 self.mock_registry.getUtility, 
-                ISettings
+                IRequirableSettings
             )
         )
         self.assertTrue(handler.settings == 'utility')

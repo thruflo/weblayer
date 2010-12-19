@@ -18,7 +18,8 @@ import time
 from zope.component import adapts
 from zope.interface import implements
 
-from interfaces import IRequestHandler, ISecureCookieWrapper
+from interfaces import IRequest, IResponse, IRequirableSettings
+from interfaces import ISecureCookieWrapper
 from settings import require_setting
 from utils import encode_to_utf8
 
@@ -149,12 +150,13 @@ class SignedSecureCookieWrapper(object):
       and set cookies that can't be forged.
     """
     
-    adapts(IRequestHandler)
+    adapts(IRequest, IResponse, IRequirableSettings)
     implements(ISecureCookieWrapper)
     
-    def __init__(self, context):
-        self.context = context
-        self._cookie_secret = self.context.settings['cookie_secret']
+    def __init__(self, request, response, settings):
+        self.request = request
+        self.response = response
+        self._cookie_secret = settings['cookie_secret']
         
     
     def set(self, name, value, timestamp=None, expires_days=30, **kwargs):
@@ -173,7 +175,7 @@ class SignedSecureCookieWrapper(object):
                 raise TypeError(u'{} must be an `int`'.format(expires_days))
             max_age = expires_days * 24 * 60 * 60
         
-        return self.context.response.set_cookie(
+        return self.response.set_cookie(
             name, 
             value=value, 
             max_age=max_age, 
@@ -186,7 +188,7 @@ class SignedSecureCookieWrapper(object):
         """
         
         if value is None:
-            value = self.context.request.cookies.get(name, None)
+            value = self.request.cookies.get(name, None)
         
         if value is None:
             return None
@@ -217,7 +219,7 @@ class SignedSecureCookieWrapper(object):
         """ Convenience method to clear a cookie.
         """
         
-        self.context.response.set_cookie(
+        self.response.set_cookie(
             name, 
             '', 
             path=path, 

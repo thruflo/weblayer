@@ -8,11 +8,11 @@ __all__ = [
     'Application'
 ]
 
+from zope.component import adapts
 from zope.interface import implements
 
 from base import Request, Response
-from component import registry
-from interfaces import IPathRouter, IWSGIApplication
+from interfaces import IPathRouter, IRequirableSettings, IWSGIApplication
 
 class Application(object):
     """ Implementation of a callable WSGI application that 
@@ -21,11 +21,13 @@ class Application(object):
     
     """
     
+    adapts(IRequirableSettings, IPathRouter)
     implements(IWSGIApplication)
     
     def __init__(
             self,
-            path_router=None,
+            settings,
+            path_router,
             request_class=None,
             response_class=None,
             default_content_type='text/html; charset=UTF-8'
@@ -33,10 +35,8 @@ class Application(object):
         """
         """
         
-        if path_router is None:
-            self._path_router = registry.getUtility(IPathRouter)
-        else:
-            self._path_router = path_router
+        self._settings = settings
+        self._path_router = path_router
         
         if request_class is None:
             self._Request = Request
@@ -69,7 +69,7 @@ class Application(object):
         
         handler_class, groups = self._path_router.match(request.path)
         if handler_class is not None:
-            handler = handler_class(request, response)
+            handler = handler_class(request, response, settings)
             try:
                 response = handler(environ['REQUEST_METHOD'], *groups)
             except Exception: # handler should catch all exceptions

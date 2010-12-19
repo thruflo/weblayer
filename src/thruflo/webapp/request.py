@@ -17,7 +17,8 @@ from zope.interface import implements
 from component import registry
 
 from interfaces import IRequest, IResponse, IRequestHandler
-from interfaces import ISettings, ITemplateRenderer
+from interfaces import IRequirableSettings
+from interfaces import ITemplateRenderer, IStaticURLGenerator
 from interfaces import IAuthenticationManager, ISecureCookieWrapper
 from interfaces import IMethodSelector, IResponseNormaliser
 
@@ -25,8 +26,6 @@ from settings import require_setting
 from utils import generate_hash, xhtml_escape
 
 require_setting('check_xsrf', default=True)
-require_setting('static_path')
-require_setting('static_url_prefix', default=u'/static/')
 
 class XSRFError(ValueError):
     """ Raised when xsrf validation fails.
@@ -38,17 +37,16 @@ class Handler(object):
     """ A request handler (aka view class) implementation.
     """
     
-    adapts(IRequest, IResponse)
+    adapts(IRequest, IResponse, IRequirableSettings)
     implements(IRequestHandler)
-    
-    _static_hashes = {}
     
     def __init__(
             self, 
             request,
             response,
-            settings=None,
-            template_renderer=None,
+            settings,
+            template_renderer_adapter=None,
+            static_url_generator_adapter=None,
             authentication_manager_adapter=None,
             secure_cookie_wrapper_adapter=None,
             method_selector_adapter=None,
@@ -59,24 +57,49 @@ class Handler(object):
         
         self.request = request
         self.response = response
-        
-        if settings is None:
-            settings = registry.getUtility(ISettings)
         self.settings = settings
         
-        if template_renderer is None:
-            template_renderer = registry.getUtility(ITemplateRenderer)
-        self.template_renderer = template_renderer
+        if template_renderer_adapter is None:
+            self.template_renderer = registry.getAdapter(
+                self.settings, 
+                ITemplateRenderer
+            )
+        else:
+            self.template_renderer = template_renderer_adapter(self.settings)
+        
+        if static_url_generator_adapter is None:
+            self.static = registry.getAdapter(
+                self.request, 
+                self.settings, 
+                IStaticURLGenerator
+            )
+        else:
+            self.static = static_url_generator_adapter(
+                self.request, 
+                self.settings
+            )
         
         if authentication_manager_adapter is None:
-            self.auth = registry.getAdapter(self, IAuthenticationManager)
+            self.auth = registry.getAdapter(
+                self.request, 
+                IAuthenticationManager
+            )
         else:
-            self.auth = authentication_manager_adapter(self)
+            self.auth = authentication_manager_adapter(self.request)
         
         if secure_cookie_wrapper_adapter is None:
-            self.cookies = registry.getAdapter(self, ISecureCookieWrapper)
+            self.cookies = registry.getAdapter(
+                self.request,
+                self.response,
+                self.settings,
+                ISecureCookieWrapper
+            )
         else:
-            self.cookies = secure_cookie_wrapper_adapter(self)
+            self.cookies = secure_cookie_wrapper_adapter(
+                self.request,
+                self.response,
+                self.settings
+            )
         
         if method_selector_adapter is None:
             self._method_selector = registry.getAdapter(self, IMethodSelector)
@@ -93,9 +116,11 @@ class Handler(object):
           
               >>> from mock import Mock
               >>> handler = Handler(
-              ...     '', '',
-              ...     settings='', 
-              ...     template_renderer='',
+              ...     '', 
+              ...     '',
+              ...     '', 
+              ...     template_renderer_adapter=Mock(),
+              ...     static_url_generator_adapter=Mock(),
               ...     authentication_manager_adapter=Mock(),
               ...     secure_cookie_wrapper_adapter=Mock(),
               ...     method_selector_adapter=Mock()
@@ -127,8 +152,9 @@ class Handler(object):
               >>> handler = Handler(
               ...     request, 
               ...     '',
-              ...     settings='', 
-              ...     template_renderer='',
+              ...     '', 
+              ...     template_renderer_adapter=Mock(),
+              ...     static_url_generator_adapter=Mock(),
               ...     authentication_manager_adapter=Mock(),
               ...     secure_cookie_wrapper_adapter=Mock(),
               ...     method_selector_adapter=Mock()
@@ -154,29 +180,6 @@ class Handler(object):
         if strip:
             values = [x.strip() for x in values]
         return values
-        
-    
-    def get_static_url(cls, path):
-        """ Returns a static URL for the given relative 
-          static file path.
-        """
-        
-        if path not in Handler._static_hashes:
-            file_path = join_path(self.settings["static_path"], path)
-            try:
-                sock = open(file_path)
-            except IOError:
-                logging.error(u'Could not open static file {}'.format(path))
-                Handler._static_hashes[path] = None
-            else:
-                Handler._static_hashes[path] = generate_hash(s=sock.read())
-                sock.close()
-        base = self.request.host_url
-        prefix = self.settings['static_url_prefix']
-        if hashes.get(path):
-            return u'{}{}{}?v={}'.format(base, prefix, path, hashes[path][:5])
-        else:
-            return u'{}{}{}'.format(base, prefix, path)
         
     
     def get_xsrf_token(self):

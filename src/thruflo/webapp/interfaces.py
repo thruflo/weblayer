@@ -15,9 +15,10 @@ __all__ = [
     'IPathRouter',
     'IMethodSelector',
     'IResponseNormaliser',
-    'ISettings',
+    'IRequirableSettings',
     'ISecureCookieWrapper',
-    'IAuthenticationManager'
+    'IAuthenticationManager',
+    'IStaticURLGenerator'
 ]
 
 from zope.interface import Interface, Attribute
@@ -191,7 +192,7 @@ class IResponseNormaliser(Interface):
     
     
 
-class ISettings(Interface):
+class IRequirableSettings(Interface):
     """ Provides dictionary-like access to global 
       application settings.
     """
@@ -250,5 +251,16 @@ class IAuthenticationManager(Interface):
     
     is_authenticated = Attribute(u'Boolean -- is there an authenticated user?')
     current_user = Attribute(u'The authenticated user, or `None`')
+    
+
+class IStaticURLGenerator(Interface):
+    """ Adapter to generate static URLs from a request.
+    """
+    
+    def get_url(path, snip_digest_at=7):
+        """ Get a fully expanded url for the given static resource `path`.
+        """
+        
+    
     
 

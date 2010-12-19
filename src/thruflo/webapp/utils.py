@@ -276,38 +276,61 @@ def json_decode(value, **kwargs):
     
 
 
-def generate_hash(algorithm='sha1', s=None):
-    """ Generates a hexdigest hash string.  
+def generate_hash(algorithm='sha256', s=None, block_size=512):
+    """ Generates a hexdigest hash string, either randomly or from a string
+      or file like object (like an open file or a buffer).
       
       By default, the hash is `random` and uses the 
-      `hashlib.sha1` algorithm::
+      `hashlib.sha256` algorithm::
       
           >>> s1 = generate_hash()
-          >>> s2 = generate_hash()
-          >>> s3 = generate_hash(algorithm='sha1')
           >>> isinstance(s1, str)
           True
-          >>> len(s1) == 40
+          >>> len(s1) == 64
           True
+          >>> s2 = generate_hash()
           >>> s1 == s2
           False
-          >>> len(s2) == len(s3)
+          >>> s3 = generate_hash(algorithm='sha256')
+          >>> len(s1) == len(s3)
           True
       
       The hash can be generated from a seed::
       
           >>> generate_hash(s='a')
-          '86f7e437faa5a7fce15d1ddcb9eaeaea377667b8'
+          'ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb'
       
-      Using `None` as the seed (which is the default) will, as
-      we've seen, generate a random value::
+      Using `None` as the seed (which is the default) will, as we've seen,
+      generate a random value::
       
           >>> s6 = generate_hash(s=None)
           >>> s7 = generate_hash(s=None)
           >>> s6 == s7
           False
       
-      And using anything that hashlib doesn't like will raise
+      Using a file like object (anything with a `read` method) will use the
+      contents of the file like object::
+      
+          >>> from StringIO import StringIO
+          >>> sock = StringIO()
+          >>> sock.write('abc')
+          >>> s8 = generate_hash(s=sock)
+          >>> s9 = generate_hash(s='abc')
+          >>> s8 == s9
+          True
+      
+      Reading the contents into memory in blocks of `block_size`, which
+      defaults to `512`::
+      
+          >>> from mock import Mock
+          >>> sock = Mock()
+          >>> sock.read.return_value = None
+          >>> s10 = generate_hash(s=sock)
+          >>> sock.read.assert_called_with(512)
+          >>> s10 = generate_hash(s=sock, block_size=1024)
+          >>> sock.read.assert_called_with(1024)
+      
+      Using anything else (that hashlib doesn't like) will raise
       a `TypeError`::
       
           >>> generate_hash(s=[]) #doctest: +NORMALIZE_WHITESPACE
@@ -331,20 +354,26 @@ def generate_hash(algorithm='sha1', s=None):
       
     """
     
-    # generate the value to hash
-    if s is None:
-        s = '{}{}'.format(random.random(), time.time())
-    
     # get the hasher
     if not algorithm in hashlib.__all__:
         error_msg = u"'{}' must be in {}".format(algorithm, hashlib.__all__)
         raise ValueError(error_msg)
     else:
-        hasher = getattr(hashlib, algorithm)
+        hasher = getattr(hashlib, algorithm)()
+    
+    # read in the data
+    if hasattr(s, 'read') and callable(s.read):
+        while True:
+            data = s.read(block_size)
+            if not data:
+                break
+            hasher.update(data)
+    else:
+        if s is None:
+            s = '{}{}'.format(random.random(), time.time())
+        hasher.update(s)
     
     # return a hexdigest of the hash
-    return hasher(s).hexdigest()
+    return hasher.hexdigest()
     
-
-
 
