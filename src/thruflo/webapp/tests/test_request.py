@@ -34,17 +34,14 @@ def _was_called_with(m, *args, **kwargs):
     
 
 
-from thruflo.webapp.interfaces import IRequirableSettings, ITemplateRenderer
-from thruflo.webapp.interfaces import IAuthenticationManager
-from thruflo.webapp.interfaces import ISecureCookieWrapper
-from thruflo.webapp.interfaces import IMethodSelector, IResponseNormaliser
-
-import thruflo.webapp.request
-from thruflo.webapp.request import Handler
-
 class TestInitHandler(unittest.TestCase):
     """ Test the logic of `Handler.__init__`.
     """
+    
+    def _make_one(self, *args, **kwargs):
+        from thruflo.webapp.request import Handler
+        return Handler(*args, **kwargs)
+        
     
     def setUp(self):
         """ Monkey patch the component registry.
@@ -57,6 +54,8 @@ class TestInitHandler(unittest.TestCase):
         self.mock_registry.getUtility.return_value = 'utility'
         self.mock_registry.getAdapter = Mock()
         self.mock_registry.getAdapter.return_value = 'adapted from registry'
+        
+        import thruflo.webapp.request
         thruflo.webapp.request.registry = self.mock_registry
         
     
@@ -66,16 +65,16 @@ class TestInitHandler(unittest.TestCase):
         
         self.assertRaises(
             TypeError,
-            Handler
+            self._make_one
         )
         self.assertRaises(
             TypeError,
-            Handler,
+            self._make_one,
             ''
         )
         self.assertRaises(
             TypeError,
-            Handler,
+            self._make_one,
             '',
             ''
         )
@@ -85,7 +84,7 @@ class TestInitHandler(unittest.TestCase):
         """ `request` is available as `self.request`.
         """
         
-        handler = Handler('req', '', '')
+        handler = self._make_one('req', '', '')
         self.assertTrue(handler.request == 'req')
         
     
@@ -93,7 +92,7 @@ class TestInitHandler(unittest.TestCase):
         """ `response` is available as `self.response`.
         """
         
-        handler = Handler('', 'resp', '')
+        handler = self._make_one('', 'resp', '')
         self.assertTrue(handler.response == 'resp')
         
     
@@ -101,7 +100,7 @@ class TestInitHandler(unittest.TestCase):
         """ `settings` is available as self.settings`.
         """
         
-        handler = Handler('', '', 'settings')
+        handler = self._make_one('', '', 'settings')
         self.assertTrue(handler.settings == 'settings')
         
     
@@ -111,7 +110,7 @@ class TestInitHandler(unittest.TestCase):
           `self.template_renderer`.
         """
         
-        handler = Handler(
+        handler = self._make_one(
             '', 
             '', 
             '',
@@ -126,7 +125,9 @@ class TestInitHandler(unittest.TestCase):
           `self.template_renderer` is looked up via the component registry.
         """
         
-        handler = Handler('', '', '')
+        from thruflo.webapp.interfaces import ITemplateRenderer
+        
+        handler = self._make_one('', '', '')
         self.assertTrue(
             _was_called_with(
                 self.mock_registry.getAdapter, 
@@ -136,7 +137,7 @@ class TestInitHandler(unittest.TestCase):
         )
         self.assertTrue(handler.template_renderer == 'adapted from registry')
         
-        handler = Handler(
+        handler = self._make_one(
             '', 
             '', 
             '', 
@@ -150,7 +151,7 @@ class TestInitHandler(unittest.TestCase):
           with `self.request` and the return value is available as `self.auth`.
         """
         
-        handler = Handler(
+        handler = self._make_one(
             '', 
             '', 
             '',
@@ -165,7 +166,9 @@ class TestInitHandler(unittest.TestCase):
           `self.auth` is looked up via the component registry.
         """
         
-        handler = Handler('', '', '')
+        from thruflo.webapp.interfaces import IAuthenticationManager
+        
+        handler = self._make_one('', '', '')
         
         self.assertTrue(
             _was_called_with(
@@ -176,7 +179,7 @@ class TestInitHandler(unittest.TestCase):
         )
         self.assertTrue(handler.auth == 'adapted from registry')
         
-        handler = Handler(
+        handler = self._make_one(
             '', 
             '', 
             '', 
@@ -190,7 +193,7 @@ class TestInitHandler(unittest.TestCase):
           with `self` and the return value is available as `self.cookies`.
         """
         
-        handler = Handler(
+        handler = self._make_one(
             '', 
             '', 
             '', 
@@ -209,7 +212,9 @@ class TestInitHandler(unittest.TestCase):
           `self.cookies` is looked up via the component registry.
         """
         
-        handler = Handler('', '', '')
+        from thruflo.webapp.interfaces import ISecureCookieWrapper
+        
+        handler = self._make_one('', '', '')
         
         self.assertTrue(
             _was_called_with(
@@ -222,7 +227,7 @@ class TestInitHandler(unittest.TestCase):
         )
         self.assertTrue(handler.cookies == 'adapted from registry')
         
-        handler = Handler(
+        handler = self._make_one(
             '', 
             '', 
             '', 
@@ -236,7 +241,7 @@ class TestInitHandler(unittest.TestCase):
           and the return value is available as `self._method_selector`.
         """
         
-        handler = Handler(
+        handler = self._make_one(
             '', 
             '', 
             '', 
@@ -251,7 +256,9 @@ class TestInitHandler(unittest.TestCase):
           `self.auth` is looked up via the component registry.
         """
         
-        handler = Handler('', '', '')
+        from thruflo.webapp.interfaces import IMethodSelector
+        
+        handler = self._make_one('', '', '')
         
         self.assertTrue(
             _was_called_with(
@@ -262,7 +269,7 @@ class TestInitHandler(unittest.TestCase):
         )
         self.assertTrue(handler._method_selector == 'adapted from registry')
         
-        handler = Handler(
+        handler = self._make_one(
             '', 
             '', 
             '', 
@@ -276,10 +283,10 @@ class TestInitHandler(unittest.TestCase):
           as `self.response_normaliser_adapter`.
         """
         
-        handler = Handler('', '', '')
+        handler = self._make_one('', '', '')
         self.assertTrue(handler._response_normaliser_adapter is None)
         
-        handler = Handler(
+        handler = self._make_one(
             '', 
             '', 
             '', 
@@ -290,9 +297,15 @@ class TestInitHandler(unittest.TestCase):
     
     
 
-class TestHandlerMethods(unittest.TestCase):
-    """ Test the logic of `Handler` methods.
+class TestHandlerGetArguments(unittest.TestCase):
+    """ Test the logic of `handler.get_argument` and 
+      `handler.get_arguments`.
     """
+    
+    def _make_one(self, *args, **kwargs):
+        from thruflo.webapp.request import Handler
+        return Handler(*args, **kwargs)
+        
     
     def setUp(self):
         self.request = Mock()
@@ -303,7 +316,7 @@ class TestHandlerMethods(unittest.TestCase):
         self.authentication_manager_adapter = Mock()
         self.secure_cookie_wrapper_adapter = Mock()
         self.method_selector_adapter = Mock()
-        self.handler = Handler(
+        self.handler = self._make_one(
             self.request,
             self.response,
             self.settings,
@@ -314,7 +327,6 @@ class TestHandlerMethods(unittest.TestCase):
             method_selector_adapter=self.method_selector_adapter
         )
         
-    
     
     def test_get_argument_calls_get_arguments(self):
         """ `get_argument` calls `get_arguments` with `strip` defaulting to
@@ -404,6 +416,38 @@ class TestHandlerMethods(unittest.TestCase):
         
     
     
+
+class TestHandlerXSRF(unittest.TestCase):
+    """ Test the logic of `handler.xsrf_token`, `handler.xsrf_input` 
+      and `.xsrf_validate`.
+    """
+    
+    def _make_one(self, *args, **kwargs):
+        from thruflo.webapp.request import Handler
+        return Handler(*args, **kwargs)
+        
+    
+    def setUp(self):
+        self.request = Mock()
+        self.response = Mock()
+        self.settings = {}
+        self.template_renderer_adapter = Mock()
+        self.static_url_generator_adapter = Mock()
+        self.authentication_manager_adapter = Mock()
+        self.secure_cookie_wrapper_adapter = Mock()
+        self.method_selector_adapter = Mock()
+        self.handler = self._make_one(
+            self.request,
+            self.response,
+            self.settings,
+            template_renderer_adapter=self.template_renderer_adapter,
+            static_url_generator_adapter=self.static_url_generator_adapter,
+            authentication_manager_adapter=self.authentication_manager_adapter,
+            secure_cookie_wrapper_adapter=self.secure_cookie_wrapper_adapter,
+            method_selector_adapter=self.method_selector_adapter
+        )
+        
+    
     def test_xsrf_token_returns__xsrf_token(self):
         """ If `self._xsrf_token` then return it.
         """
@@ -425,6 +469,8 @@ class TestHandlerMethods(unittest.TestCase):
         """ Then generates a new token and sets it as the cookie value
           and caches it as self._xsrf_token.
         """
+        
+        import thruflo.webapp.request
         
         generate_hash = Mock()
         generate_hash.return_value = 'digest'
@@ -455,6 +501,9 @@ class TestHandlerMethods(unittest.TestCase):
           and cache it as self._xsrf_input.
         """
         
+        import thruflo.webapp.request
+        __xhtml_escape = thruflo.webapp.request
+        
         xhtml_escape = Mock()
         xhtml_escape.return_value = 'digest &amp; sons'
         thruflo.webapp.request.xhtml_escape = xhtml_escape
@@ -464,6 +513,344 @@ class TestHandlerMethods(unittest.TestCase):
             u'<input type="hidden" name="_xsrf" value="digest &amp; sons" />'
         )
         xhtml_escape.assert_called_with('digest & sons')
+        
+        thruflo.webapp.request.xhtml_escape = __xhtml_escape
+        
+    
+    def test_xsrf_validate_method_not_post_returns_none(self):
+        """ No need to validate unless the request is a POST.
+        """
+        
+        self.handler.request.method = 'notpost'
+        self.assertTrue(self.handler.xsrf_validate() is None)
+        
+    
+    def test_xsrf_validate_xmlhttprequest_returns_none(self):
+        """ No need to validate if it's an XMLHttpRequest.
+        """
+        
+        self.handler.request.method = 'post'
+        self.handler.request.headers.get.return_value = 'XMLHttpRequest'
+        self.assertTrue(self.handler.xsrf_validate() is None)
+        self.handler.request.headers.get.assert_called_with('X-Requested-With')
+        
+    
+    def test_xsrf_validate_raise_error_if_no_token_in_request(self):
+        """ Raise error if we haven't got an xsrf token in the request.
+        """
+        
+        from thruflo.webapp.request import XSRFError
+        
+        self.handler.request.method = 'post'
+        self.handler.request.headers.get.return_value = 'NotAnXMLHttpRequest'
+        self.handler.get_argument = Mock()
+        self.handler.get_argument.return_value = None
+        self.assertRaises(
+            XSRFError,
+            self.handler.xsrf_validate
+        )
+        self.handler.get_argument.assert_called_with('_xsrf', None)
+        
+    
+    def test_xsrf_validate_raise_error_if_token_doesnt_match(self):
+        """ Raise error the token in the request doesn't match 
+          `self.xsrf_token`.
+        """
+        
+        from thruflo.webapp.request import XSRFError
+        
+        self.handler.request.method = 'post'
+        self.handler.request.headers.get.return_value = 'NotAnXMLHttpRequest'
+        self.handler.get_argument = Mock()
+        self.handler.get_argument.return_value = 'foo'
+        self.handler._xsrf_token = 'bar'
+        self.assertRaises(
+            XSRFError,
+            self.handler.xsrf_validate
+        )
+        
+    
+    def test_xsrf_validate_success(self):
+        """ Pass silently if the token in the request does match 
+          `self.xsrf_token`.
+        """
+        
+        self.handler.request.method = 'post'
+        self.handler.request.headers.get.return_value = 'NotAnXMLHttpRequest'
+        self.handler.get_argument = Mock()
+        self.handler.get_argument.return_value = 'matches'
+        self.handler._xsrf_token = 'matches'
+        self.assertTrue(self.handler.xsrf_validate() is None)
+        
+    
+    
+
+class TestHandlerRender(unittest.TestCase):
+    """ Test the logic of `handler.render`.
+    """
+    
+    def _make_one(self, *args, **kwargs):
+        from thruflo.webapp.request import Handler
+        return Handler(*args, **kwargs)
+        
+    
+    def setUp(self):
+        self.request = Mock()
+        self.response = Mock()
+        self.settings = {}
+        self.template_renderer_adapter = Mock()
+        self.static_url_generator_adapter = Mock()
+        self.authentication_manager_adapter = Mock()
+        self.secure_cookie_wrapper_adapter = Mock()
+        self.method_selector_adapter = Mock()
+        self.handler = self._make_one(
+            self.request,
+            self.response,
+            self.settings,
+            template_renderer_adapter=self.template_renderer_adapter,
+            static_url_generator_adapter=self.static_url_generator_adapter,
+            authentication_manager_adapter=self.authentication_manager_adapter,
+            secure_cookie_wrapper_adapter=self.secure_cookie_wrapper_adapter,
+            method_selector_adapter=self.method_selector_adapter
+        )
+        self.handler._xsrf_token = '...'
+        
+    
+    def test_tmpl_name_passed_to_renderer(self):
+        """ `tmpl_name` is passed to `self.template_renderer`.
+        """
+        
+        self.handler.render('foo.tmpl')
+        self.assertTrue(
+            self.handler.template_renderer.render.call_args[0][0] \
+            == 'foo.tmpl'
+        )
+        
+    
+    def test_params_passed_to_renderer(self):
+        """ `params` are passed to `self.template_renderer` as exploded
+          `**kwargs`.
+        """
+        
+        params = dict(
+            request=self.handler.request,
+            current_user=self.handler.auth.current_user,
+            get_static_url=self.handler.static.get_url,
+            xsrf_input=self.handler.xsrf_input
+        )
+        self.handler.render('foo.tmpl')
+        self.assertTrue(
+            self.handler.template_renderer.render.call_args[1] == params
+        )
+        
+    
+    def test_kwargs_passed_to_renderer(self):
+        """ `kwargs` are passed to `self.template_renderer` as exploded
+          `**kwargs`.
+        """
+        
+        self.handler.render('foo.tmpl', foo='bar')
+        kwargs = self.handler.template_renderer.render.call_args[1]
+        self.assertTrue(kwargs['foo'] == 'bar')
+        
+    
+    def test_kwargs_overwrite_default_params(self):
+        """ `kwargs` are passed to `self.template_renderer` as exploded
+          `**kwargs`.
+        """
+        
+        self.handler.render('foo.tmpl', request='bar')
+        kwargs = self.handler.template_renderer.render.call_args[1]
+        self.assertTrue(kwargs['request'] == 'bar')
+        
+    
+    
+
+class TestHandlerRedirect(unittest.TestCase):
+    """ Test the logic of `handler.redirect`.
+    """
+    
+    def _make_one(self):
+        from thruflo.webapp.request import Handler
+        return Handler(
+            Mock(), Mock(), {},
+            template_renderer_adapter=Mock(),
+            static_url_generator_adapter=Mock(),
+            authentication_manager_adapter=Mock(),
+            secure_cookie_wrapper_adapter=Mock(),
+            method_selector_adapter=Mock()
+        )
+        
+    
+    def setUp(self):
+        from thruflo.webapp.request import webob_exceptions
+        self.__status_map = webob_exceptions.status_map
+        self.Moved301 = Mock()
+        self.Found302 = Mock()
+        webob_exceptions.status_map = {
+            '301': self.Moved301,
+            '302': self.Found302
+        }
+        self.handler = self._make_one()
+        self.handler.request.get_response = Mock()
+        self.handler.request.get_response.return_value = 'response'
+    
+    def tearDown(self):
+        from thruflo.webapp.request import webob_exceptions
+        webob_exceptions.status_map = self.__status_map
+        
+    
+    def test_status_defaults_to_302(self):
+        """ Uses `webob.exc.status_map['302'] by default.
+        """
+        
+        self.handler.redirect('/foo')
+        self.assertRaises(
+            AssertionError,
+            self.Moved301.assert_called_with,
+            location='/foo'
+        )
+        self.Found302.assert_called_with(location='/foo')
+        
+    
+    def test_status_301_if_permanent_is_true(self):
+        """ Unless `permanent is True`.
+        """
+        
+        self.handler.redirect('/foo', permanent=True)
+        self.assertRaises(
+            AssertionError,
+            self.Found302.assert_called_with,
+            location='/foo'
+        )
+        self.Moved301.assert_called_with(location='/foo')
+        
+    
+    def test_status_301_if_permanent_is_literally_true(self):
+        """ Note that's `permanent is True` not `permanent == True`.
+        """
+        
+        self.handler.redirect('/foo', permanent=1)
+        self.assertRaises(
+            AssertionError,
+            self.Moved301.assert_called_with,
+            location='/foo'
+        )
+        
+    
+    def test_excclass_called_with_location_in_exploded_kwargs(self):
+        """ ExceptionClass is called with exploded `**kwargs`, with 
+          kwargs['location']` set to `location`.
+        """
+        
+        self.handler.redirect('/foo', baz='blah')
+        self.Found302.assert_called_with(baz='blah', location='/foo')
+        
+    
+    def test_request_get_response_called_with_exc(self):
+        """ Returns `request.get_response(exc)`.
+        """
+        
+        self.Found302.return_value = 'exc'
+        response = self.handler.redirect('/foo')
+        self.handler.request.get_response.assert_called_with('exc')
+        self.assertTrue(response == 'response')
+        
+    
+    
+
+
+class TestHandlerError(unittest.TestCase):
+    """ Test the logic of `handler.error`.
+    """
+    
+    def _make_one(self):
+        from thruflo.webapp.request import Handler
+        return Handler(
+            Mock(), Mock(), {},
+            template_renderer_adapter=Mock(),
+            static_url_generator_adapter=Mock(),
+            authentication_manager_adapter=Mock(),
+            secure_cookie_wrapper_adapter=Mock(),
+            method_selector_adapter=Mock()
+        )
+        
+    
+    def setUp(self):
+        from thruflo.webapp.request import webob_exceptions
+        self.__status_map = webob_exceptions.status_map
+        self.ClientError = Mock()
+        self.ServerError = Mock()
+        webob_exceptions.status_map = {
+            '400': self.ClientError,
+            '500': self.ServerError
+        }
+        self.handler = self._make_one()
+        self.handler.request.get_response = Mock()
+        self.handler.request.get_response.return_value = 'response'
+    
+    def tearDown(self):
+        from thruflo.webapp.request import webob_exceptions
+        webob_exceptions.status_map = self.__status_map
+        
+    
+    def test_exception_not_none(self):
+        """ If `exception` is not `None`, returns 
+          `request.get_response(exception)`.
+        """
+        
+        response = self.handler.error(exception='not none')
+        self.handler.request.get_response.assert_called_with('not none')
+        self.assertTrue(response == 'response')
+        
+    
+    def test_exception_none(self):
+        """ If `exception` is `None`, which is the default, uses status
+          to get ExceptionClass from `webob_exceptions.status_map`.
+        """
+        
+        self.handler.error(status='500')
+        self.assertRaises(
+            AssertionError,
+            self.ClientError.assert_called_with
+        )
+        self.ServerError.assert_called_with()
+        self.handler.error(status='400')
+        self.ClientError.assert_called_with()
+        
+    
+    def test_status_can_be_int(self):
+        """ `500` becomes `'500'`.
+        """
+        
+        self.handler.error(status=500)
+        self.ServerError.assert_called_with()
+        
+    
+    def test_status_defaults_to_500(self):
+        """ `status` defaults to `'500'`.
+        """
+        
+        self.handler.error()
+        self.ServerError.assert_called_with()
+        
+    
+    def test_excclass_called_with_exploded_kwargs(self):
+        """ ExceptionClass is called with exploded `**kwargs`.
+        """
+        
+        self.handler.error(foo='bar', baz='blah')
+        self.ServerError.assert_called_with(foo='bar', baz='blah')
+        
+    
+    def test_request_get_response_called_with_exc(self):
+        """ Returns `request.get_response(exc)`.
+        """
+        
+        self.ServerError.return_value = 'exc'
+        response = self.handler.error()
+        self.handler.request.get_response.assert_called_with('exc')
+        self.assertTrue(response == 'response')
         
     
     

@@ -11,6 +11,8 @@ __all__ = [
 import threading
 from os.path import dirname, join as join_path
 
+import webob.exc as webob_exceptions
+
 from zope.component import adapts
 from zope.interface import implements
 
@@ -23,7 +25,7 @@ from interfaces import IAuthenticationManager, ISecureCookieWrapper
 from interfaces import IMethodSelector, IResponseNormaliser
 
 from settings import require_setting
-from utils import generate_hash, xhtml_escape
+from utils import encode_to_utf8, generate_hash, xhtml_escape
 
 require_setting('check_xsrf', default=True)
 
@@ -161,22 +163,22 @@ class Handler(object):
         return self._xsrf_input
         
     
-    def validate_xsrf(self):
+    def xsrf_validate(self):
         """ Raise an `XSRFError` if the '_xsrf' argument isn't present
           or if it doesn't match the '_xsrf'.
         """
         
-        if self.context.request.method != "POST":
-            return
+        if self.request.method != 'post':
+            return None
         
         if self.request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            return
-            
-        request_token = self.context.get_argument('_xsrf', None)
+            return None
+        
+        request_token = self.get_argument('_xsrf', None)
         if request_token is None:
             raise XSRFError(u'`_xsrf` argument missing from POST')
             
-        if self.get_xsrf_token() != request_token:
+        if request_token != self.xsrf_token:
             raise XSRFError(u'XSRF cookie does not match POST argument')
             
         
@@ -189,59 +191,68 @@ class Handler(object):
         params = dict(
             request=self.request,
             current_user=self.auth.current_user,
-            static_url=self.get_static_url,
-            xsrf_form_html=self.xsrf.form_html
+            get_static_url=self.static.get_url,
+            xsrf_input=self.xsrf_input
         )
         params.update(kwargs)
         return self.template_renderer.render(tmpl_name, **params)
         
     
-    def redirect(self, url, status=302, content_type=None):
-        """ Handle redirecting.
+    def redirect(self, location, permanent=False, **kwargs):
+        """ Redirect to location.  Defaults to `302` unless `permanent`
+          is `True`.
+          
+          `kwargs` (with `kwargs['location']` set to `location` are passed
+          to the appropriate `web.exc`_ class constructor.
+          
         """
         
-        self.response.status = status
-        if not self.response.headerlist:
-            self.response.headerlist = []
-        self.response.headerlist.append(('Location', url))
-        if content_type:
-            self.response.content_type = content_type
-        return self.response
+        status = permanent is True and '301' or '302'
+        kwargs['location'] = location
+        
+        ExceptionClass = webob_exceptions.status_map[status]
+        exc = ExceptionClass(**kwargs)
+        
+        return self.request.get_response(exc)
         
     
-    def error(self, status=500, body=u'System Error'):
-        """ Clear response and return error.
+    def error(self, exception=None, status=500, **kwargs):
+        """ Return a response corresponding to `exception` or if `exception`
+          is `None`, corresponding to `status`.  `kwargs` are passed to the
+          appropriate `webob.exc` class constructor.
+          
+          @@ Override at an application level to generate error messages that
+          are more user friendly.
         """
         
-        self.response = self.response.__class__(status=status)
+        status = str(status)
         
-        if isinstance(body, unicode):
-            self.response.unicode_body = body
-        else:
-            self.response.body = body
+        if exception is None:
+            ExceptionClass = webob_exceptions.status_map[status]
+            exception = ExceptionClass(**kwargs)
         
-        return self.response
+        return self.request.get_response(exception)
         
     
     
-    def _handle_method_not_found(self, method_name):
-        """ Override to handle 405 nicely.
+    def handle_method_not_found(self, method_name):
+        """ Log a warning and return "405 Method Not Allowed".
         """
         
         logging.warning(u'{} method not found'.format(method_name))
         return self.error(status=405)
         
     
-    def _handle_xsrf_error(self, err):
-        """ Override to handle XSRF mismatch nicely.
+    def handle_xsrf_error(self, err):
+        """ Log a warning and return "403 Forbidden".
         """
         
         logging.warning(err)
         return self.error(status=403)
         
     
-    def _handle_system_error(self, err):
-        """ Override to handle 500 nicely.
+    def handle_system_error(self, err):
+        """ Log the error and return "500 Internal Server Error".
         """
         
         logging.error(err, exc_info=True)
@@ -256,18 +267,21 @@ class Handler(object):
         method = self._method_selector.select_method(method_name)
         
         if method is None:
-            handler_response = self._handle_method_not_found(method_name)
+            handler_response = self.handle_method_not_found(method_name)
         else:
             try:
-                if self.settings["check_xsrf"]: self.xsrf.validate_request()
+                if self.settings["check_xsrf"]:
+                    self.xsrf_validate()
             except XSRFError, err:
-                handler_response = self._handle_xsrf_error(err)
+                handler_response = self.handle_xsrf_error(err)
             else:
                 try:
                     handler_response = method(*groups)
+                except webob_exceptions.HTTPException, err:
+                    handler_response = self.error(exception=err)
                 except Exception, err:
-                    handler_response = self._handle_system_error(err)
-        
+                    handler_response = self.handle_system_error(err)
+            
         if self._response_normaliser_adapter is None:
             response_normaliser = registry.getAdapter(
                 self.response, 
