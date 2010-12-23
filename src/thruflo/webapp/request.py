@@ -8,7 +8,7 @@ __all__ = [
     'Handler'
 ]
 
-import threading
+import logging
 from os.path import dirname, join as join_path
 
 import webob.exc as webob_exceptions
