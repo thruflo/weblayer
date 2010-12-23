@@ -18,7 +18,7 @@ from interfaces import IRequest, IRequirableSettings, IStaticURLGenerator
 from settings import require_setting
 from utils import generate_hash
 
-require_setting('static_path', default=u'/var/www/static')
+require_setting('static_files_path', default=u'/var/www/static')
 require_setting('static_url_prefix', default=u'/static/')
 
 class MemoryCachedStaticURLGenerator(object):
@@ -44,7 +44,7 @@ class MemoryCachedStaticURLGenerator(object):
               >>> req = Mock()
               >>> req.host_url = 'foo.com'
               >>> settings = {}
-              >>> settings['static_path'] = '/var/www/static'
+              >>> settings['static_files_path'] = '/var/www/static'
               >>> settings['static_url_prefix'] = u'/static/'
               >>> static = MemoryCachedStaticURLGenerator(
               ...     req, 
@@ -53,14 +53,14 @@ class MemoryCachedStaticURLGenerator(object):
               >>> static._host_url
               'foo.com'
           
-          `settings['static_path']` and `settings['static_url_prefix']` are
-          available as `self._static_path` and `self._static_url_prefix`::
+          `settings['static_files_path']` and `settings['static_url_prefix']` are
+          available as `self._static_files_path` and `self._static_url_prefix`::
           
               >>> static = MemoryCachedStaticURLGenerator(
               ...     req, 
               ...     settings
               ... )
-              >>> static._static_path
+              >>> static._static_files_path
               '/var/www/static'
               >>> static._static_url_prefix
               u'/static/'
@@ -110,7 +110,7 @@ class MemoryCachedStaticURLGenerator(object):
         """
         
         self._host_url = request.host_url
-        self._static_path = settings['static_path']
+        self._static_files_path = settings['static_files_path']
         self._static_url_prefix = settings['static_url_prefix']
         
         if join_path_ is None:
@@ -145,7 +145,7 @@ class MemoryCachedStaticURLGenerator(object):
               >>> generate_hash = Mock()
               >>> generate_hash.return_value = 'digest'
               >>> settings = {
-              ...     'static_path': '/var/www/static', 
+              ...     'static_files_path': '/var/www/static', 
               ...     'static_url_prefix': u'/static/'
               ... }
               >>> static = MemoryCachedStaticURLGenerator(
@@ -192,7 +192,7 @@ class MemoryCachedStaticURLGenerator(object):
           
         """
         
-        file_path = self._join_path(self._static_path, path)
+        file_path = self._join_path(self._static_files_path, path)
         try:
             sock = self._open_file(file_path)
         except IOError:
@@ -211,7 +211,7 @@ class MemoryCachedStaticURLGenerator(object):
               >>> request = Mock()
               >>> request.host_url = 'http://static.foo.com'
               >>> settings = {}
-              >>> settings['static_path'] = '/var/www/static'
+              >>> settings['static_files_path'] = '/var/www/static'
               >>> settings['static_url_prefix'] = u'/static/'
               >>> MemoryCachedStaticURLGenerator._cache = {}
               >>> static = MemoryCachedStaticURLGenerator(

@@ -78,7 +78,7 @@ from interfaces import IRequirableSettings
 
 _HANGER_NAME = '__thruflo_require_settings_venusian_hanger__'
 
-def require_setting(name, default=None, help=u''):
+def require_setting(name, default=None, help=u'', category='thruflo.webapp'):
     """ Call this at module level to require a setting.
       
       Works just like a decorator, defering the real work
@@ -114,11 +114,11 @@ def require_setting(name, default=None, help=u''):
         venusian.attach(
             getattr(calling_mod, _HANGER_NAME),
             callback,
-            category='thruflo'
+            category=category
         )
     
 
-def override_setting(name, default=None, help=u''):
+def override_setting(name, default=None, help=u'', category='thruflo.webapp'):
     """ Call this at module level to override a setting.
     """
     
@@ -147,7 +147,7 @@ def override_setting(name, default=None, help=u''):
         venusian.attach(
             getattr(calling_mod, _HANGER_NAME),
             callback,
-            category='thruflo'
+            category=category
         )
     
     
@@ -157,10 +157,11 @@ class require(object):
     """ Decorator to require a setting.
     """
     
-    def __init__(self, name, default=None, help=u''):
+    def __init__(self, name, default=None, help=u'', category='thruflo.webapp'):
         self._name = name
         self._default = default
         self._help = help
+        self._category = category
         
     
     def __call__(self, wrapped):
@@ -175,7 +176,7 @@ class require(object):
             )
             
         
-        venusian.attach(wrapped, callback, category='thruflo')
+        venusian.attach(wrapped, callback, category=self._category)
         return wrapped
         
     
@@ -185,10 +186,11 @@ class override(object):
     """ Decorator to override a setting.
     """
     
-    def __init__(self, name, default=None, help=u''):
+    def __init__(self, name, default=None, help=u'', category='thruflo.webapp'):
         self._name = name
         self._default = default
         self._help = help
+        self._category = category
         
     
     
@@ -204,7 +206,7 @@ class override(object):
             )
             
         
-        venusian.attach(wrapped, callback, category='thruflo')
+        venusian.attach(wrapped, callback, category=self._category)
         return wrapped
         
     

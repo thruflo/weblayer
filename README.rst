@@ -1,31 +1,30 @@
-A minimal, testable WSGI framework::
+A WSGI library::
 
     from thruflo.webapp import Bootstrapper, RequestHandler, WSGIApplication
     from thruflo.webapp.method import expose
     
     class Hello(RequestHandler):
-        @expose
         def get(self, world):
             return u'hello {}'.format(world)
+            
         
     
     url_mapping = [(r'/(.*)', Hello)]
-    
     app_settings = {
-        'cookie_secret', u'...',
-        'static_path': u'/var/www/static',
-        'static_url_prefix', u'/static/',
-        'template_directories': '/foo/bar/templates'
+        'cookie_secret', '...',
+        'static_files_path': '/var/www/static',
+        'template_directories': ['/my/app/templates']
     }
     
-    if __name__ == '__main__':
-        bootstrapper = Bootstrapper(app_settings, url_mapping)
-        settings, path_router = bootstrapper.bootstrap()
-        application = WSGIApplication(settings, path_router)
-        
-        from paste.httpserver import serve
-        serve(application, host='0.0.0.0')
+    bootstrapper = Bootstrapper(app_settings, url_mapping)
+    application = WSGIApplication(**bootstrapper())
     
+    if __name__ == '__main__':
+        from paste.httpserver import serve
+        serve(application)
+        
+    
+
 Run the tests::
 
     ./bin/nosetests -c etc/nose.cfg

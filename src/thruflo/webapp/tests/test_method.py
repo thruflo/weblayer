@@ -20,7 +20,7 @@ class MockHandler(object):
     
     implements(IRequestHandler)
     
-    @expose
+    @expose(category='thruflo.webapp.tests')
     def yes(self):
         """ This method should be exposed.
         """
@@ -44,7 +44,7 @@ class TestIntegration(unittest.TestCase):
         
         from thruflo.webapp.tests import test_method
         scanner = venusian.Scanner()
-        scanner.scan(test_method, categories=('thruflo',))
+        scanner.scan(test_method, categories=('thruflo.webapp.tests',))
         self.handler = MockHandler()
         
     

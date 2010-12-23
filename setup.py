@@ -12,16 +12,16 @@ setup(
     author_email = 'thruflo@geemail.com',
     url = 'http://github.com/thruflo/thruflo.webapp',
     classifiers = [
-        'Intended Audience :: Developers',
         'Development Status :: 3 - Alpha',
+        'Environment :: Web Environment',
+        'Framework :: Paste',
+        'Intended Audience :: Developers',
         'License :: Public Domain',
         'Operating System :: Unix',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.5',
         'Programming Language :: Python :: 2.6',
-        'Programming Language :: Python :: 2.7',
-        'Environment :: Web Environment',
-        'Framework :: Paste'
+        'Programming Language :: Python :: 2.7'
     ],
     license = 'http://creativecommons.org/publicdomain/zero/1.0/',
     packages = find_packages('src'),
@@ -36,7 +36,6 @@ setup(
     install_requires=[
         'zope.interface >= 3.6, < 4.0',
         'zope.component >= 3.10, < 4.0',
-        'repoze.component >= 0.4, < 0.5',
         'venusian', # ' >= 4.0, < 5.0',
         'webob >= 1.0, < 2.0',
         'Mako >= 0.3, < 0.4'

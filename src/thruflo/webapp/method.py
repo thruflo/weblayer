@@ -21,10 +21,12 @@
   
       >>> handler = MockHandler()
       >>> selector = ExposedMethodSelector(handler)
-      >>> selector.select_method('POST') # returns None
-      >>> selector.select_method('_do_something_bad') # returns None
-      >>> selector.select_method('GET') #doctest: +ELLIPSIS
-      <bound method MockHandler.get ...>
+      >>> callable(selector.select_method('POST'))
+      False
+      >>> callable(selector.select_method('_do_something_bad'))
+      False
+      >>> callable(selector.select_method('GET'))
+      True
   
   To (only) allow `MockHandler` to only accept 'GET' requests.
   
@@ -89,17 +91,27 @@ def _expose(method_name, class_):
         class_.__exposed_methods__.append(method_name)
     
 
-def expose(method, venusian=venusian):
+class expose(object):
     """ Decorator to expose a request handler's methods.
     """
     
-    def callback(scanner, name, ob):
-        return _expose(method.__name__, ob)
+    def __init__(self, category='thruflo.webapp'):
+        self._category = category
         
     
     
-    venusian.attach(method, callback, category='thruflo')
-    return method
+    def __call__(self, method):
+        """
+        """
+        
+        def callback(scanner, name, ob):
+            return _expose(method.__name__, ob)
+            
+        
+        venusian.attach(method, callback, category=self._category)
+        return method
+        
+    
     
 
 

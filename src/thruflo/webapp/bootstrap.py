@@ -4,6 +4,12 @@
 """ Helper class to simplify bootstrapping the application.
 """
 
+import imp
+import inspect
+import pkgutil
+
+from os.path import dirname
+
 import venusian
 
 from component import registry
@@ -25,12 +31,10 @@ class Bootstrapper(object):
     def scan(
             self, 
             packages=None, 
-            extra_categories=None, 
-            scan_defaults=True,
+            extra_categories=None,
             settings=None
         ):
-        """ Run a `venusian` scan on packages.  Include `thruflo.webapp` 
-          and the calling module or module's package by default.
+        """ Run a `venusian` scan on packages.
         """
         
         if settings is None:
@@ -38,17 +42,10 @@ class Bootstrapper(object):
         else:
             scanner = venusian.Scanner(settings=settings)
         
-        categories = ['thruflo']
+        categories = ['thruflo.webapp']
         if extra_categories is not None:
             for item in extra_categories:
                 categories.append(item)
-        
-        if scan_defaults:
-            import thruflo.webapp
-            scanner.scan(thruflo.webapp, categories=categories)
-            # @@ get the calling module / module's package
-            # scanner.scan(caller, categories=categories)
-            raise NotImplementedError
         
         if packages is not None:
             for item in packages:
@@ -138,6 +135,25 @@ class Bootstrapper(object):
         
         return settings, path_router
     
+    def __call__(self, packages=[], scan_caller=True, scan_framework=True):
+        """ `scan()` `setup_components()` and return `settings`, `path_router`.
+        """
+        
+        if scan_caller:
+            calling_mod = inspect.getmodule(inspect.stack()[1][0])
+            packages.append(dirname(calling_mod.__file__))
+            
+        if scan_framework:
+            packages.append(sys.modules['thruflo.webapp'])
+        
+        self.scan(packages=packages)
+        self.setup_components()
+        
+        settings = registry.getUtility(IRequirableSettings)
+        path_router = registry.getUtility(IPathRouter)
+        
+        return settings, path_router
+        
     
     def __init__(self, settings={}, url_mapping=[]):
         """

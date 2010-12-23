@@ -14,20 +14,24 @@ from thruflo.webapp.settings import RequirableSettings
 from thruflo.webapp.settings import require, require_setting
 from thruflo.webapp.settings import override, override_setting
 
-require_setting('test_module')
+require_setting('test_module', category='thruflo.webapp.tests')
 
-@require('test_function')
+@require('test_function', category='thruflo.webapp.tests')
 def foo(): # pragma: no cover
     pass
 
 
-@require('test_class')
+@require('test_class', category='thruflo.webapp.tests')
 class Foo(object):
     pass
     
 
 
-require_setting('test_override_function', default='something')
+require_setting(
+    'test_override_function', 
+    default='something', 
+    category='thruflo.webapp.tests'
+)
 
 class TestIntegration(unittest.TestCase):
     """ Test requiring and overriding settings.
@@ -46,7 +50,7 @@ class TestIntegration(unittest.TestCase):
         }
         self.settings = RequirableSettings()
         self.scanner = venusian.Scanner(settings=self.settings)
-        self.scanner.scan(test_settings, categories=('thruflo',))
+        self.scanner.scan(test_settings, categories=('thruflo.webapp.tests',))
         
     
     def test_required_items(self):
@@ -105,7 +109,7 @@ class TestIntegration(unittest.TestCase):
         
         from thruflo.webapp.tests.fixtures import settings
         
-        self.scanner.scan(settings, categories=('thruflo',))
+        self.scanner.scan(settings, categories=('thruflo.webapp.tests',))
         
         self.settings(self.required_items)
         self.assertTrue(self.settings['test_override_function'] == 'something else')
@@ -138,8 +142,8 @@ class TestVenusian(unittest.TestCase):
         settings = RequirableSettings()
         scanner = venusian.Scanner(settings=settings)
         
-        scanner.scan(test_settings, categories=('thruflo',))
-        scanner.scan(double_import, categories=('thruflo',))
+        scanner.scan(test_settings, categories=('thruflo.webapp.tests',))
+        scanner.scan(double_import, categories=('thruflo.webapp.tests',))
         
         settings({
             'test_module': 'some value',
