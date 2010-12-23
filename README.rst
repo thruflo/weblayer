@@ -1,9 +1,10 @@
-A WSGI library::
+Yet another WSGI layer::
 
     from thruflo.webapp import Bootstrapper, RequestHandler, WSGIApplication
     from thruflo.webapp.method import expose
     
     class Hello(RequestHandler):
+        @expose
         def get(self, world):
             return u'hello {}'.format(world)
             

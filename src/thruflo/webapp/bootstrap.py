@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" Helper class to simplify bootstrapping the application.
+""" Provides `Bootstrapper`, a helper class that simplifies bootstrapping
+  application components.
 """
 
-import imp
+__all__ = [
+    'Bootstrapper'
+]
+
 import inspect
-import pkgutil
+import sys
 
 from os.path import dirname
 
@@ -25,7 +29,23 @@ from static import MemoryCachedStaticURLGenerator
 from template import MakoTemplateRenderer
 
 class Bootstrapper(object):
-    """
+    """ Bootstrap thruflo.webapp components.
+      
+      To bootstrap a default configuration, pass a dictionary of settings
+      and list of url mappings to the constructor::
+      
+          bootstrapper = Bootstrapper(settings={}, url_mapping=[])
+      
+      Then call the instance to:
+      
+      * scan for venusian callbacks
+      * register components
+      * get IRequirableSettings and IPathRouter utilities
+      
+      ::
+      
+          settings, path_router = bootstrapper()
+      
     """
     
     def scan(
@@ -37,6 +57,9 @@ class Bootstrapper(object):
         """ Run a `venusian` scan on packages.
         """
         
+        if not packages:
+            return
+        
         if settings is None:
             scanner = venusian.Scanner(settings=self._settings)
         else:
@@ -44,13 +67,11 @@ class Bootstrapper(object):
         
         categories = ['thruflo.webapp']
         if extra_categories is not None:
-            for item in extra_categories:
-                categories.append(item)
+            categories.extend(extra_categories)
         
-        if packages is not None:
-            for item in packages:
-                scanner.scan(item, categories=categories)
-            
+        for item in packages:
+            scanner.scan(item, categories=categories)
+        
         return scanner
         
     
@@ -71,7 +92,8 @@ class Bootstrapper(object):
         
         if settings is not False:
             if settings is None:
-                settings = self._settings(self._user_settings)
+                self._settings(self._user_settings)
+                settings = self._settings
             registry.registerUtility(settings, IRequirableSettings)
         
         if path_router is not False:
@@ -101,7 +123,7 @@ class Bootstrapper(object):
             if StaticURLGenerator is None:
                 StaticURLGenerator = MemoryCachedStaticURLGenerator
             registry.registerAdapter(
-                MemoryCachedStaticURLGenerator, 
+                StaticURLGenerator, 
                 adapts=[IRequest, IRequirableSettings],
                 provides=IStaticURLGenerator
             )
@@ -133,11 +155,13 @@ class Bootstrapper(object):
                 provides=IResponseNormaliser
             )
         
-        return settings, path_router
     
-    def __call__(self, packages=[], scan_caller=True, scan_framework=True):
+    def __call__(self, packages=None, scan_caller=True, scan_framework=True):
         """ `scan()` `setup_components()` and return `settings`, `path_router`.
         """
+        
+        if packages is None:
+            packages = []
         
         if scan_caller:
             calling_mod = inspect.getmodule(inspect.stack()[1][0])
@@ -155,12 +179,20 @@ class Bootstrapper(object):
         return settings, path_router
         
     
-    def __init__(self, settings={}, url_mapping=[]):
-        """
+    def __init__(self, settings=None, url_mapping=None):
+        """ Stores the `settings` and `url_mapping` provided and initialises
+          a `RequirableSettings` instance.
         """
         
-        self._user_settings = settings
-        self._url_mapping = url_mapping
+        if settings is None:
+            self._user_settings = {}
+        else:
+            self._user_settings = settings
+        
+        if url_mapping is None:
+            self._url_mapping = []
+        else:
+            self._url_mapping = url_mapping
         
         self._settings = RequirableSettings()
         
