@@ -44,6 +44,8 @@ from zope.interface import implements
 
 from interfaces import IRequestHandler, IMethodSelector
 
+_CATEGORY = 'thruflo.webapp'
+
 def _expose(method_name, class_):
     """ Ensures `method_name` is in `class_.__exposed_methods__` 
       iff `class_` implements `IRequestHandler`.
@@ -91,27 +93,18 @@ def _expose(method_name, class_):
         class_.__exposed_methods__.append(method_name)
     
 
-class expose(object):
+def expose(method):
     """ Decorator to expose a request handler's methods.
     """
     
-    def __init__(self, category='thruflo.webapp'):
-        self._category = category
+    def callback(scanner, name, ob):
+        import logging
+        logging.warning('expose.callback({}, {})'.format(name, ob))
+        return _expose(method.__name__, ob)
         
     
-    
-    def __call__(self, method):
-        """
-        """
-        
-        def callback(scanner, name, ob):
-            return _expose(method.__name__, ob)
-            
-        
-        venusian.attach(method, callback, category=self._category)
-        return method
-        
-    
+    venusian.attach(method, callback, category=_CATEGORY)
+    return method
     
 
 

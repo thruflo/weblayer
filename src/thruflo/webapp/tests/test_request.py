@@ -54,6 +54,8 @@ class TestInitHandler(unittest.TestCase):
         self.mock_registry.getUtility.return_value = 'utility'
         self.mock_registry.getAdapter = Mock()
         self.mock_registry.getAdapter.return_value = 'adapted from registry'
+        self.mock_registry.getMultiAdapter = Mock()
+        self.mock_registry.getMultiAdapter.return_value = 'multi adapted'
         
         import thruflo.webapp.request
         thruflo.webapp.request.registry = self.mock_registry
@@ -146,6 +148,51 @@ class TestInitHandler(unittest.TestCase):
         self.assertTrue(handler.template_renderer == 'adapted from registry')
         
     
+    def test_static_url_generator_adapter(self):
+        """ If `static_url_generator_adapter` is not None, it's called
+          with `self.request` and `self.settings` and the return value is
+          available as `self.static`.
+        """
+        
+        handler = self._make_one(
+            '', 
+            '', 
+            '',
+            static_url_generator_adapter=self.adapter
+        )
+        self.adapter.assert_called_with(handler.request, handler.settings)
+        self.assertTrue(handler.static == 'adapted')
+        
+    
+    def test_static_url_generator_adapter_from_registry(self):
+        """ If `static_url_generator_adapter` is None, which is the default,
+          `self.static` is looked up via the component registry.
+        """
+        
+        from thruflo.webapp.interfaces import IStaticURLGenerator
+        
+        handler = self._make_one('', '', '')
+        
+        self.assertTrue(
+            _was_called_with(
+                self.mock_registry.getMultiAdapter, (
+                    handler.request, 
+                    handler.settings
+                ),
+                IStaticURLGenerator
+            )
+        )
+        self.assertTrue(handler.static == 'multi adapted')
+        
+        handler = self._make_one(
+            '', 
+            '', 
+            '', 
+            static_url_generator_adapter=None
+        )
+        self.assertTrue(handler.static == 'multi adapted')
+        
+    
     def test_authentication_manager_adapter(self):
         """ If `authentication_manager_adapter` is not None, it's called
           with `self.request` and the return value is available as `self.auth`.
@@ -218,14 +265,15 @@ class TestInitHandler(unittest.TestCase):
         
         self.assertTrue(
             _was_called_with(
-                self.mock_registry.getAdapter,
-                handler.request, 
-                handler.response, 
-                handler.settings,
+                self.mock_registry.getMultiAdapter, (
+                    handler.request, 
+                    handler.response, 
+                    handler.settings
+                ),
                 ISecureCookieWrapper
             )
         )
-        self.assertTrue(handler.cookies == 'adapted from registry')
+        self.assertTrue(handler.cookies == 'multi adapted')
         
         handler = self._make_one(
             '', 
@@ -233,7 +281,7 @@ class TestInitHandler(unittest.TestCase):
             '', 
             secure_cookie_wrapper_adapter=None
         )
-        self.assertTrue(handler.cookies == 'adapted from registry')
+        self.assertTrue(handler.cookies == 'multi adapted')
         
     
     def test_method_selector_adapter(self):

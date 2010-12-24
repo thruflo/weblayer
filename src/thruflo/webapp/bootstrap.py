@@ -28,6 +28,39 @@ from settings import RequirableSettings
 from static import MemoryCachedStaticURLGenerator
 from template import MakoTemplateRenderer
 
+raise NotImplementedError(
+  """ Atm, scanning `@expose` decorated methods doesn't work
+    with the order we bootstrap stuff.
+    
+    We can scan the packages fine.  The issue is if we've built
+    a `url_mapping` beforehand then the classes in that aren't
+    scanned.
+    
+    We could:
+    
+    * stop using an `@expose` decorator at all, expose the default
+      set of HTTP verbs and provide default '405' handler methods
+      for all the verbs -- this is simplest, removes the syntax
+      headache but isn't as explicit.  Presumably we'd store the
+      list of verbs in `__all__`, `__exposed_methods__`, which
+      we would then allow the user to edit manually?
+      
+    * skip the venusian aspect of the decorator: there's no harm
+      calling the `@expose` decorator more than once.  We would
+      need to hack copy over some parts of the venusian internals
+      to amend the class definition which is perhaps buggy but
+      then perhaps not so bad.  Once done, this allows us to be
+      explicit again.
+      
+    * change the pattern for the url_mapping to use dotted paths
+      that we import when initialising the path_router
+      
+    * pass some sort of registry to the venusian scanner (n.b.:
+      this is how it's meant to be used...)
+    
+  """
+)
+
 class Bootstrapper(object):
     """ Bootstrap thruflo.webapp components.
       
@@ -70,6 +103,14 @@ class Bootstrapper(object):
             categories.extend(extra_categories)
         
         for item in packages:
+            import logging
+            logging.warning(
+                'scanner.scan({}, categories={})'.format(
+                    item, 
+                    categories
+                )
+            )
+            
             scanner.scan(item, categories=categories)
         
         return scanner
@@ -106,8 +147,8 @@ class Bootstrapper(object):
                 TemplateRenderer = MakoTemplateRenderer
             registry.registerAdapter(
                 TemplateRenderer, 
-                adapts=[IRequirableSettings],
-                provides=ITemplateRenderer
+                required=[IRequirableSettings],
+                provided=ITemplateRenderer
             )
         
         if AuthenticationManager is not False:
@@ -115,8 +156,8 @@ class Bootstrapper(object):
                 AuthenticationManager = TrivialAuthenticationManager
             registry.registerAdapter(
                 AuthenticationManager, 
-                adapts=[IRequestHandler],
-                provides=IAuthenticationManager
+                required=[IRequest],
+                provided=IAuthenticationManager
             )
         
         if StaticURLGenerator is not False:
@@ -124,8 +165,8 @@ class Bootstrapper(object):
                 StaticURLGenerator = MemoryCachedStaticURLGenerator
             registry.registerAdapter(
                 StaticURLGenerator, 
-                adapts=[IRequest, IRequirableSettings],
-                provides=IStaticURLGenerator
+                required=[IRequest, IRequirableSettings],
+                provided=IStaticURLGenerator
             )
         
         if SecureCookieWrapper is not False:
@@ -133,8 +174,8 @@ class Bootstrapper(object):
                 SecureCookieWrapper = SignedSecureCookieWrapper
             registry.registerAdapter(
                 SecureCookieWrapper, 
-                adapts=[IRequest, IResponse, IRequirableSettings],
-                provides=ISecureCookieWrapper
+                required=[IRequest, IResponse, IRequirableSettings],
+                provided=ISecureCookieWrapper
             )
         
         if MethodSelector is not False:
@@ -142,8 +183,8 @@ class Bootstrapper(object):
                 MethodSelector = ExposedMethodSelector
             registry.registerAdapter(
                 MethodSelector, 
-                adapts=[IRequestHandler],
-                provides=IMethodSelector
+                required=[IRequestHandler],
+                provided=IMethodSelector
             )
         
         if ResponseNormaliser is not False:
@@ -151,26 +192,28 @@ class Bootstrapper(object):
                 ResponseNormaliser = DefaultToJSONResponseNormaliser
             registry.registerAdapter(
                 ResponseNormaliser, 
-                adapts=[IResponse],
-                provides=IResponseNormaliser
+                required=[IResponse],
+                provided=IResponseNormaliser
             )
         
     
-    def __call__(self, packages=None, scan_caller=True, scan_framework=True):
+    def __call__(self, packages=None, scan_framework=True):
         """ `scan()` `setup_components()` and return `settings`, `path_router`.
         """
         
         if packages is None:
             packages = []
         
-        if scan_caller:
-            calling_mod = inspect.getmodule(inspect.stack()[1][0])
-            packages.append(dirname(calling_mod.__file__))
-            
         if scan_framework:
-            packages.append(sys.modules['thruflo.webapp'])
+            packages.append('thruflo.webapp')
         
-        self.scan(packages=packages)
+        to_scan = []
+        for item in packages:
+            if not item in sys.modules:
+                __import__(item)
+            to_scan.append(sys.modules[item])
+        
+        self.scan(packages=to_scan)
         self.setup_components()
         
         settings = registry.getUtility(IRequirableSettings)

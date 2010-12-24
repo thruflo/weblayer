@@ -70,9 +70,10 @@ class Handler(object):
             self.template_renderer = template_renderer_adapter(self.settings)
         
         if static_url_generator_adapter is None:
-            self.static = registry.getAdapter(
-                self.request, 
-                self.settings, 
+            self.static = registry.getMultiAdapter((
+                    self.request, 
+                    self.settings
+                ),
                 IStaticURLGenerator
             )
         else:
@@ -90,10 +91,11 @@ class Handler(object):
             self.auth = authentication_manager_adapter(self.request)
         
         if secure_cookie_wrapper_adapter is None:
-            self.cookies = registry.getAdapter(
-                self.request,
-                self.response,
-                self.settings,
+            self.cookies = registry.getMultiAdapter((
+                    self.request,
+                    self.response,
+                    self.settings
+                ),
                 ISecureCookieWrapper
             )
         else:

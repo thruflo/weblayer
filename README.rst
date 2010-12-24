@@ -18,7 +18,8 @@ Yet another WSGI layer::
     }
     
     bootstrapper = Bootstrapper(app_settings, url_mapping)
-    application = WSGIApplication(**bootstrapper())
+    settings, path_router = bootstrapper()
+    application = WSGIApplication(settings, path_router)
     
     if __name__ == '__main__':
         from paste.httpserver import serve

@@ -11,8 +11,12 @@ from mock import Mock
 from zope.interface import implements
 from thruflo.webapp.interfaces import IRequestHandler
 
+from thruflo.webapp import method
 from thruflo.webapp.method import expose
 from thruflo.webapp.method import ExposedMethodSelector
+
+___CATEGORY = method._CATEGORY
+method._CATEGORY = 'thruflo.webapp.tests'
 
 class MockHandler(object):
     """ Mock that the venusian scanner should pick up.
@@ -20,7 +24,7 @@ class MockHandler(object):
     
     implements(IRequestHandler)
     
-    @expose(category='thruflo.webapp.tests')
+    @expose
     def yes(self):
         """ This method should be exposed.
         """
@@ -33,6 +37,8 @@ class MockHandler(object):
     
     
 
+
+method._CATEGORY = ___CATEGORY
 
 class TestIntegration(unittest.TestCase):
     """ Test the @expose decorator.

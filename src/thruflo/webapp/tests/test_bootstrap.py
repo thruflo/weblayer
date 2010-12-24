@@ -571,8 +571,8 @@ class TestSetupComponents(unittest.TestCase):
             _was_called_with(
                 self.registry.registerAdapter,
                 MakoTemplateRenderer,
-                adapts=[IRequirableSettings],
-                provides=ITemplateRenderer
+                required=[IRequirableSettings],
+                provided=ITemplateRenderer
             )
         )
         
@@ -595,8 +595,8 @@ class TestSetupComponents(unittest.TestCase):
             _was_called_with(
                 self.registry.registerAdapter,
                 TemplateRenderer,
-                adapts=[IRequirableSettings],
-                provides=ITemplateRenderer
+                required=[IRequirableSettings],
+                provided=ITemplateRenderer
             )
         )
         
@@ -623,7 +623,7 @@ class TestSetupComponents(unittest.TestCase):
           `TrivialAuthenticationManager`.
         """
         
-        from thruflo.webapp.interfaces import IRequestHandler
+        from thruflo.webapp.interfaces import IRequest
         from thruflo.webapp.interfaces import IAuthenticationManager
         
         from thruflo.webapp import bootstrap
@@ -638,8 +638,8 @@ class TestSetupComponents(unittest.TestCase):
             _was_called_with(
                 self.registry.registerAdapter,
                 AuthenticationManager,
-                adapts=[IRequestHandler],
-                provides=IAuthenticationManager
+                required=[IRequest],
+                provided=IAuthenticationManager
             )
         )
         
@@ -651,7 +651,7 @@ class TestSetupComponents(unittest.TestCase):
           it's registered.
         """
         
-        from thruflo.webapp.interfaces import IRequestHandler
+        from thruflo.webapp.interfaces import IRequest
         from thruflo.webapp.interfaces import IAuthenticationManager
         
         bootstrapper = self.make_one()
@@ -664,8 +664,8 @@ class TestSetupComponents(unittest.TestCase):
             _was_called_with(
                 self.registry.registerAdapter,
                 AuthenticationManager,
-                adapts=[IRequestHandler],
-                provides=IAuthenticationManager
+                required=[IRequest],
+                provided=IAuthenticationManager
             )
         )
         
@@ -708,8 +708,8 @@ class TestSetupComponents(unittest.TestCase):
             _was_called_with(
                 self.registry.registerAdapter,
                 StaticURLGenerator, 
-                adapts=[IRequest, IRequirableSettings],
-                provides=IStaticURLGenerator
+                required=[IRequest, IRequirableSettings],
+                provided=IStaticURLGenerator
             )
         )
         
@@ -733,8 +733,8 @@ class TestSetupComponents(unittest.TestCase):
             _was_called_with(
                 self.registry.registerAdapter,
                 StaticURLGenerator, 
-                adapts=[IRequest, IRequirableSettings],
-                provides=IStaticURLGenerator
+                required=[IRequest, IRequirableSettings],
+                provided=IStaticURLGenerator
             )
         )
         
@@ -777,8 +777,8 @@ class TestSetupComponents(unittest.TestCase):
             _was_called_with(
                 self.registry.registerAdapter,
                 SecureCookieWrapper, 
-                adapts=[IRequest, IResponse, IRequirableSettings],
-                provides=ISecureCookieWrapper
+                required=[IRequest, IResponse, IRequirableSettings],
+                provided=ISecureCookieWrapper
             )
         )
         
@@ -802,8 +802,8 @@ class TestSetupComponents(unittest.TestCase):
             _was_called_with(
                 self.registry.registerAdapter,
                 SecureCookieWrapper, 
-                adapts=[IRequest, IResponse, IRequirableSettings],
-                provides=ISecureCookieWrapper
+                required=[IRequest, IResponse, IRequirableSettings],
+                provided=ISecureCookieWrapper
             )
         )
         
@@ -845,8 +845,8 @@ class TestSetupComponents(unittest.TestCase):
             _was_called_with(
                 self.registry.registerAdapter,
                 MethodSelector, 
-                adapts=[IRequestHandler],
-                provides=IMethodSelector
+                required=[IRequestHandler],
+                provided=IMethodSelector
             )
         )
         
@@ -869,8 +869,8 @@ class TestSetupComponents(unittest.TestCase):
             _was_called_with(
                 self.registry.registerAdapter,
                 MethodSelector, 
-                adapts=[IRequestHandler],
-                provides=IMethodSelector
+                required=[IRequestHandler],
+                provided=IMethodSelector
             )
         )
         
@@ -912,8 +912,8 @@ class TestSetupComponents(unittest.TestCase):
             _was_called_with(
                 self.registry.registerAdapter,
                 ResponseNormaliser, 
-                adapts=[IResponse],
-                provides=IResponseNormaliser
+                required=[IResponse],
+                provided=IResponseNormaliser
             )
         )
         
@@ -936,8 +936,8 @@ class TestSetupComponents(unittest.TestCase):
             _was_called_with(
                 self.registry.registerAdapter,
                 ResponseNormaliser, 
-                adapts=[IResponse],
-                provides=IResponseNormaliser
+                required=[IResponse],
+                provided=IResponseNormaliser
             )
         )
         
