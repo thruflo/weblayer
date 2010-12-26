@@ -299,3 +299,36 @@ class Handler(object):
     
     
 
+class SafeHandler(Handler):
+    """ Exposes the four `safe HTTP methods`_.
+      
+      .. _`safe HTTP methods`: http://bit.ly/f8tKin
+    """
+    
+    __all__ = (
+        'head', 
+        'get', 
+        'trace',
+        'options'
+    )
+    
+
+class HTTPHandler(Handler):
+    """ Exposes the nine `HTTP methods`_.
+      
+      .. _`HTTP methods`: http://bit.ly/92iEnV
+    """
+    
+    __all__ = (
+        'head', 
+        'get', 
+        'post',
+        'put',
+        'delete',
+        'trace',
+        'options', 
+        'connect',
+        'patch'
+    )
+    
+

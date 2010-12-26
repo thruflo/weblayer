@@ -96,54 +96,6 @@ class TestCallBootstrapper(unittest.TestCase):
         return bootstrapper
         
     
-    def test_scan_caller_true_gets_calling_mod(self):
-        """ If `scan_caller` is True we use `inspect.stack` and
-          `inspect.getmodule` to get the calling module.
-        """
-        
-        bootstrapper = self.make_one()
-        bootstrapper(scan_caller=True)
-        self.assertTrue(self.inspect.stack.called)
-        self.assertTrue(self.inspect.getmodule.called)
-        
-    
-    def test_scan_caller_defaults_to_true(self):
-        """ `scan_caller` defaults to `True`, thus calling `inspect.stack`
-          and `inspect.getmodule` to get the calling module.
-        """
-        
-        bootstrapper = self.make_one()
-        bootstrapper(scan_caller=True)
-        self.assertTrue(self.inspect.stack.called)
-        self.assertTrue(self.inspect.getmodule.called)
-        
-        del bootstrapper
-        
-    
-    def test_scan_caller_appends_calling_module_dirname_to_packages(self):
-        """ When `scan_caller` is `True`, we append
-          and `dirname` are not called.
-        """
-        
-        bootstrapper = self.make_one()
-        bootstrapper(packages=[], scan_caller=True)
-        self.dirname.assert_called_with('/foo/bar.py')
-        packages = bootstrapper.scan.call_args[1]['packages']
-        self.assertTrue('/foo/bar' in packages)
-        
-    
-    def test_scan_caller_false(self):
-        """ When `scan_caller` is `False`, `inspect.stack`, `inspect.getmodule`
-         to get the calling module.
-        """
-        
-        bootstrapper = self.make_one()
-        bootstrapper(scan_caller=False)
-        self.assertTrue(not self.inspect.stack.called)
-        self.assertTrue(not self.inspect.getmodule.called)
-        self.assertTrue(not self.dirname.called)
-        
-    
     def test_scan_framework_appends_thruflo_webapp_to_packages(self):
         """ When `scan_framework` is `True`, we append
           `sys.modules['thruflo.webapp']` to packages.
@@ -183,12 +135,14 @@ class TestCallBootstrapper(unittest.TestCase):
         """
         
         bootstrapper = self.make_one()
-        bootstrapper(scan_caller=False, scan_framework=False)
+        bootstrapper(scan_framework=False)
         bootstrapper.scan.assert_called_with(packages=[])
         
         bootstrapper = self.make_one()
-        bootstrapper(packages=[1, 2], scan_caller=False, scan_framework=False)
-        bootstrapper.scan.assert_called_with(packages=[1, 2])
+        bootstrapper(packages=['thruflo.webapp.tests'], scan_framework=False)
+        bootstrapper.scan.assert_called_with(
+            packages=[sys.modules['thruflo.webapp.tests']]
+        )
         
     
     def test_setup_components(self):

@@ -28,7 +28,7 @@ from settings import RequirableSettings
 from static import MemoryCachedStaticURLGenerator
 from template import MakoTemplateRenderer
 
-raise NotImplementedError(
+if False: raise NotImplementedError(
   """ Atm, scanning `@expose` decorated methods doesn't work
     with the order we bootstrap stuff.
     

@@ -1,86 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" Unit and integration tests for `thruflo.webapp.method`.
+""" Unit tests for `thruflo.webapp.method`.
 """
 
-import venusian
 import unittest
 from mock import Mock
-
-from zope.interface import implements
-from thruflo.webapp.interfaces import IRequestHandler
-
-from thruflo.webapp import method
-from thruflo.webapp.method import expose
-from thruflo.webapp.method import ExposedMethodSelector
-
-___CATEGORY = method._CATEGORY
-method._CATEGORY = 'thruflo.webapp.tests'
-
-class MockHandler(object):
-    """ Mock that the venusian scanner should pick up.
-    """
-    
-    implements(IRequestHandler)
-    
-    @expose
-    def yes(self):
-        """ This method should be exposed.
-        """
-        
-    
-    def no(self):
-        """ This method should not be exposed.
-        """
-        
-    
-    
-
-
-method._CATEGORY = ___CATEGORY
-
-class TestIntegration(unittest.TestCase):
-    """ Test the @expose decorator.
-    """
-    
-    def setUp(self):
-        """ Scan the module to actually execute the decorator.
-        """
-        
-        from thruflo.webapp.tests import test_method
-        scanner = venusian.Scanner()
-        scanner.scan(test_method, categories=('thruflo.webapp.tests',))
-        self.handler = MockHandler()
-        
-    
-    
-    def test_scanned_yes(self):
-        """ `MockHandler.yes` should be exposed.
-        """
-        
-        s = ExposedMethodSelector(self.handler)
-        self.assertTrue(s.select_method('YES') == self.handler.yes)
-        
-    
-    
-    def test_scanned_no(self):
-        """ `MockHandler.no` should not be exposed.
-        """
-        
-        s = ExposedMethodSelector(self.handler)
-        self.assertTrue(s.select_method('NO') is None)
-        
-    
-    
 
 class TestExposedMethodSelector(unittest.TestCase):
     """ Test the logic of the ExposedMethodSelector.
     """
     
     def setUp(self):
+        """
+        """
+        
+        from thruflo.webapp.method import ExposedMethodSelector
+        
         class MockContext(object):
-            __exposed_methods__ = ['a', 'b', 'C']
+            __all__ = ['a', 'b', 'C']
             a = 'method_a'
             c = 'method_c'
             
@@ -112,8 +50,10 @@ class TestExposedMethodSelector(unittest.TestCase):
     
     
     def test_exposed_methods_exists(self):
-        """ Context must have `__exposed_methods__`.
+        """ Context must have `__all__`.
         """
+        
+        from thruflo.webapp.method import ExposedMethodSelector
         
         class MockContext(object):
             a = 'method_a'
