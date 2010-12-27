@@ -18,7 +18,7 @@ import time
 from zope.component import adapts
 from zope.interface import implements
 
-from interfaces import IRequest, IResponse, IRequirableSettings
+from interfaces import IRequest, IResponse, ISettings
 from interfaces import ISecureCookieWrapper
 from settings import require_setting
 from utils import encode_to_utf8
@@ -150,7 +150,7 @@ class SignedSecureCookieWrapper(object):
       and set cookies that can't be forged.
     """
     
-    adapts(IRequest, IResponse, IRequirableSettings)
+    adapts(IRequest, IResponse, ISettings)
     implements(ISecureCookieWrapper)
     
     def __init__(self, request, response, settings):

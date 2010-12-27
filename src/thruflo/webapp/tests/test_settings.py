@@ -4,75 +4,141 @@
 """ Unit and integration tests for `thruflo.webapp.settings`.
 """
 
-import venusian
 import unittest
 from mock import Mock
 
-from zope.interface import implements
-
-from thruflo.webapp.settings import RequirableSettings
-from thruflo.webapp.settings import require, require_setting
-from thruflo.webapp.settings import override, override_setting
-
-require_setting('test_module', category='thruflo.webapp.tests')
-
-@require('test_function', category='thruflo.webapp.tests')
-def foo(): # pragma: no cover
-    pass
-
-
-@require('test_class', category='thruflo.webapp.tests')
-class Foo(object):
-    pass
+class TestInit(unittest.TestCase):
+    """ Test the logic of `RequirableSettings.__init__`.
+    """
     
-
-
-require_setting(
-    'test_override_function', 
-    default='something', 
-    category='thruflo.webapp.tests'
-)
+    def setUp(self):
+        from thruflo.webapp import settings
+        self.__venusian = settings.venusian
+        self.venusian = Mock()
+        self.scanner = Mock()
+        self.venusian.Scanner.return_value = self.scanner
+        settings.venusian = self.venusian
+        
+    
+    def tearDown(self):
+        from thruflo.webapp import settings
+        settings.venusian = self.__venusian
+        
+    
+    def make_one(self, *args, **kwargs):
+        from thruflo.webapp.settings import RequirableSettings
+        return RequirableSettings(*args, **kwargs)
+        
+    
+    def test_required_settings_and_items_are_empty_dicts(self):
+        """ `self.__required_settings__` and `self._items` are empty dicts.
+        """
+        
+        settings = self.make_one()
+        self.assertTrue(settings.__required_settings__ == {})
+        self.assertTrue(settings._items == {})
+        
+    
+    def test_scanner_init_with_settings_if_packages(self):
+        """ If `packages` are provided, which is not the case by default,
+          inits a `venusian.Scanner` with `settings=self`
+        """
+        
+        settings = self.make_one()
+        self.assertTrue(not self.venusian.Scanner.called)
+        
+        settings = self.make_one(packages=[])
+        self.assertTrue(not self.venusian.Scanner.called)
+        
+        settings = self.make_one(packages=['a', 'b'])
+        self.venusian.Scanner.assert_called_with(settings=settings)
+        
+    
+    def test_scan_each_package(self):
+        """ If a list of `packages` is provided, scans them in turn.
+        """
+        
+        settings = self.make_one(packages=['a'])
+        args = self.scanner.scan.call_args[0]
+        self.assertTrue(args[0] == 'a')
+        
+        settings = self.make_one(packages=['b', 'c', 'd'])
+        args = self.scanner.scan.call_args[0]
+        self.assertTrue(args[0] == 'd')
+        
+        self.assertTrue(len(self.scanner.scan.call_args_list) == 4)
+        
+    
+    def test_categories(self):
+        """ `categories` defaults to `[_CATEGORY]` unless `extra_categories`
+          are provided.
+        """
+        
+        from thruflo.webapp.settings import _CATEGORY
+        
+        settings = self.make_one(packages=['a'])
+        kwargs = self.scanner.scan.call_args[1]
+        self.assertTrue(kwargs['categories'] == [_CATEGORY])
+        
+        settings = self.make_one(packages=['a'], extra_categories=None)
+        kwargs = self.scanner.scan.call_args[1]
+        self.assertTrue(kwargs['categories'] == [_CATEGORY])
+        
+        settings = self.make_one(packages=['a'], extra_categories=['b', 'c'])
+        kwargs = self.scanner.scan.call_args[1]
+        self.assertTrue(kwargs['categories'] == [_CATEGORY, 'b', 'c'])
+        
+    
+    
 
 class TestIntegration(unittest.TestCase):
     """ Test requiring and overriding settings.
     """
     
     def setUp(self):
-        """ Scan the module to actually execute the decorator.
-        """
-        
-        from thruflo.webapp.tests import test_settings
-        
         self.required_items = {
             'test_module': 'some value',
             'test_function': 'some value',
-            'test_class': 'some value'
+            'test_class': 'some value',
+            'test_method': 'some value'
         }
-        self.settings = RequirableSettings()
-        self.scanner = venusian.Scanner(settings=self.settings)
-        self.scanner.scan(test_settings, categories=('thruflo.webapp.tests',))
+        
+    
+    def make_one(self, packages):
+        from thruflo.webapp.settings import RequirableSettings
+        return RequirableSettings(
+            packages=packages,
+            extra_categories=['thruflo.webapp.tests']
+        )
         
     
     def test_required_items(self):
-        """ This is our control: calling `self.settings` with 
-          `self.required_items` should be fine.
+        """ This is our control: calling `settings` with `self.required_items`
+          should be fine.
         """
         
-        self.settings(self.required_items)
-        self.assertTrue(self.settings['test_module'] == 'some value')
-        self.assertTrue(self.settings['test_function'] == 'some value')
-        self.assertTrue(self.settings['test_class'] == 'some value')
+        from thruflo.webapp.tests.fixtures import require
+        settings = self.make_one([require])
+        
+        settings(self.required_items)
+        self.assertTrue(settings['test_module'] == 'some value')
+        self.assertTrue(settings['test_function'] == 'some value')
+        self.assertTrue(settings['test_class'] == 'some value')
+        self.assertTrue(settings['test_method'] == 'some value')
         
     
     def test_module(self):
         """ `test_module` should be required.
         """
         
+        from thruflo.webapp.tests.fixtures import require
+        settings = self.make_one([require])
+        
         items = self.required_items.copy()
         del items['test_module']
         self.assertRaises(
             KeyError,
-            self.settings,
+            settings,
             items
         )
         
@@ -81,11 +147,14 @@ class TestIntegration(unittest.TestCase):
         """ `test_function` should be required.
         """
         
+        from thruflo.webapp.tests.fixtures import require
+        settings = self.make_one([require])
+        
         items = self.required_items.copy()
         del items['test_function']
         self.assertRaises(
             KeyError,
-            self.settings,
+            settings,
             items
         )
         
@@ -94,11 +163,30 @@ class TestIntegration(unittest.TestCase):
         """ `test_class` should be required.
         """
         
+        from thruflo.webapp.tests.fixtures import require
+        settings = self.make_one([require])
+        
         items = self.required_items.copy()
         del items['test_class']
         self.assertRaises(
             KeyError,
-            self.settings,
+            settings,
+            items
+        )
+        
+    
+    def test_method(self):
+        """ `test_method` should be required.
+        """
+        
+        from thruflo.webapp.tests.fixtures import require
+        settings = self.make_one([require])
+        
+        items = self.required_items.copy()
+        del items['test_method']
+        self.assertRaises(
+            KeyError,
+            settings,
             items
         )
         
@@ -107,52 +195,80 @@ class TestIntegration(unittest.TestCase):
         """ Test the overrides.
         """
         
-        from thruflo.webapp.tests.fixtures import settings
+        from thruflo.webapp.tests.fixtures import require, override
         
-        self.scanner.scan(settings, categories=('thruflo.webapp.tests',))
-        
-        self.settings(self.required_items)
-        self.assertTrue(self.settings['test_override_function'] == 'something else')
+        settings = self.make_one([require, override])
+        settings(self.required_items)
+        self.assertTrue(settings['test_override_function'] == 'something else')
         
     
     
 
-class TestVenusian(unittest.TestCase):
+class TestDoubleImport(unittest.TestCase):
     """ See http://bit.ly/dIKcX9, specifically the bit that says
       
-      > This has the effect that double-registrations will never 
-      be performed.
+          This has the effect that double-registrations will never 
+          be performed.
       
       `thruflo.webapp.settings` is our equivalent of that article's 
-      `config.py`, this module is `app.py` and `.fixtures.double_import` 
+      `config.py`, `.fixtures.require` `app.py` and `.fixtures.double_import`
       is like `app2.py`.
     """
     
-    def test_double_import(self):
+    def make_one(self, packages):
+        from thruflo.webapp.settings import RequirableSettings
+        return RequirableSettings(
+            packages=packages,
+            extra_categories=['thruflo.webapp.tests']
+        )
+        
+    
+    def test__require_called_once(self):
         """ `app2` imports `app`, which means the `require_setting`
-          above would be run twice if we executed them on import.
+          above would be run twice if we called `_require` on import.
           
-          That would throw a KeyError (as we see in the next test).
         """
         
-        from thruflo.webapp.tests import test_settings
-        from thruflo.webapp.tests import test_settings
+        from thruflo.webapp.settings import RequirableSettings
+        __require = RequirableSettings._require
+        _require = Mock()
+        RequirableSettings._require = _require
+        
+        from thruflo.webapp.tests.fixtures import require
         from thruflo.webapp.tests.fixtures import double_import
         
-        settings = RequirableSettings()
-        scanner = venusian.Scanner(settings=settings)
+        settings = self.make_one(packages=[require, double_import])
         
-        scanner.scan(test_settings, categories=('thruflo.webapp.tests',))
-        scanner.scan(double_import, categories=('thruflo.webapp.tests',))
+        self.assertTrue(_require.call_args_list == [((
+                        'test_module',
+                    ), {
+                        'default': None, 
+                        'help': u''
+                    }
+                ), ((
+                        'test_function',
+                    ), {
+                        'default': None, 
+                        'help': u''
+                    }
+                ), ((
+                        'test_method',
+                    ), {
+                        'default': None, 
+                        'help': u''
+                    }
+                ), ((
+                        'test_class',
+                    ), {
+                        'default': None, 
+                        'help': u''
+                    }
+                )
+            ]
+        )
         
-        settings({
-            'test_module': 'some value',
-            'test_function': 'some value',
-            'test_class': 'some value'
-        })
-        self.assertTrue(settings['test_module'] == 'some value')
+        RequirableSettings._require = __require
         
     
     
-
 

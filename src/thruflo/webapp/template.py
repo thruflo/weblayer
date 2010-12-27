@@ -16,7 +16,7 @@ from zope.interface import implements
 
 from mako.lookup import TemplateLookup
 
-from interfaces import IRequirableSettings, ITemplateRenderer
+from interfaces import ISettings, ITemplateRenderer
 from settings import require_setting
 
 DEFAULT_BUILT_INS = {
@@ -32,7 +32,7 @@ class MakoTemplateRenderer(object):
     """ `Mako` template renderer.
     """
     
-    adapts(IRequirableSettings)
+    adapts(ISettings)
     implements(ITemplateRenderer)
     
     def __init__(

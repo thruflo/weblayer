@@ -1,1 +1,1 @@
-from thruflo.webapp.tests import test_settings
+from thruflo.webapp.tests.fixtures import require

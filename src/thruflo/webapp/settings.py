@@ -10,7 +10,7 @@
   
       >>> require_setting('api_key')
   
-  Or by decorating a class or function (*not* a method)::
+  Or by decorating a class, function or method::
   
       >>> @require('api_key')
       ... class Foo(object): pass
@@ -25,9 +25,9 @@
       >>> settings = RequirableSettings()
       >>> settings._require('api_key') # never call this directly!
   
-  You can call the `RequirableSettings` instance with the settings
-  provided.  If you pass in a value for `api_key`, great, otherwise, 
-  you'll get a `KeyError`::
+  You can call the `RequirableSettings` instance with the
+  settings provided.  If you pass in a value for `api_key`, great, 
+  otherwise, you'll get a `KeyError`::
   
       >>> settings({})
       Traceback (most recent call last):
@@ -74,144 +74,10 @@ import venusian
 
 from zope.interface import implements
 
-from interfaces import IRequirableSettings
+from interfaces import ISettings
 
+_CATEGORY = 'thruflo.webapp'
 _HANGER_NAME = '__thruflo_require_settings_venusian_hanger__'
-
-def require_setting(name, default=None, help=u'', category='thruflo.webapp'):
-    """ Call this at module level to require a setting.
-      
-      Works just like a decorator, defering the real work
-      until the callback is called by a `venusian` scan.
-      
-      However, because it's *not* a decorator, we need to
-      do a little dance...
-      
-    """
-    
-    # the first step is to get the module we're being called in
-    calling_mod = inspect.getmodule(inspect.stack()[1][0])
-    
-    # ignore when `None` (e.g.: if called from a doctest)
-    if calling_mod is not None:
-        # make sure it has a harmless function at
-        # `calling_mod.__thruflo_require_settings_venusian_hanger__`
-        def _hanger(): pass
-        
-        if not hasattr(calling_mod, _HANGER_NAME):
-            setattr(calling_mod, _HANGER_NAME, _hanger)
-        
-        # defer the real business
-        def callback(scanner, *args):
-            return scanner.settings._require(
-                name, 
-                default=default, 
-                help=help
-            )
-        
-        
-        # and, crucially, hang the callback off the *calling module*
-        venusian.attach(
-            getattr(calling_mod, _HANGER_NAME),
-            callback,
-            category=category
-        )
-    
-
-def override_setting(name, default=None, help=u'', category='thruflo.webapp'):
-    """ Call this at module level to override a setting.
-    """
-    
-    # the first step is to get the module we're being called in
-    calling_mod = inspect.getmodule(inspect.stack()[1][0])
-    
-    # ignore when `None` (e.g.: if called from a doctest)
-    if calling_mod is not None:
-        # make sure it has a harmless function at
-        # `calling_mod.__thruflo_require_settings_venusian_hanger__`
-        def _hanger(): pass
-        
-        if not hasattr(calling_mod, _HANGER_NAME):
-            setattr(calling_mod, _HANGER_NAME, _hanger)
-        
-        # defer the real business
-        def callback(scanner, *args):
-            return scanner.settings._override(
-                name, 
-                default=default, 
-                help=help
-            )
-        
-        
-        # and, crucially, hang the callback off the *calling module*
-        venusian.attach(
-            getattr(calling_mod, _HANGER_NAME),
-            callback,
-            category=category
-        )
-    
-    
-
-
-class require(object):
-    """ Decorator to require a setting.
-    """
-    
-    def __init__(self, name, default=None, help=u'', category='thruflo.webapp'):
-        self._name = name
-        self._default = default
-        self._help = help
-        self._category = category
-        
-    
-    def __call__(self, wrapped):
-        """
-        """
-        
-        def callback(scanner, *args):
-            return scanner.settings._require(
-                self._name, 
-                default=self._default, 
-                help=self._help
-            )
-            
-        
-        venusian.attach(wrapped, callback, category=self._category)
-        return wrapped
-        
-    
-    
-
-class override(object):
-    """ Decorator to override a setting.
-    """
-    
-    def __init__(self, name, default=None, help=u'', category='thruflo.webapp'):
-        self._name = name
-        self._default = default
-        self._help = help
-        self._category = category
-        
-    
-    
-    def __call__(self, wrapped):
-        """
-        """
-        
-        def callback(scanner, *args):
-            return scanner.settings._override(
-                self._name, 
-                default=self._default, 
-                help=self._help
-            )
-            
-        
-        venusian.attach(wrapped, callback, category=self._category)
-        return wrapped
-        
-    
-    
-
 
 class RequirableSettings(object):
     """ Utility that provides dictionary-like access to 
@@ -219,14 +85,29 @@ class RequirableSettings(object):
       
       Do not use the `_require` and `_override` methods directly.  
       Instead, use the `require_setting` and `override_setting`
-      functions below, in tandem with a `venusian` scan.
+      functions or the `require` and `override` decorators defined below,
+      in tandem with a `venusian` scan.
     """
     
-    implements(IRequirableSettings)
+    implements(ISettings)
     
-    def __init__(self):
+    def __init__(self, packages=None, extra_categories=None):
+        """ If `packages`, run a `venusian` scan.
+        """
+        
         self.__required_settings__ = {}
         self._items = {}
+        
+        if packages:
+            categories = [_CATEGORY]
+            if extra_categories is not None:
+                categories.extend(extra_categories)
+            scanner = venusian.Scanner(settings=self)
+            for item in packages:
+                scanner.scan(item, categories=categories)
+                
+            
+        
         
     
     
@@ -433,5 +314,111 @@ class RequirableSettings(object):
             
         
     
+    
+
+
+def _attach_callback(
+        name, 
+        default=None, 
+        help=u'', 
+        category=_CATEGORY,
+        override=False
+    ):
+    """ Hangs a callback to `_require` or `_override` off the module that
+      this method is called from.
+      
+      N.b.: attaches the callback manually, rather than using `venusian.attach`
+      to avoid depending on a CPython implementation detail.
+      
+    """
+    
+    # get the module we're being called in
+    calling_mod = None
+    for item in inspect.stack():
+        if item[3] == '<module>':
+            calling_mod = inspect.getmodule(item[0])
+            break
+        
+    # ignore when `None` (e.g.: if called from a doctest)
+    if calling_mod is None:
+        return
+    
+    # make sure it has a harmless function at
+    # `calling_mod.__thruflo_require_settings_venusian_hanger__`
+    def _required_settings_hanger(): pass
+    
+    if not hasattr(calling_mod, _HANGER_NAME):
+        setattr(calling_mod, _HANGER_NAME, _required_settings_hanger)
+    
+    # defer the real business
+    def callback(scanner, *args):
+        settings = scanner.settings
+        method = override and settings._override or settings._require
+        return method(name, default=default, help=help)
+        
+    
+    hanger = getattr(calling_mod, _HANGER_NAME)
+    categories = getattr(hanger, venusian.ATTACH_ATTR, {})
+    callbacks = categories.setdefault(category, [])
+    callbacks.append(callback)
+    setattr(hanger, venusian.ATTACH_ATTR, categories)
+    
+
+def require_setting(name, default=None, help=u'', category=_CATEGORY):
+    """ Call function at module level to require a setting.
+    """
+    
+    _attach_callback(
+        name, 
+        default=default, 
+        help=help, 
+        category=category, 
+        override=False
+    )
+    
+
+def override_setting(name, default=None, help=u'', category=_CATEGORY):
+    """ Call function at module level to override a setting.
+    """
+    
+    _attach_callback(
+        name, 
+        default=default, 
+        help=help, 
+        category=category, 
+        override=True
+    )
+    
+
+def require(name, default=None, help=u'', category=_CATEGORY):
+    """ Decorator to require a setting.
+    """
+    
+    def wrap(wrapped):
+        """ Called at decoration time.  Requires the setting and returns the
+          unchanged wrapped function / method or class.
+        """
+        
+        require_setting(name, default=default, help=help, category=category)
+        return wrapped
+        
+    
+    return wrap
+    
+
+def override(name, default=None, help=u'', category=_CATEGORY):
+    """ Decorator to override a setting.
+    """
+    
+    def wrap(wrapped):
+        """ Called at decoration time.  Overrides the setting and returns the
+          unchanged wrapped function / method or class.
+        """
+        
+        override_setting(name, default=default, help=help, category=category)
+        return wrapped
+        
+    
+    return wrap
     
 

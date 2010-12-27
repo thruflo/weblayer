@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from thruflo.webapp.settings import override
+from thruflo.webapp.settings import require_setting, override
+
+require_setting(
+    'test_override_function', 
+    default='something', 
+    category='thruflo.webapp.tests'
+)
 
 @override(
     'test_override_function', 

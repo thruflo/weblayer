@@ -14,7 +14,7 @@ from os.path import join
 from zope.component import adapts
 from zope.interface import implements
 
-from interfaces import IRequest, IRequirableSettings, IStaticURLGenerator
+from interfaces import IRequest, ISettings, IStaticURLGenerator
 from settings import require_setting
 from utils import generate_hash
 
@@ -27,7 +27,7 @@ class MemoryCachedStaticURLGenerator(object):
     
     _cache = {}
     
-    adapts(IRequest, IRequirableSettings)
+    adapts(IRequest, ISettings)
     implements(IStaticURLGenerator)
     
     def __init__(

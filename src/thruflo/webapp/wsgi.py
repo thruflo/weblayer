@@ -12,7 +12,7 @@ from zope.component import adapts
 from zope.interface import implements
 
 from base import Request, Response
-from interfaces import IPathRouter, IRequirableSettings, IWSGIApplication
+from interfaces import IPathRouter, ISettings, IWSGIApplication
 
 class Application(object):
     """ Implementation of a callable WSGI application that 
@@ -21,7 +21,7 @@ class Application(object):
     
     """
     
-    adapts(IRequirableSettings, IPathRouter)
+    adapts(ISettings, IPathRouter)
     implements(IWSGIApplication)
     
     def __init__(

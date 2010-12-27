@@ -19,7 +19,7 @@ from zope.interface import implements
 from component import registry
 
 from interfaces import IRequest, IResponse, IRequestHandler
-from interfaces import IRequirableSettings
+from interfaces import ISettings
 from interfaces import ITemplateRenderer, IStaticURLGenerator
 from interfaces import IAuthenticationManager, ISecureCookieWrapper
 from interfaces import IMethodSelector, IResponseNormaliser
@@ -39,7 +39,7 @@ class Handler(object):
     """ A request handler (aka view class) implementation.
     """
     
-    adapts(IRequest, IResponse, IRequirableSettings)
+    adapts(IRequest, IResponse, ISettings)
     implements(IRequestHandler)
     
     def __init__(
@@ -300,16 +300,14 @@ class Handler(object):
     
 
 class SafeHandler(Handler):
-    """ Exposes the four `safe HTTP methods`_.
+    """ Exposes the two commonly used of the four `safe HTTP methods`_.
       
       .. _`safe HTTP methods`: http://bit.ly/f8tKin
     """
     
     __all__ = (
         'head', 
-        'get', 
-        'trace',
-        'options'
+        'get'
     )
     
 

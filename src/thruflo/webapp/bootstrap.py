@@ -9,12 +9,7 @@ __all__ = [
     'Bootstrapper'
 ]
 
-import inspect
 import sys
-
-from os.path import dirname
-
-import venusian
 
 from component import registry
 from interfaces import *
@@ -28,95 +23,68 @@ from settings import RequirableSettings
 from static import MemoryCachedStaticURLGenerator
 from template import MakoTemplateRenderer
 
-if False: raise NotImplementedError(
-  """ Atm, scanning `@expose` decorated methods doesn't work
-    with the order we bootstrap stuff.
-    
-    We can scan the packages fine.  The issue is if we've built
-    a `url_mapping` beforehand then the classes in that aren't
-    scanned.
-    
-    We could:
-    
-    * stop using an `@expose` decorator at all, expose the default
-      set of HTTP verbs and provide default '405' handler methods
-      for all the verbs -- this is simplest, removes the syntax
-      headache but isn't as explicit.  Presumably we'd store the
-      list of verbs in `__all__`, `__exposed_methods__`, which
-      we would then allow the user to edit manually?
-      
-    * skip the venusian aspect of the decorator: there's no harm
-      calling the `@expose` decorator more than once.  We would
-      need to hack copy over some parts of the venusian internals
-      to amend the class definition which is perhaps buggy but
-      then perhaps not so bad.  Once done, this allows us to be
-      explicit again.
-      
-    * change the pattern for the url_mapping to use dotted paths
-      that we import when initialising the path_router
-      
-    * pass some sort of registry to the venusian scanner (n.b.:
-      this is how it's meant to be used...)
-    
-  """
-)
-
 class Bootstrapper(object):
-    """ Bootstrap thruflo.webapp components.
+    """ Bootstrap `thruflo.webapp` components.
       
       To bootstrap a default configuration, pass a dictionary of settings
       and list of url mappings to the constructor::
       
-          bootstrapper = Bootstrapper(settings={}, url_mapping=[])
+          >>> _settings = {'cookie_secret': '', 'template_directories': []}
+          >>> bootstrapper = Bootstrapper(settings=_settings, url_mapping=[])
       
-      Then call the instance to:
+      Then call the instance to scan for registered settings, register 
+      components and get ISettings and IPathRouter utilities::
       
-      * scan for venusian callbacks
-      * register components
-      * get IRequirableSettings and IPathRouter utilities
+          >>> settings, path_router = bootstrapper()
       
-      ::
+      This will raise a `KeyError` if the required settings aren't passed in::
       
-          settings, path_router = bootstrapper()
+          >>> bootstrapper = Bootstrapper(settings={}, url_mapping=[])
+          >>> settings, path_router = bootstrapper() #doctest: +NORMALIZE_WHITESPACE
+          Traceback (most recent call last):
+          ...
+          KeyError: u'Required setting `template_directories` () is missing, 
+                    Required setting `cookie_secret` (a long, random sequence 
+                    of bytes) is missing'
+          
+      Unless you tell it not to scan the framework (and don't pass in any other
+      packages to scan)::
+      
+          >>> settings, path_router = bootstrapper(scan_framework=False)
       
     """
     
-    def scan(
+    def require_settings(
             self, 
             packages=None, 
-            extra_categories=None,
-            settings=None
+            scan_framework=True, 
+            extra_categories=None
         ):
-        """ Run a `venusian` scan on packages.
+        """ Init and return `RequirableSettings`, scanning 
+          `packages` for required settings in the process.
         """
         
-        if not packages:
-            return
+        if packages is None:
+            packages = []
         
-        if settings is None:
-            scanner = venusian.Scanner(settings=self._settings)
-        else:
-            scanner = venusian.Scanner(settings=settings)
+        if scan_framework:
+            packages.insert(0, 'thruflo.webapp')
         
-        categories = ['thruflo.webapp']
-        if extra_categories is not None:
-            categories.extend(extra_categories)
-        
+        to_scan = []
         for item in packages:
-            import logging
-            logging.warning(
-                'scanner.scan({}, categories={})'.format(
-                    item, 
-                    categories
-                )
-            )
-            
-            scanner.scan(item, categories=categories)
+            if not item in sys.modules:
+                __import__(item)
+            to_scan.append(sys.modules[item])
         
-        return scanner
+        
+        settings = RequirableSettings(
+            packages=to_scan,
+            extra_categories=extra_categories
+        )
+        return settings
         
     
-    def setup_components(
+    def register_components(
             self, 
             settings=None,
             path_router=None,
@@ -133,9 +101,9 @@ class Bootstrapper(object):
         
         if settings is not False:
             if settings is None:
-                self._settings(self._user_settings)
-                settings = self._settings
-            registry.registerUtility(settings, IRequirableSettings)
+                settings = RequirableSettings()
+            settings(self._user_settings)
+            registry.registerUtility(settings, ISettings)
         
         if path_router is not False:
             if path_router is None:
@@ -147,7 +115,7 @@ class Bootstrapper(object):
                 TemplateRenderer = MakoTemplateRenderer
             registry.registerAdapter(
                 TemplateRenderer, 
-                required=[IRequirableSettings],
+                required=[ISettings],
                 provided=ITemplateRenderer
             )
         
@@ -165,7 +133,7 @@ class Bootstrapper(object):
                 StaticURLGenerator = MemoryCachedStaticURLGenerator
             registry.registerAdapter(
                 StaticURLGenerator, 
-                required=[IRequest, IRequirableSettings],
+                required=[IRequest, ISettings],
                 provided=IStaticURLGenerator
             )
         
@@ -174,7 +142,7 @@ class Bootstrapper(object):
                 SecureCookieWrapper = SignedSecureCookieWrapper
             registry.registerAdapter(
                 SecureCookieWrapper, 
-                required=[IRequest, IResponse, IRequirableSettings],
+                required=[IRequest, IResponse, ISettings],
                 provided=ISecureCookieWrapper
             )
         
@@ -197,34 +165,33 @@ class Bootstrapper(object):
             )
         
     
-    def __call__(self, packages=None, scan_framework=True):
-        """ `scan()` `setup_components()` and return `settings`, `path_router`.
+    
+    def __call__(
+            self, 
+            packages=None, 
+            scan_framework=True, 
+            extra_categories=None
+        ):
+        """ `require_settings`, `register_components` and return 
+          `settings, path_router`.
         """
         
-        if packages is None:
-            packages = []
+        self.register_components(
+            settings=self.require_settings(
+                packages=packages,
+                scan_framework=scan_framework,
+                extra_categories=extra_categories
+            )
+        )
         
-        if scan_framework:
-            packages.append('thruflo.webapp')
-        
-        to_scan = []
-        for item in packages:
-            if not item in sys.modules:
-                __import__(item)
-            to_scan.append(sys.modules[item])
-        
-        self.scan(packages=to_scan)
-        self.setup_components()
-        
-        settings = registry.getUtility(IRequirableSettings)
+        settings = registry.getUtility(ISettings)
         path_router = registry.getUtility(IPathRouter)
         
         return settings, path_router
         
     
     def __init__(self, settings=None, url_mapping=None):
-        """ Stores the `settings` and `url_mapping` provided and initialises
-          a `RequirableSettings` instance.
+        """ Stores the `settings` and `url_mapping` provided.
         """
         
         if settings is None:
@@ -236,8 +203,6 @@ class Bootstrapper(object):
             self._url_mapping = []
         else:
             self._url_mapping = url_mapping
-        
-        self._settings = RequirableSettings()
         
     
     

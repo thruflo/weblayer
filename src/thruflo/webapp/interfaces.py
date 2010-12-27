@@ -15,7 +15,7 @@ __all__ = [
     'IPathRouter',
     'IMethodSelector',
     'IResponseNormaliser',
-    'IRequirableSettings',
+    'ISettings',
     'ISecureCookieWrapper',
     'IAuthenticationManager',
     'IStaticURLGenerator'
@@ -192,7 +192,7 @@ class IResponseNormaliser(Interface):
     
     
 
-class IRequirableSettings(Interface):
+class ISettings(Interface):
     """ Provides dictionary-like access to global 
       application settings.
     """
