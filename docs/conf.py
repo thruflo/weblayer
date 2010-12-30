@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# thruflo.webapp documentation build configuration file, created by
+# weblayer documentation build configuration file, created by
 # sphinx-quickstart on Tue Nov 23 22:04:06 2010.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -19,7 +19,7 @@ import sys, os
 sys.path.insert(
     0, 
     os.path.abspath(
-        os.path.join('..', 'src', 'thruflo', 'webapp')
+        os.path.join('..', 'src', 'weblayer')
     )
 )
 
@@ -49,7 +49,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'thruflo.webapp'
+project = u'weblayer'
 copyright = u'2010, thruflo'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -173,7 +173,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'thruflowebappdoc'
+htmlhelp_basename = 'weblayerdoc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -187,7 +187,7 @@ htmlhelp_basename = 'thruflowebappdoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'thruflowebapp.tex', u'thruflo.webapp Documentation',
+  ('index', 'weblayer.tex', u'weblayer Documentation',
    u'thruflo', 'manual'),
 ]
 
@@ -220,6 +220,6 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'thruflowebapp', u'thruflo.webapp Documentation',
+    ('index', 'weblayer', u'weblayer Documentation',
      [u'thruflo'], 1)
 ]

@@ -1,10 +1,8 @@
-.. thruflo.webapp documentation master file, created by
-   sphinx-quickstart on Tue Nov 23 22:04:06 2010.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
 
-Welcome to thruflo.webapp's documentation!
-==========================================
+weblayer
+========
+
+.. include:: ../README.rst
 
 Contents:
 
@@ -21,84 +19,84 @@ Indices and tables
 Modules
 =======
 
-thruflo.webapp.auth
+weblayer.auth
 -------------------
 
-.. automodule:: thruflo.webapp.auth
+.. automodule:: weblayer.auth
    :members:
 
-thruflo.webapp.base
+weblayer.base
 -------------------
 
-.. automodule:: thruflo.webapp.base
+.. automodule:: weblayer.base
    :members:
 
-thruflo.webapp.bootstrap
+weblayer.bootstrap
 ------------------------
 
-.. automodule:: thruflo.webapp.bootstrap
+.. automodule:: weblayer.bootstrap
    :members:
 
-thruflo.webapp.cookie
+weblayer.cookie
 ---------------------
 
-.. automodule:: thruflo.webapp.cookie
+.. automodule:: weblayer.cookie
    :members:
 
-thruflo.webapp.interfaces
+weblayer.interfaces
 -------------------------
 
-.. automodule:: thruflo.webapp.interfaces
-.. autointerface:: thruflo.webapp.interfaces.IAuthenticationManager
-.. autointerface:: thruflo.webapp.interfaces.IMethodSelector
-.. autointerface:: thruflo.webapp.interfaces.IPathRouter
-.. autointerface:: thruflo.webapp.interfaces.IRequest
-.. autointerface:: thruflo.webapp.interfaces.IRequestHandler
-.. autointerface:: thruflo.webapp.interfaces.IResponse
-.. autointerface:: thruflo.webapp.interfaces.IResponseNormaliser
-.. autointerface:: thruflo.webapp.interfaces.ISecureCookieWrapper
-.. autointerface:: thruflo.webapp.interfaces.ISettings
-.. autointerface:: thruflo.webapp.interfaces.ITemplateRenderer
-.. autointerface:: thruflo.webapp.interfaces.IWSGIApplication
+.. automodule:: weblayer.interfaces
+.. autointerface:: weblayer.interfaces.IAuthenticationManager
+.. autointerface:: weblayer.interfaces.IMethodSelector
+.. autointerface:: weblayer.interfaces.IPathRouter
+.. autointerface:: weblayer.interfaces.IRequest
+.. autointerface:: weblayer.interfaces.IRequestHandler
+.. autointerface:: weblayer.interfaces.IResponse
+.. autointerface:: weblayer.interfaces.IResponseNormaliser
+.. autointerface:: weblayer.interfaces.ISecureCookieWrapper
+.. autointerface:: weblayer.interfaces.ISettings
+.. autointerface:: weblayer.interfaces.ITemplateRenderer
+.. autointerface:: weblayer.interfaces.IWSGIApplication
 
-thruflo.webapp.method
+weblayer.method
 ---------------------
 
-.. automodule:: thruflo.webapp.method
+.. automodule:: weblayer.method
    :members:
 
-thruflo.webapp.normalise
+weblayer.normalise
 ------------------------
 
-.. automodule:: thruflo.webapp.normalise
+.. automodule:: weblayer.normalise
    :members:
 
-thruflo.webapp.route
+weblayer.route
 --------------------
 
-.. automodule:: thruflo.webapp.route
+.. automodule:: weblayer.route
    :members:
 
-thruflo.webapp.settings
+weblayer.settings
 -----------------------
 
-.. automodule:: thruflo.webapp.settings
+.. automodule:: weblayer.settings
    :members:
 
-thruflo.webapp.template
+weblayer.template
 -----------------------
 
-.. automodule:: thruflo.webapp.template
+.. automodule:: weblayer.template
    :members:
 
-thruflo.webapp.utils
+weblayer.utils
 --------------------
 
-.. automodule:: thruflo.webapp.utils
+.. automodule:: weblayer.utils
    :members:
 
-thruflo.webapp.web
+weblayer.web
 -------------------
 
-.. automodule:: thruflo.webapp.web
+.. automodule:: weblayer.web
    :members:
