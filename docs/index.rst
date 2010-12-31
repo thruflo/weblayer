@@ -1,50 +1,74 @@
 
-weblayer
-========
+======================
+weblayer Documentation
+======================
+
+
+Getting Started
+===============
 
 .. include:: ../README.rst
 
-Contents:
+Hello World
+-----------
 
-.. toctree::
-   :maxdepth: 2
+You can then write code like this:
 
-Indices and tables
-==================
+.. literalinclude:: ../src/weblayer/examples/helloworld.py
+  :language: python
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+
+User Guide
+==========
+
+.. include:: ../USERGUIDE.rst
+
+Deployment
+----------
+
+@@ deployment ...
+
+* paste
+* gunicorn
+* mod_wsgi
+* appengine
+
 
 Modules
 =======
 
 weblayer.auth
--------------------
+-------------
 
 .. automodule:: weblayer.auth
    :members:
 
 weblayer.base
--------------------
+-------------
 
 .. automodule:: weblayer.base
    :members:
 
 weblayer.bootstrap
-------------------------
+------------------
 
 .. automodule:: weblayer.bootstrap
    :members:
 
+weblayer.component
+------------------
+
+.. automodule:: weblayer.component
+   :members:
+
 weblayer.cookie
----------------------
+---------------
 
 .. automodule:: weblayer.cookie
    :members:
 
 weblayer.interfaces
--------------------------
+-------------------
 
 .. automodule:: weblayer.interfaces
 .. autointerface:: weblayer.interfaces.IAuthenticationManager
@@ -56,47 +80,60 @@ weblayer.interfaces
 .. autointerface:: weblayer.interfaces.IResponseNormaliser
 .. autointerface:: weblayer.interfaces.ISecureCookieWrapper
 .. autointerface:: weblayer.interfaces.ISettings
+.. autointerface:: weblayer.interfaces.IStaticURLGenerator
 .. autointerface:: weblayer.interfaces.ITemplateRenderer
 .. autointerface:: weblayer.interfaces.IWSGIApplication
 
 weblayer.method
----------------------
+---------------
 
 .. automodule:: weblayer.method
    :members:
 
 weblayer.normalise
-------------------------
+------------------
 
 .. automodule:: weblayer.normalise
    :members:
 
+weblayer.request
+----------------
+
+.. automodule:: weblayer.request
+   :members:
+
 weblayer.route
---------------------
+--------------
 
 .. automodule:: weblayer.route
    :members:
 
 weblayer.settings
------------------------
+-----------------
 
 .. automodule:: weblayer.settings
    :members:
 
+weblayer.static
+---------------
+
+.. automodule:: weblayer.static
+   :members:
+
 weblayer.template
------------------------
+-----------------
 
 .. automodule:: weblayer.template
    :members:
 
 weblayer.utils
---------------------
+--------------
 
 .. automodule:: weblayer.utils
    :members:
 
-weblayer.web
--------------------
+weblayer.wsgi
+-------------
 
-.. automodule:: weblayer.web
+.. automodule:: weblayer.wsgi
    :members:
