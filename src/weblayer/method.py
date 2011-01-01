@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" Use `__all__` to explicitly expose public request handler methods::
+""" Use `RequestHandler.__all__` to explicitly expose public request
+  handler methods::
   
       >>> class MockHandler(object):
       ...     implements(IRequestHandler)

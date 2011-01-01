@@ -13,7 +13,7 @@ def _get_long_description():
 
 setup(
     name = 'weblayer',
-    version = '0.1',
+    version = '0.3',
     description = '...',
     long_description = _get_long_description(),
     author = 'James Arthur',
