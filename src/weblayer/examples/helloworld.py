@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+""" A simple hello world example.
+"""
+
 from weblayer import Bootstrapper, RequestHandler, WSGIApplication
 
 class Hello(RequestHandler):
@@ -18,7 +24,8 @@ config = {
 
 def app_factory():
     bootstrapper = Bootstrapper(settings=config, url_mapping=mapping)
-    return WSGIApplication(*bootstrapper())
+    settings, path_router = bootstrapper()
+    return WSGIApplication(settings, path_router)
 
 
 def main():
