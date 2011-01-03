@@ -4,9 +4,9 @@ Built on `WebOb`_ it provides a set of components that can be used to handle req
 
 It's fast and fully tested.  The `source code`_ contains documentation and `examples`_.
 
-.. _`examples`: #
-.. _`python`: #
-.. _`source code`: #
-.. _`weblayer`: #
-.. _`webob`: #
-.. _`wsgi`: #
+.. _`examples`: https://github.com/thruflo/weblayer/tree/master/src/weblayer/examples
+.. _`python`: htpp://www.python.org
+.. _`source code`: https://github.com/thruflo/weblayer
+.. _`weblayer`: http://packages.python.org/weblayer
+.. _`webob`: http://pythonpaste.org/webob/
+.. _`wsgi`: http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
