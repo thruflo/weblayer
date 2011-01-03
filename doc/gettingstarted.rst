@@ -41,7 +41,7 @@ Run the tests::
     
 Generate the docs::
 
-    ./bin/sphinx-build -a -b html docs docs/_build
+    ./bin/sphinx-build -a -b html doc doc/_build
 
 If you have any problems or suggestions, `Github Issues`_ is the place to raise a ticket.
 

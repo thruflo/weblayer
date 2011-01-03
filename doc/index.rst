@@ -18,6 +18,6 @@ Contents
    
    gettingstarted
    userguide
-   deployment
+   recipes
    modules
 
