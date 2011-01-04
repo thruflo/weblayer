@@ -37,19 +37,19 @@ setup(
     include_package_data = True,
     zip_safe = False,
     install_requires=[
-        'zope.interface >= 3.6, < 4.0',
+        'zope.interface >= 3.6.1, < 4.0',
         'zope.component >= 3.10, < 4.0',
-        # 'venusian', # ' >= 4.0, < 5.0', # @@ need to resolve this dependency link
+        'venusian >= 0.5, < 0.6',
         'webob >= 1.0, < 2.0',
-        'Mako >= 0.3, < 0.4'
+        'Mako >= 0.3.6, < 0.4'
     ],
     extras_require = {
         'dev': [
             'setuptools_git >= 0.3, < 0.4',
-            'nose >= 0.11, < 1.0',
+            'nose >= 1.0, < 2.0',
             'coverage >= 3.4, < 4.0',
             'mock >= 0.7, < 0.8',
-            'Sphinx >= 1.0, < 2.0',
+            'Sphinx >= 1.0.5, < 2.0',
             'repoze.sphinx.autointerface >= 0.4, < 0.5'
         ]
     },
