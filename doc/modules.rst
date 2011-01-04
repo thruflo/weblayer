@@ -101,3 +101,9 @@ weblayer.wsgi
 
 .. automodule:: weblayer.wsgi
    :members:
+
+weblayer.examples.helloworld
+----------------------------
+
+.. automodule:: weblayer.examples.helloworld
+   :members:
