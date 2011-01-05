@@ -24,34 +24,62 @@ from static import MemoryCachedStaticURLGenerator
 from template import MakoTemplateRenderer
 
 class Bootstrapper(object):
-    """ Bootstrap `weblayer` components.
-      
-      To bootstrap a default configuration, pass a dictionary of settings
+    """ To bootstrap a default configuration, pass a dictionary of settings
       and list of url mappings to the constructor::
       
-          >>> _settings = {'cookie_secret': '', 'template_directories': []}
-          >>> bootstrapper = Bootstrapper(settings=_settings, url_mapping=[])
+          >>> config = {
+          ...     'cookie_secret': '...', 
+          ...     'static_files_path': '/var/www/static',
+          ...     'template_directories': ['templates']
+          ... }
+          >>> bootstrapper = Bootstrapper(settings=config, url_mapping=[])
       
-      Then call the instance to scan for registered settings, register 
-      components and get ISettings and IPathRouter utilities::
+      Then call the instance to register components and get `ISettings` and 
+      `IPathRouter` utilities::
       
           >>> settings, path_router = bootstrapper()
       
-      This will raise a `KeyError` if the required settings aren't passed in::
+      To override specific components, either pass in `False` to skip
+      registering them, e.g. this will skip registering a template renderer::
+      
+          >>> settings, path_router = bootstrapper(TemplateRenderer=False)
+      
+      Or pass in your own implementation, e.g.::
+      
+          >>> from mock import Mock
+          >>> mock_router = Mock()
+          >>> settings, path_router = bootstrapper(path_router=mock_router)
+          >>> path_router == mock_router
+          True
+      
+      By default, calling the bootstrapper explicitly requires settings, 
+      performing a `venusian scan`_ of the `weblayer` package to find the
+      required settings and raise a `KeyError` if they weren't passed in
+      when the `bootstrapper` was initialised::
       
           >>> bootstrapper = Bootstrapper(settings={}, url_mapping=[])
-          >>> settings, path_router = bootstrapper() #doctest: +NORMALIZE_WHITESPACE
+          >>> bootstrapper(require_settings=True) #doctest: +NORMALIZE_WHITESPACE
           Traceback (most recent call last):
           ...
           KeyError: u'Required setting `template_directories` () is missing, 
+                    Required setting `static_files_path` () is missing, 
                     Required setting `cookie_secret` (a long, random sequence 
                     of bytes) is missing'
           
-      Unless you tell it not to scan the framework (and don't pass in any other
-      packages to scan)::
+      If the required settings are provided, all is well::
       
-          >>> settings, path_router = bootstrapper(scan_framework=False)
+          >>> bootstrapper = Bootstrapper(settings=config, url_mapping=[])
+          >>> settings, path_router = bootstrapper(require_settings=True)
       
+      If you require your own settings (see the :py:mod:`~weblayer.settings`
+      module for more information), pass in the dotted names of the modules
+      or packages they are required in::
+      
+          bootstrapper(packages=['foo', 'baz.bar'])
+      
+      Your settings will then also be required.
+      
+      .. _`venusian scan`: http://docs.repoze.org/venusian/
     """
     
     def require_settings(
@@ -168,17 +196,17 @@ class Bootstrapper(object):
     
     def __call__(
             self, 
-            require_settings=False,
             packages=None, 
             scan_framework=True, 
             extra_categories=None,
+            require_settings=True,
             **kwargs
         ):
-        """ if `require_settings` is `True, call :py:meth:`require_settings`, 
+        """ If `require_settings` is `True, call :py:meth:`require_settings`, 
           :py:meth:`register_components` and return `settings, path_router`.
         """
         
-        if not require_settings or 'settings' in kwargs:
+        if 'settings' in kwargs or not require_settings:
             settings_component = kwargs.get('settings', None)
         else:
             settings_component = self.require_settings(

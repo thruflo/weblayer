@@ -15,16 +15,30 @@ Apache mod_wsgi
 Appengine
 ---------
 
-As a pure `Python`_ package, `weblayer`_ works perfectly on `Google App Engine`_, as shown by `./src/weblayer/examples/appengine`_.  The application is in `app.py`:
+As a pure `Python`_ package, :ref:`weblayer` works perfectly on `Google App Engine`_, as shown by `./src/weblayer/examples/appengine`_.  The application is in `app.py`:
 
 .. literalinclude:: ../src/weblayer/examples/appengine/app.py
-   :lines: 10-
+   :lines: 24-
 
 With the `App Engine configuration <http://code.google.com/appengine/docs/python/config/appconfig.html>`_ in `app.yaml` (you should replace `<<yourappid>>` with your application id):
 
 .. literalinclude:: ../src/weblayer/examples/appengine/app.yaml
 
 You can see this deployed at `http://weblayer-demo.appspot.com <http://weblayer-demo.appspot.com>`_.
+
+.. note::
+
+    You must have :ref:`weblayer` and its dependencies included your `Python Path`_, e.g.: by copying them into the same folder as `app.py` or by `amending sys.path`_.  Check the `install_requires` list in `setup.py`_ but at the time of writing this means you need to include:
+    
+    * `mako`, 
+    * `venusian`, 
+    * `weblayer`, 
+    * `webob`, 
+    * `zope.component`
+    * `zope.interface`
+    * `zope.event`
+    * `pkg_resources.py`
+    
 
 Paste
 -----
@@ -132,3 +146,7 @@ When these issues are resolved, it may be appropriate for `weblayer`_ to provide
 .. _`gevent`: #
 .. _`websocket`: #
 .. _`gevent-websocket`: #
+
+.. _`Python Path`: http://code.google.com/appengine/docs/python/runtime.html
+.. _`amending sys.path`: http://www.johnny-lin.com/cdat_tips/tips_pylang/path.html
+.. _`setup.py`: http://github.com/thruflo/weblayer/tree/master/setup.py

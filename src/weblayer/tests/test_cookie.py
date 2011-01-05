@@ -209,7 +209,7 @@ class TestGetCookie(unittest.TestCase):
         
         cs = self.settings['cookie_secret']
         sig = _generate_cookie_signature(cs, 'name', 'dmFsdWU=', too_old)
-        value = 'dmFsdWU=|{}|{}'.format(too_old, sig)
+        value = 'dmFsdWU=|%s|%s' % (too_old, sig)
         
         result = self.cookie_wrapper.get('name', value=value)
         self.assertTrue(result is None)
@@ -222,7 +222,7 @@ class TestGetCookie(unittest.TestCase):
         t = time.time()
         ts = str(int(t))
         
-        value = 'dmFsdWU=|{}|{}'.format(ts, 'not the right sig')
+        value = 'dmFsdWU=|%s|%s' % (ts, 'not the right sig')
         
         result = self.cookie_wrapper.get('name', value=value)
         self.assertTrue(result is None)
@@ -239,7 +239,7 @@ class TestGetCookie(unittest.TestCase):
         
         cs = self.settings['cookie_secret']
         sig = _generate_cookie_signature(cs, 'name', 'a', ts)
-        value = 'a|{}|{}'.format(ts, sig)
+        value = 'a|%s|%s' % (ts, sig)
         
         result = self.cookie_wrapper.get('name', value=value)
         self.assertTrue(result is None)
@@ -255,7 +255,7 @@ class TestGetCookie(unittest.TestCase):
         
         cs = self.settings['cookie_secret']
         sig = _generate_cookie_signature(cs, 'name', 'dmFsdWU=', ts)
-        value = 'dmFsdWU=|{}|{}'.format(ts, sig)
+        value = 'dmFsdWU=|%s|%s' % (ts, sig)
         
         result = self.cookie_wrapper.get('name', value=value)
         self.assertTrue(result == 'value')

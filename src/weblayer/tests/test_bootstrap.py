@@ -62,6 +62,60 @@ class TestCallBootstrapper(unittest.TestCase):
         return bootstrapper
         
     
+    def test_register_components(self):
+        """ Calls `self.register_components(settings=None)`.
+        """
+        
+        bootstrapper = self.make_one()
+        bootstrapper()
+        bootstrapper.register_components.assert_called_with(settings='required settings')
+        
+    
+    def test_register_components_settings_kwarg(self):
+        """ Calls `self.register_components(settings={'a': 'b'})`.
+        """
+        
+        bootstrapper = self.make_one()
+        bootstrapper(settings={'a': 'b'})
+        bootstrapper.register_components.assert_called_with(
+            settings={'a': 'b'}
+        )
+        
+    
+    def test_require_settings_register_components(self):
+        """ Calls `self.register_components(settings=settings)`.
+        """
+        
+        bootstrapper = self.make_one()
+        bootstrapper(require_settings=True)
+        bootstrapper.register_components.assert_called_with(
+            settings='required settings'
+        )
+        
+    
+    def test_require_settings_false_register_components(self):
+        """ Calls `self.register_components(settings=settings)`.
+        """
+        
+        bootstrapper = self.make_one()
+        bootstrapper(require_settings=False)
+        bootstrapper.register_components.assert_called_with(
+            settings=None
+        )
+        
+    
+    def test_register_components_path_router_kwarg(self):
+        """ Calls `self.register_components(path_router='path router')`.
+        """
+        
+        bootstrapper = self.make_one()
+        bootstrapper(path_router='path router')
+        bootstrapper.register_components.assert_called_with(
+            settings='required settings', 
+            path_router='path router'
+        )
+        
+    
     def test_require_settings_packages(self):
         """ Passes `packages` through to `self.require_settings`, defaulting
           to `None`.
@@ -111,17 +165,6 @@ class TestCallBootstrapper(unittest.TestCase):
         args = bootstrapper.require_settings.call_args
         extra_categories = args[1]['extra_categories']
         self.assertTrue(extra_categories == ['a', 'b', 'c'])
-        
-    
-    def test_register_components_with_settings(self):
-        """ Calls `self.register_components(settings=settings)`.
-        """
-        
-        bootstrapper = self.make_one()
-        bootstrapper()
-        bootstrapper.register_components.assert_called_with(
-            settings='required settings'
-        )
         
     
     def test_returns_registered_settings_and_path_router(self):

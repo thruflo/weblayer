@@ -2,10 +2,11 @@
 Getting Started
 ===============
 
+
 Install
 -------
 
-`weblayer`_ requires `Python`_ version 2.5 to 2.7.  Install it via the `Python Package Index`_, e.g.::
+:ref:`weblayer` requires `Python`_ version 2.5 to 2.7.  Install it via the `Python Package Index`_, e.g.::
 
     easy_install weblayer
 
@@ -13,16 +14,19 @@ Or::
 
     pip install weblayer
 
+See the :ref:`Hello World` for example usage.
+
+
 Develop
 -------
 
 To develop (or play around with) it, get the `source code`_, either using `Git`_::
 
-    git clone ... # @@
+    git clone git://github.com/thruflo/weblayer.git
 
 Or from a release tarball, e.g.::
 
-    wget # @@ 
+    wget http://pypi.python.org/packages/source/w/weblayer/weblayer-0.3.tar.gz
     tar -zxvf weblayer-0.3.tar.gz
     
 Develop the egg::
@@ -43,7 +47,6 @@ Generate the docs::
     ./bin/sphinx-build -a -b html doc doc/_build
 
 If you have any problems or suggestions, `Github Issues`_ is the place to raise a ticket.
-
 
 .. _`git`: # 
 .. _`github issues`: #

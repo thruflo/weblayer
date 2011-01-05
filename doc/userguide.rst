@@ -40,10 +40,10 @@ We then see :py:class:`Hello`, a simple request handler (also sometimes called a
         
             def get(self):
                 form = u'<form method="post"><input type="text" name="name" /></form>'
-                return u'What is your name? {}'.format(form)
+                return u'What is your name? %s' % form
         
             def post(self):
-                return u'Hello {}!'.format(self.get_argument('name'))
+                return u'Hello %s!' % self.get_argument('name')
         
             def dofoo(self):
                 return u'I just did foo!'
@@ -82,10 +82,10 @@ And then opening http://localhost:8080/foo in a web browser.
 Bootstrapping
 -------------
 
-Next, we create :py:obj:`application`, a bootstrapped :py:class:`weblayer.wsgi.WSGIApplication`:
+Next, we bootstrap a :py:class:`weblayer.wsgi.WSGIApplication` with some hardcoded application settings and the :ref:`url mapping` we defined above:
 
 .. literalinclude:: ../src/weblayer/examples/helloworld.py
-   :lines: 17-18
+   :lines: 17-24
 
 :py:class:`weblayer.bootstrap.Bootstrapper` is a helper class that simplifies component registration.  You can use it "out of the box", as we do above, or you can use it to override specific components.
 
@@ -93,13 +93,34 @@ Next, we create :py:obj:`application`, a bootstrapped :py:class:`weblayer.wsgi.W
 
     The :py:class:`weblayer.bootstrap.Bootstrapper` is similar to `repoze.bfg's Configurator`_ in that it allows for imperative configuration of components.
 
+With :ref:`weblayer`'s default configuration, you need to tell it where your static files and templates are and provide a secret string that your secure cookies are signed with so they can't be forged:
+
+You can explicitly require your own settings using a module level function call.  For example, the :py:attr:`cookie_secret` requirement is defined at the top of :py:mod:`weblayer.cookie` using:
+
+.. literalinclude:: ../src/weblayer/cookie.py
+   :lines: 26
+
+See :py:mod:`weblayer.settings` for more details.
+
+.. note::
+
+    This pattern of optional explicit declaration of settings is borrowed from `tornado.options`_ and allows the application to throw an error on initialisation, rather than further down the line (e.g.: when a request happens to come in).
+    
+    :ref:`weblayer`'s implementation uses a `venusian scan`_ to prevent duplicate import issues.  This introduces a slight complexity: you must tell :ref:`weblayer` which modules or packages to scan for settings to be required.
+    
+    This can be done using the :py:obj:`packages` keyword argument when calling the :py:obj:`bootstrapper`, e.g.::
+    
+        settings, path_router = bootstrapper(packages=['your.package',])
+    
+
+
 Serving
 -------
 
 Finally, the remainder of the example takes care of serving the example application on http://localhost:8080:
 
 .. literalinclude:: ../src/weblayer/examples/helloworld.py
-   :lines: 20-
+   :lines: 26-
 
 For more realistic setups, see the :ref:`Deployment` recipes.
 
@@ -112,7 +133,7 @@ As the :ref:`Hello World` example above shows, :ref:`weblayer` is made up of a n
 Workflow
 --------
 
-
+@@ ...
 
 Architecture
 ------------
@@ -186,31 +207,6 @@ If you then run this, all requests will meet with a 404 response::
     ... "GET / HTTP/1.1" 404 0
     ... "GET /foo HTTP/1.1" 404 0
 
-
-Require Settings
-================
-
-If you wish, you can explicitly require settings when bootstrapping your application using the keyword argument :py:obj:`require_settings=True` when calling the bootstrapper.  With :ref:`weblayer`'s default configuration, you need to tell it where your static files and templates are and provide a secret string that your secure cookies are signed with so they can't be forged:
-
-.. literalinclude:: ../src/weblayer/examples/require_settings.py
-
-You can explicitly require your own settings using a module level function call.  For example, the :py:attr:`cookie_secret` requirement is defined at the top of :py:mod:`weblayer.cookie` using:
-
-.. literalinclude:: ../src/weblayer/cookie.py
-   :lines: 26
-
-See :py:mod:`weblayer.settings` for more details.
-
-.. note::
-
-    This pattern of optional explicit declaration of settings is borrowed from `tornado.options`_.  You can safely ignore it and make sure that you provide the settings your application requires.  However, explicitly requiring settings allows the application to throw an error on initialisation, rather than further down the line (e.g.: when a request to a specific handler happens to come in).
-    
-    :ref:`weblayer`'s implementation uses a `venusian scan`_ to prevent duplicate import issues.  This introduces a slight complexity: you must tell :ref:`weblayer` which modules or packages to scan for settings to be required.
-    
-    This can be done most simply using the :py:obj:`packages` keyword argument when calling the :py:obj:`bootstrapper` (introduced in the next section) e.g.::
-    
-        settings, path_router = bootstrapper(packages=['your.package',])
-    
 
 
 .. _`helloworld.py`: http://github.com/thruflo/weblayer/tree/master/src/weblayer/examples/helloworld.py

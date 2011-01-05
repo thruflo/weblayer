@@ -1,11 +1,10 @@
+
 .. _weblayer:
 
 ========
 weblayer
 ========
 
-@@ bootstrap unit tests
-@@ n.b.: fix the refs in the other docs and in the docstrings...
 
 Introduction
 ============

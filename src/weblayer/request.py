@@ -160,8 +160,8 @@ class BaseHandler(object):
         
         if not hasattr(self, '_xsrf_input'):
             escaped = xhtml_escape(self.xsrf_token)
-            tag = u'<input type="hidden" name="_xsrf" value="{}" />'
-            self._xsrf_input = tag.format(escaped)
+            tag = u'<input type="hidden" name="_xsrf" value="%s" />'
+            self._xsrf_input = tag % escaped
         return self._xsrf_input
         
     
@@ -241,7 +241,7 @@ class BaseHandler(object):
         """ Log a warning and return "405 Method Not Allowed".
         """
         
-        logging.warning(u'{} method not found'.format(method_name))
+        logging.warning(u'%s method not found' % method_name)
         return self.error(status=405)
         
     

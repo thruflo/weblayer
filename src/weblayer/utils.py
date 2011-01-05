@@ -55,7 +55,7 @@ def encode_to_utf8(value):
     """
     
     if not isinstance(value, basestring):
-        raise ValueError('{} must be a `basestring`'.format(value))
+        raise ValueError('%s must be a `basestring`' % value)
     elif isinstance(value, unicode):
         return value.encode("utf-8")
     return value
@@ -88,7 +88,7 @@ def decode_to_unicode(value):
     """
     
     if not isinstance(value, basestring):
-        raise ValueError('{} must be a `basestring`'.format(value))
+        raise ValueError('%s must be a `basestring`' % value)
     elif isinstance(value, str):
         return value.decode("utf-8")
     return value
@@ -357,7 +357,7 @@ def generate_hash(algorithm='sha256', s=None, block_size=512):
     
     # get the hasher
     if not algorithm in hashlib.__all__:
-        error_msg = u"'{}' must be in {}".format(algorithm, hashlib.__all__)
+        error_msg = u"'%s' must be in %s" % (algorithm, hashlib.__all__)
         raise ValueError(error_msg)
     else:
         hasher = getattr(hashlib, algorithm)()
@@ -371,7 +371,7 @@ def generate_hash(algorithm='sha256', s=None, block_size=512):
             hasher.update(data)
     else:
         if s is None:
-            s = '{}{}'.format(random.random(), time.time())
+            s = '%s%s' % (random.random(), time.time())
         hasher.update(s)
     
     # return a hexdigest of the hash

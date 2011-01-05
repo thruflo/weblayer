@@ -233,7 +233,7 @@ class RequirableSettings(object):
         
         if name in self.__required_settings__:
             if self.__required_settings__[name] != (default, help):
-                raise KeyError(u'{} is already defined'.format(name))
+                raise KeyError(u'%s is already defined' % name)
         
         self.__required_settings__[name] = (default, help)
         
@@ -308,7 +308,7 @@ class RequirableSettings(object):
                 if default is not None:
                     self[k] = default
                 else:
-                    msg = u'Required setting `{}` ({}) is missing'.format(k, v[1])
+                    msg = u'Required setting `%s` (%s) is missing' % (k, v[1])
                     missing.append(msg)
         if missing:
             raise KeyError(u', '.join(missing))

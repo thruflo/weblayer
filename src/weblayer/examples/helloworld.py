@@ -8,13 +8,19 @@ from weblayer import Bootstrapper, RequestHandler, WSGIApplication
 
 class Hello(RequestHandler):
     def get(self, world):
-        return u'hello {}'.format(world)
+        return u'hello %s' % world
     
 
 
 mapping = [(r'/(.*)', Hello)]
 
-bootstrapper = Bootstrapper(url_mapping=mapping)
+config = {
+    'cookie_secret': '...', 
+    'static_files_path': '/var/www/static',
+    'template_directories': ['templates']
+}
+
+bootstrapper = Bootstrapper(settings=config, url_mapping=mapping)
 application = WSGIApplication(*bootstrapper())
 
 if __name__ == '__main__':

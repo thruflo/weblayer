@@ -11,7 +11,7 @@ from weblayer import Bootstrapper, RequestHandler, WSGIApplication
 
 class Hello(RequestHandler):
     def get(self, world):
-        return u'hello {}'.format(world)
+        return u'hello %s' % world
     
 
 

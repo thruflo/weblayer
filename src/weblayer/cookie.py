@@ -96,10 +96,10 @@ def _time_independent_equals(a, b):
     """
     
     if not isinstance(a, basestring):
-        raise ValueError(u'`{}` must be a `basestring`'.format(a))
+        raise ValueError(u'`%s` must be a `basestring`' % a)
     
     if not isinstance(b, basestring):
-        raise ValueError(u'`{}` must be a `basestring`'.format(b))
+        raise ValueError(u'`%s` must be a `basestring`' % b)
     
     if len(a) != len(b):
         return False
@@ -172,7 +172,7 @@ class SignedSecureCookieWrapper(object):
         max_age = None
         if expires_days:
             if not isinstance(expires_days, int):
-                raise TypeError(u'{} must be an `int`'.format(expires_days))
+                raise TypeError(u'%s must be an `int`' % expires_days)
             max_age = expires_days * 24 * 60 * 60
         
         return self.response.set_cookie(

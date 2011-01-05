@@ -18,7 +18,7 @@ from interfaces import IRequest, ISettings, IStaticURLGenerator
 from settings import require_setting
 from utils import generate_hash
 
-require_setting('static_files_path', default=u'/var/www/static')
+require_setting('static_files_path')
 require_setting('static_url_prefix', default=u'/static/')
 
 class MemoryCachedStaticURLGenerator(object):
@@ -196,7 +196,7 @@ class MemoryCachedStaticURLGenerator(object):
         try:
             sock = self._open_file(file_path)
         except IOError:
-            logging.warning(u'Couldn\'t open static file {}'.format(file_path))
+            logging.warning(u'Couldn\'t open static file %s' % file_path)
             self._cache[path] = None
         else:
             digest = self._generate_hash(s=sock)
@@ -248,13 +248,13 @@ class MemoryCachedStaticURLGenerator(object):
         digest = self._cache.get(path)
         
         if digest is None:
-            return u'{}{}{}'.format(
+            return u'%s%s%s' % (
                 self._host_url, 
                 self._static_url_prefix, 
                 path
             )
         else:
-            return u'{}{}{}?v={}'.format(
+            return u'%s%s%s?v=%s' % (
                 self._host_url, 
                 self._static_url_prefix, 
                 path, 

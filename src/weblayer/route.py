@@ -101,13 +101,13 @@ def _compile_top_and_tailed(string_or_compiled_pattern):
     
     s = string_or_compiled_pattern
     if not isinstance(s, basestring):
-        error_msg = u'`{}` must be string or compiled pattern'.format(s)
+        error_msg = u'`%s` must be string or compiled pattern' % s
         raise TypeError(error_msg)
     
     if not s.startswith('^'):
-        s = r'^{}'.format(s)
+        s = r'^%s' % s
     if not s.endswith('$'):
-        s = r'{}$'.format(s)
+        s = r'%s$' % s
     
     return re.compile(s)
     
@@ -173,7 +173,7 @@ class RegExpPathRouter(object):
         
         for regexp, handler_class in raw_mapping:
             if not IRequestHandler.implementedBy(handler_class):
-                error_msg = u'`{}` must implement `{}`'.format(
+                error_msg = u'`%s` must implement `%s`' % (
                     handler_class, 
                     IRequestHandler
                 )
