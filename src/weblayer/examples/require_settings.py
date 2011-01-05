@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" A simple hello world example.
+""" An example showing how to explicitly require settings.
 """
 
 from weblayer import Bootstrapper, RequestHandler, WSGIApplication
@@ -14,8 +14,14 @@ class Hello(RequestHandler):
 
 mapping = [(r'/(.*)', Hello)]
 
-bootstrapper = Bootstrapper(url_mapping=mapping)
-application = WSGIApplication(*bootstrapper())
+config = {
+    'cookie_secret': '...',
+    'static_files_path': '/var/www/static',
+    'template_directories': ['/my/app/templates']
+}
+
+bootstrapper = Bootstrapper(settings=config, url_mapping=mapping)
+application = WSGIApplication(*bootstrapper(require_settings=True))
 
 if __name__ == '__main__':
     from wsgiref.simple_server import make_server

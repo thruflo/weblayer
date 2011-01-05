@@ -13,7 +13,6 @@ Or::
 
     pip install weblayer
 
-
 Develop
 -------
 
@@ -48,6 +47,7 @@ If you have any problems or suggestions, `Github Issues`_ is the place to raise 
 
 .. _`git`: # 
 .. _`github issues`: #
+.. _`helloworld.py`: http://github.com/thruflo/weblayer/tree/master/src/weblayer/examples/helloworld.py
 .. _`python`: #
 .. _`python package index`: #
 .. _`source code`: #

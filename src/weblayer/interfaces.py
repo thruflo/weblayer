@@ -163,10 +163,12 @@ class ITemplateRenderer(Interface):
     
 
 class IPathRouter(Interface):
-    """ Maps urls to request handlers.
+    """ Maps incoming requests to request handlers using the request path.
     """
     
-    mapping = Attribute(u'List of (compiled_regexp, request_handler) tuples')
+    def match(path):
+        """ Return a handler that matches path.
+        """
     
 
 class IMethodSelector(Interface):

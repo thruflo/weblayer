@@ -168,21 +168,27 @@ class Bootstrapper(object):
     
     def __call__(
             self, 
+            require_settings=False,
             packages=None, 
             scan_framework=True, 
-            extra_categories=None
+            extra_categories=None,
+            **kwargs
         ):
-        """ `require_settings`, `register_components` and return 
-          `settings, path_router`.
+        """ if `require_settings` is `True, call :py:meth:`require_settings`, 
+          :py:meth:`register_components` and return `settings, path_router`.
         """
         
-        self.register_components(
-            settings=self.require_settings(
+        if not require_settings or 'settings' in kwargs:
+            settings_component = kwargs.get('settings', None)
+        else:
+            settings_component = self.require_settings(
                 packages=packages,
                 scan_framework=scan_framework,
                 extra_categories=extra_categories
             )
-        )
+        
+        kwargs['settings'] = settings_component
+        self.register_components(**kwargs)
         
         settings = registry.getUtility(ISettings)
         path_router = registry.getUtility(IPathRouter)

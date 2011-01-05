@@ -4,6 +4,8 @@
 weblayer
 ========
 
+@@ bootstrap unit tests
+@@ n.b.: fix the refs in the other docs and in the docstrings...
 
 Introduction
 ============
@@ -12,7 +14,7 @@ Introduction
 
 Built on `WebOb`_ it provides a set of components that can be used to handle requests and create a `WSGI`_ application.  It is not a framework.  In contrast, :ref:`weblayer` tries to prescribe as little as possible, allowing you to swap out components and work with your weapons of choice.
 
-It's fast and fully tested.  The `source code`_ is `public domain`_.
+It's fast and fully tested.  The `source code`_ is in the `public domain`_.
 
 
 Contents

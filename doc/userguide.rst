@@ -7,7 +7,7 @@ User Guide
 Hello World
 ===========
 
-`helloworld.py`_ shows an example web application made using :ref:`weblayer`'s "out of the box" configuration:
+`helloworld.py`_ shows how to start writing a web application using :ref:`weblayer`'s "out of the box" configuration:
 
 .. literalinclude:: ../src/weblayer/examples/helloworld.py
    :linenos: 
@@ -58,7 +58,7 @@ Handlers are mapped to incoming requests using the incoming request path.  This 
 In this case, we map :py:class:`Hello` to all incoming requests:
 
 .. literalinclude:: ../src/weblayer/examples/helloworld.py
-   :lines: 15-16
+   :lines: 15
 
 The `groups`_ in the regular expression (i.e.: the parts with parenthesis around them) that match the request path are passed to the appropriate method of the request handler as arguments.  So, in this case, an `HTTP GET request`_ to `/foo` will yield one match group, :py:obj:`'foo'` which is passed into :py:meth:`Hello.get` as the positional argument :py:obj:`world`, resulting in the response :py:obj:`u'hello foo'`.
 
@@ -76,17 +76,125 @@ And then opening http://localhost:8080/foo in a web browser.
     
     Regular expressions are preferred over `routes`_ as they are both more powerful and an essential part of any Python developer's toolbox.  It seems strange to invent another tool for the job when the best one already exists.  Finally, `traversal`_ implies a context, which is overly prescriptive and not always the case.
     
-    You may, of course, disagree with this analysis and override the :py:class:`weblayer.interfaces.IPathRouter` implementation as you see fit.
+    You may, of course, disagree with this analysis and :ref:`override <Overriding>` the :py:class:`weblayer.interfaces.IPathRouter` implementation as you see fit.
 
-Required Settings
------------------
 
-Carrying on through the example, we next define some required settings.  With :ref:`weblayer`'s default configuration, you need to tell it where your static files and templates are and provide a secret string that your secure cookies are signed with so they can't be forged:
+Bootstrapping
+-------------
+
+Next, we create :py:obj:`application`, a bootstrapped :py:class:`weblayer.wsgi.WSGIApplication`:
 
 .. literalinclude:: ../src/weblayer/examples/helloworld.py
-   :lines: 18-23
+   :lines: 17-18
 
-If you wish, you can explicitly require settings using a module level function call.  For example, the :py:attr:`cookie_secret` requirement is defined at the top of :py:mod:`weblayer.cookie` using:
+:py:class:`weblayer.bootstrap.Bootstrapper` is a helper class that simplifies component registration.  You can use it "out of the box", as we do above, or you can use it to override specific components.
+
+.. note::
+
+    The :py:class:`weblayer.bootstrap.Bootstrapper` is similar to `repoze.bfg's Configurator`_ in that it allows for imperative configuration of components.
+
+Serving
+-------
+
+Finally, the remainder of the example takes care of serving the example application on http://localhost:8080:
+
+.. literalinclude:: ../src/weblayer/examples/helloworld.py
+   :lines: 20-
+
+For more realistic setups, see the :ref:`Deployment` recipes.
+
+
+Components
+==========
+
+As the :ref:`Hello World` example above shows, :ref:`weblayer` is made up of a number of components.  Each component has a specific job and is implemented in a particular way.  This section explains what they do, how they fit together and how to override the implementation of individual components.
+
+Workflow
+--------
+
+
+
+Architecture
+------------
+
+:ref:`weblayer` uses the `Zope Component Architecture <zope.component>`_ under the hood.  Individual components are said to `implement`_ one of :py:mod:`weblayer.interfaces`, listed in :py:obj:`weblayer.interfaces.__all__`:
+
+.. literalinclude:: ../src/weblayer/interfaces.py
+   :lines: 9-22
+
+For example, :py:class:`weblayer.route.RegExpPathRouter`::
+    
+    class RegExpPathRouter(object):
+        """ Routes paths to request handlers using regexp patterns.
+        """
+        
+        implements(IPathRouter)
+        
+        # some code removed from this example for brevity
+        
+        def match(self, path):
+            """ Iterate through self._mapping.  If the path matches an item, 
+              return the handler class and the `re` `match` object's groups, 
+              otherwise return `(None, None)`.
+            """
+            
+            for regexp, handler_class in self._mapping:
+                match = regexp.match(path)
+                if match:
+                    return handler_class, match.groups()
+                
+            return None, None
+        
+    
+
+Is one particular implementation of :py:class:`weblayer.interfaces.IPathRouter`::
+
+    class IPathRouter(Interface):
+        """ Maps incoming requests to request handlers using the request path.
+        """
+    
+        def match(path):
+            """ Return a handler that matches path.
+            """
+    
+
+
+Overriding
+----------
+
+Alternative component implementations need to declare that they implement the appropriate interface and provide the attributes and methods that the interface specifies.  For example, an alternative  :py:class:`~weblayer.interfaces.IPathRouter` implementation needs to provide a :py:meth:`match` method, e.g.::
+
+    class LazyPathRouter(object):
+        """ Never even bothers trying.
+        """
+        
+        implements(IPathRouter)
+        
+        def match(self, path):
+            return None, None
+        
+    
+
+The simplest way to then register this component is using the :py:class:`~weblayer.bootstrap.Bootstrapper` when bootstrapping the :py:class:`~weblayer.wsgi.WSGIApplication`.  The `override_path_router.py`_ example shows how:
+
+.. literalinclude:: ../src/weblayer/examples/override_path_router.py
+   :lines: 11-
+
+If you then run this, all requests will meet with a 404 response::
+
+    $ python src/weblayer/examples/override_path_router.py 
+    ... "GET / HTTP/1.1" 404 0
+    ... "GET /foo HTTP/1.1" 404 0
+
+
+Require Settings
+================
+
+If you wish, you can explicitly require settings when bootstrapping your application using the keyword argument :py:obj:`require_settings=True` when calling the bootstrapper.  With :ref:`weblayer`'s default configuration, you need to tell it where your static files and templates are and provide a secret string that your secure cookies are signed with so they can't be forged:
+
+.. literalinclude:: ../src/weblayer/examples/require_settings.py
+
+You can explicitly require your own settings using a module level function call.  For example, the :py:attr:`cookie_secret` requirement is defined at the top of :py:mod:`weblayer.cookie` using:
 
 .. literalinclude:: ../src/weblayer/cookie.py
    :lines: 26
@@ -105,38 +213,8 @@ See :py:mod:`weblayer.settings` for more details.
     
 
 
-Bootstrapping
--------------
-
-Next, we define an :py:func:`app_factory` function that returns a bootstrapped :py:class:`weblayer.wsgi.WSGIApplication`:
-
-.. literalinclude:: ../src/weblayer/examples/helloworld.py
-   :lines: 25-28
-
-:py:class:`weblayer.bootstrap.Bootstrapper` is a helper class that simplifies component registration.  You can use it "out of the box", as we do above, or you can use it to override specific components.
-
-.. note::
-
-    The :py:class:`weblayer.bootstrap.Bootstrapper` is similar to `repoze.bfg's Configurator`_ in that it allows for imperative configuration of components.
-
-Serving
--------
-
-Finally, the remainder of the example takes care of serving the example application on http://localhost:8080:
-
-.. literalinclude:: ../src/weblayer/examples/helloworld.py
-   :lines: 31-
-
-For more realistic setups, see the :ref:`Deployment` recipes.
-
-
-Components
-==========
-
-@@ explain how it fits together and how to override
-@@ n.b.: fix the refs in the other docs and in the docstrings...
-
-.. _`helloworld.py`: https://github.com/thruflo/weblayer/tree/master/src/weblayer/examples/helloworld.py
+.. _`helloworld.py`: http://github.com/thruflo/weblayer/tree/master/src/weblayer/examples/helloworld.py
+.. _`override_path_router.py`: http://github.com/thruflo/weblayer/tree/master/src/weblayer/examples/override_path_router.py
 
 .. _`HTTP GET request`: http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.3
 .. _`regular expression`: http://docs.python.org/library/re.html
@@ -153,3 +231,5 @@ Components
 .. _`venusian scan`: http://docs.repoze.org/venusian/
 .. _`repoze.bfg's Configurator`: http://docs.repoze.org/bfg/narr/configuration.html
 .. _`deployment`: recipes#deployment
+
+.. _`implement`: http://pypi.python.org/pypi/zope.interface#declaring-implemented-interfaces
