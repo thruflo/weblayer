@@ -14,8 +14,6 @@ Or::
 
     pip install weblayer
 
-See the :ref:`Hello World` for example usage.
-
 
 Develop
 -------
@@ -23,15 +21,16 @@ Develop
 To develop (or play around with) it, get the `source code`_, either using `Git`_::
 
     git clone git://github.com/thruflo/weblayer.git
+    cd weblayer
 
 Or from a release tarball, e.g.::
 
-    wget http://pypi.python.org/packages/source/w/weblayer/weblayer-0.3.tar.gz
-    tar -zxvf weblayer-0.3.tar.gz
-    
+    wget http://github.com/thruflo/weblayer/tarball/master
+    tar -zxvf thruflo-weblayer-*.tar.gz
+    cd thruflo-weblayer-*
+
 Develop the egg::
 
-    cd weblayer
     python setup.py develop
 
 Install the additional dependencies::
@@ -48,10 +47,8 @@ Generate the docs::
 
 If you have any problems or suggestions, `Github Issues`_ is the place to raise a ticket.
 
-.. _`git`: # 
-.. _`github issues`: #
-.. _`helloworld.py`: http://github.com/thruflo/weblayer/tree/master/src/weblayer/examples/helloworld.py
-.. _`python`: #
-.. _`python package index`: #
-.. _`source code`: #
-.. _`weblayer`: #
+.. _`git`: http://git-scm.com/
+.. _`github issues`: http://github.com/thruflo/weblayer/issues
+.. _`python`: http://www.python.org
+.. _`python package index`: http://pypi.python.org/pypi/weblayer
+.. _`source code`: http://github.com/thruflo/weblayer

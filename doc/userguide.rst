@@ -3,7 +3,6 @@
 User Guide
 ==========
 
-
 Hello World
 ===========
 
@@ -130,11 +129,6 @@ Components
 
 As the :ref:`Hello World` example above shows, :ref:`weblayer` is made up of a number of components.  Each component has a specific job and is implemented in a particular way.  This section explains what they do, how they fit together and how to override the implementation of individual components.
 
-Workflow
---------
-
-@@ ...
-
 Architecture
 ------------
 
@@ -178,6 +172,37 @@ Is one particular implementation of :py:class:`weblayer.interfaces.IPathRouter`:
             """ Return a handler that matches path.
             """
     
+
+
+Default Implementations
+-----------------------
+
+The default implementations are as follows:
+
+* :py:class:`~weblayer.interfaces.IAuthenticationManager` is implemented by :py:class:`~weblayer.auth.TrivialAuthenticationManager`.
+* :py:class:`~weblayer.interfaces.IMethodSelector` is implemented by :py:class:`~weblayer.method.ExposedMethodSelector`.
+* :py:class:`~weblayer.interfaces.IPathRouter` is implemented by :py:class:`~weblayer.route.RegExpPathRouter`.
+* :py:class:`~weblayer.interfaces.IRequest` is implemented by :py:class:`~weblayer.base.Request`.
+* :py:class:`~weblayer.interfaces.IRequestHandler` is implemented by :py:class:`~weblayer.request.RequestHandler`.
+* :py:class:`~weblayer.interfaces.IResponse` is implemented by :py:class:`~weblayer.base.Response`.
+* :py:class:`~weblayer.interfaces.IResponseNormaliser` is implemented by :py:class:`~weblayer.response.DefaultToJSONResponseNormaliser`.
+* :py:class:`~weblayer.interfaces.ISecureCookieWrapper` is implemented by :py:class:`~weblayer.cookie.SignedSecureCookieWrapper`.
+* :py:class:`~weblayer.interfaces.ISettings` is implemented by :py:class:`~weblayer.settings.RequirableSettings`.
+* :py:class:`~weblayer.interfaces.IStaticURLGenerator` is implemented by :py:class:`~weblayer.static.MemoryCachedStaticURLGenerator`.
+* :py:class:`~weblayer.interfaces.ITemplateRenderer` is implemented by :py:class:`~weblayer.template.MakoTemplateRenderer`.
+* :py:class:`~weblayer.interfaces.IWSGIApplication` is implemented by :py:class:`~weblayer.wsgi.WSGIApplication`.
+
+
+Workflow
+--------
+
+Each application requires an :py:class:`~weblayer.interfaces.ISettings` implementation and an :py:class:`~weblayer.interfaces.IPathRouter`.  These are passed in to your :py:class:`~weblayer.interfaces.IWSGIApplication` when it is initialised, most commonly using the :py:class:`~weblayer.bootstrap.Bootstrapper`.
+
+When HTTP requests come in to your application, :py:class:`~weblayer.interfaces.IWSGIApplication` uses the :py:class:`~weblayer.interfaces.IPathRouter` implementation to map the incoming requests to an :py:class:`~weblayer.interfaces.IRequestHandler` that is instantiated with a :py:class:`~weblayer.interfaces.IRequest`, :py:class:`~weblayer.interfaces.IResponse` and the :py:class:`~weblayer.interfaces.ISettings`.  The :py:class:`~weblayer.interfaces.IRequestHandler` then uses the :py:class:`~weblayer.interfaces.IMethodSelector` implementation to select which of its methods will handle the request.
+
+When writing :py:class:`~weblayer.interfaces.IRequestHandler` code, you can access your :py:class:`~weblayer.interfaces.IStaticURLGenerator` at `self.static`, your :py:class:`~weblayer.interfaces.IAuthenticationManager` at `self.auth` and your :py:class:`~weblayer.interfaces.ISecureCookieWrapper` at `self.cookies`.  Your :py:class:`~weblayer.interfaces.ITemplateRenderer` is available through `self.render()`.
+    
+Finally, the return value of your handler method is passed to your :py:class:`~weblayer.interfaces.IResponseNormaliser` implementation which uses it to either replace or update the :py:class:`~weblayer.interfaces.IResponse` originally passed in to your :py:class:`~weblayer.interfaces.IRequestHandler` and now returned as the response of your :py:class:`~weblayer.interfaces.IWSGIApplication`.
 
 
 Overriding
