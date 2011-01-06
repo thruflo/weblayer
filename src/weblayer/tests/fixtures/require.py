@@ -8,7 +8,6 @@ def foo(): # pragma: no cover
     pass
 
 
-@require('test_class', category='weblayer.tests')
 class Foo(object):
     @require('test_method', category='weblayer.tests')
     def bar(self): # pragma: no cover

@@ -10,10 +10,9 @@
   
       >>> require_setting('api_key')
   
-  Or by decorating a class, function or method::
+  Or by decorating a function or method::
   
-      >>> @require('api_key')
-      ... class Foo(object):
+      >>> class Foo(object):
       ...     @require('api_key')
       ...     def foo(self):
       ...         pass
@@ -63,7 +62,9 @@
   Which is also available as the `@override` decorator:
   
       @override('api_key', default="...")
-      class Foo(object): pass
+      def foo(object): 
+          pass
+      
   
 """
 

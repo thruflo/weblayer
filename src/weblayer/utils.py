@@ -334,10 +334,10 @@ def generate_hash(algorithm='sha256', s=None, block_size=512):
       Using anything else (that hashlib doesn't like) will raise
       a `TypeError`::
       
-          >>> generate_hash(s=[]) #doctest: +NORMALIZE_WHITESPACE
+          >>> generate_hash(s=[]) #doctest: +ELLIPSIS
           Traceback (most recent call last):
           ...
-          TypeError: must be string or buffer, not list
+          TypeError: ...
       
       The algorithm name can also be passed in::
       
@@ -348,19 +348,15 @@ def generate_hash(algorithm='sha256', s=None, block_size=512):
       
       As long as it's in `hashlib.__all__`::
       
-          >>> generate_hash(algorithm='foo') #doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+          >>> generate_hash(algorithm='foo')
           Traceback (most recent call last):
           ...
-          ValueError: 'foo' must be in ('md5', 'sha1', 'sha224', ...)
+          AttributeError: 'module' object has no attribute 'foo'
       
     """
     
     # get the hasher
-    if not algorithm in hashlib.__all__:
-        error_msg = u"'%s' must be in %s" % (algorithm, hashlib.__all__)
-        raise ValueError(error_msg)
-    else:
-        hasher = getattr(hashlib, algorithm)()
+    hasher = getattr(hashlib, algorithm)()
     
     # read in the data
     if hasattr(s, 'read') and callable(s.read):

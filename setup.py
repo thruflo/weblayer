@@ -45,12 +45,12 @@ setup(
     ],
     extras_require = {
         'dev': [
-            'setuptools_git >= 0.3, < 0.4',
             'nose >= 1.0, < 2.0',
             'coverage >= 3.4, < 4.0',
-            'mock >= 0.7, < 0.8',
+            'mock >= 0.7.0b4, < 0.8',
             'Sphinx >= 1.0.5, < 2.0',
-            'repoze.sphinx.autointerface >= 0.4, < 0.5'
+            'repoze.sphinx.autointerface >= 0.4, < 0.5',
+            'setuptools_git >= 0.3, < 0.4'
         ]
     },
     entry_points = {

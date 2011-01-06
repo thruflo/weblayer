@@ -99,7 +99,6 @@ class TestIntegration(unittest.TestCase):
         self.required_items = {
             'test_module': 'some value',
             'test_function': 'some value',
-            'test_class': 'some value',
             'test_method': 'some value'
         }
         
@@ -123,7 +122,6 @@ class TestIntegration(unittest.TestCase):
         settings(self.required_items)
         self.assertTrue(settings['test_module'] == 'some value')
         self.assertTrue(settings['test_function'] == 'some value')
-        self.assertTrue(settings['test_class'] == 'some value')
         self.assertTrue(settings['test_method'] == 'some value')
         
     
@@ -152,22 +150,6 @@ class TestIntegration(unittest.TestCase):
         
         items = self.required_items.copy()
         del items['test_function']
-        self.assertRaises(
-            KeyError,
-            settings,
-            items
-        )
-        
-    
-    def test_class(self):
-        """ `test_class` should be required.
-        """
-        
-        from weblayer.tests.fixtures import require
-        settings = self.make_one([require])
-        
-        items = self.required_items.copy()
-        del items['test_class']
         self.assertRaises(
             KeyError,
             settings,
@@ -253,12 +235,6 @@ class TestDoubleImport(unittest.TestCase):
                     }
                 ), ((
                         'test_method',
-                    ), {
-                        'default': None, 
-                        'help': u''
-                    }
-                ), ((
-                        'test_class',
                     ), {
                         'default': None, 
                         'help': u''
