@@ -3,6 +3,7 @@
 Recipes
 =======
 
+.. _deployment:
 
 Deployment
 ==========

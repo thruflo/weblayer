@@ -3,24 +3,31 @@
 User Guide
 ==========
 
+:ref:`weblayer` is made up of a number of components.  You can use it "out of the box", as shown by the :ref:`helloworld` example, or you can get stuck in under the hood and setup :ref:`weblayer` just the way you want, as explained in the :ref:`Components` section.
+
+Once you have your application setup and configured the way you want it, you can write code that takes advantage of the :ref:`api`.
+
+
+.. _helloworld:
+
 Hello World
 ===========
 
-`helloworld.py`_ shows how to start writing a web application using :ref:`weblayer`'s "out of the box" configuration:
+`helloworld.py`_ shows how to start writing a web application using :ref:`weblayer`'s default configuration:
 
 .. literalinclude:: ../src/weblayer/examples/helloworld.py
    :linenos: 
    :lines: 7-
 
-Let's walk through it.  First up, the example shows three imports from :ref:`weblayer`:
+Let's walk through it.  First up, we import :py:class:`~weblayer.bootstrap.Bootstrapper`, :py:class:`~weblayer.request.RequestHandler` and :py:class:`~weblayer.wsgi.WSGIApplication`:
 
 .. literalinclude:: ../src/weblayer/examples/helloworld.py
    :lines: 7
 
-Request Handling
-----------------
+Handling Requests
+-----------------
 
-We then see :py:class:`Hello`, a simple request handler (also sometimes called a "view") that subclasses the :py:class:`weblayer.request.RequestHandler` class we imported:
+We then see :py:class:`Hello`, a simple request handler (aka "view") that subclasses the :py:class:`~weblayer.request.RequestHandler` class we imported:
 
 .. literalinclude:: ../src/weblayer/examples/helloworld.py
    :lines: 9-13
@@ -49,10 +56,7 @@ We then see :py:class:`Hello`, a simple request handler (also sometimes called a
         
     
 
-URL Mapping
------------
-
-Handlers are mapped to incoming requests using the incoming request path.  This mapping takes the form of a list of tuples where the first item in the tuple is a `regular expression`_ and the second is a :py:class:`weblayer.request.RequestHandler` class.
+Handlers are mapped to incoming requests using the incoming request path.  This mapping takes the form of a list of tuples where the first item in the tuple is a `regular expression`_ and the second is a :py:class:`~weblayer.request.RequestHandler` class.
 
 In this case, we map :py:class:`Hello` to all incoming requests:
 
@@ -75,24 +79,15 @@ And then opening http://localhost:8080/foo in a web browser.
     
     Regular expressions are preferred over `routes`_ as they are both more powerful and an essential part of any Python developer's toolbox.  It seems strange to invent another tool for the job when the best one already exists.  Finally, `traversal`_ implies a context, which is overly prescriptive and not always the case.
     
-    You may, of course, disagree with this analysis and :ref:`override <Overriding>` the :py:class:`weblayer.interfaces.IPathRouter` implementation as you see fit.
+    You may, of course, disagree with this analysis and :ref:`override <components>` the :py:class:`~weblayer.interfaces.IPathRouter` implementation as you see fit.
 
-
-Bootstrapping
--------------
-
-Next, we bootstrap a :py:class:`weblayer.wsgi.WSGIApplication` with some hardcoded application settings and the :ref:`url mapping` we defined above:
-
-.. literalinclude:: ../src/weblayer/examples/helloworld.py
-   :lines: 17-24
-
-:py:class:`weblayer.bootstrap.Bootstrapper` is a helper class that simplifies component registration.  You can use it "out of the box", as we do above, or you can use it to override specific components.
-
-.. note::
-
-    The :py:class:`weblayer.bootstrap.Bootstrapper` is similar to `repoze.bfg's Configurator`_ in that it allows for imperative configuration of components.
+Required Settings
+-----------------
 
 With :ref:`weblayer`'s default configuration, you need to tell it where your static files and templates are and provide a secret string that your secure cookies are signed with so they can't be forged:
+
+.. literalinclude:: ../src/weblayer/examples/helloworld.py
+   :lines: 17-21
 
 You can explicitly require your own settings using a module level function call.  For example, the :py:attr:`cookie_secret` requirement is defined at the top of :py:mod:`weblayer.cookie` using:
 
@@ -112,6 +107,17 @@ See :py:mod:`weblayer.settings` for more details.
         settings, path_router = bootstrapper(packages=['your.package',])
     
 
+Bootstrapping
+-------------
+
+:py:class:`~weblayer.bootstrap.Bootstrapper` is a helper class that simplifies component registration.  Here, we use it to bootstrap a :py:class:`~weblayer.wsgi.WSGIApplication` with some hardcoded application settings and the :ref:`url mapping` we defined above:
+
+.. literalinclude:: ../src/weblayer/examples/helloworld.py
+   :lines: 23-24
+
+.. note::
+
+    The :py:class:`weblayer.bootstrap.Bootstrapper` is similar to `repoze.bfg's Configurator`_ in that it allows for imperative configuration of components.
 
 Serving
 -------
@@ -124,10 +130,10 @@ Finally, the remainder of the example takes care of serving the example applicat
 For more realistic setups, see the :ref:`Deployment` recipes.
 
 
+.. _components:
+
 Components
 ==========
-
-As the :ref:`Hello World` example above shows, :ref:`weblayer` is made up of a number of components.  Each component has a specific job and is implemented in a particular way.  This section explains what they do, how they fit together and how to override the implementation of individual components.
 
 Architecture
 ------------
@@ -137,7 +143,7 @@ Architecture
 .. literalinclude:: ../src/weblayer/interfaces.py
    :lines: 9-22
 
-For example, :py:class:`weblayer.route.RegExpPathRouter`::
+For example, :py:class:`~weblayer.route.RegExpPathRouter`::
     
     class RegExpPathRouter(object):
         """ Routes paths to request handlers using regexp patterns.
@@ -145,34 +151,37 @@ For example, :py:class:`weblayer.route.RegExpPathRouter`::
         
         implements(IPathRouter)
         
-        # some code removed from this example for brevity
+        # `__init__` method removed from this example for brevity
         
         def match(self, path):
             """ Iterate through self._mapping.  If the path matches an item, 
-              return the handler class and the `re` `match` object's groups, 
-              otherwise return `(None, None)`.
+              return the handler class, the `re` `match` object's groups (as args
+              to pass to the handler) and an empty dict (as kwargs to pass to the
+              handler).  Otherwise return `(None, None, None)`.
             """
             
             for regexp, handler_class in self._mapping:
                 match = regexp.match(path)
                 if match:
-                    return handler_class, match.groups()
+                    return handler_class, match.groups(), {}
                 
-            return None, None
+            return None, None, None
+            
         
     
 
-Is one particular implementation of :py:class:`weblayer.interfaces.IPathRouter`::
+Is one particular implementation of :py:class:`~weblayer.interfaces.IPathRouter`::
 
     class IPathRouter(Interface):
         """ Maps incoming requests to request handlers using the request path.
         """
-    
+        
         def match(path):
-            """ Return a handler that matches path.
+            """ Return `handler, args, kwargs` from `path`.
             """
+            
+        
     
-
 
 Default Implementations
 -----------------------
@@ -198,11 +207,13 @@ Workflow
 
 Each application requires an :py:class:`~weblayer.interfaces.ISettings` implementation and an :py:class:`~weblayer.interfaces.IPathRouter`.  These are passed in to your :py:class:`~weblayer.interfaces.IWSGIApplication` when it is initialised, most commonly using the :py:class:`~weblayer.bootstrap.Bootstrapper`.
 
-When HTTP requests come in to your application, :py:class:`~weblayer.interfaces.IWSGIApplication` uses the :py:class:`~weblayer.interfaces.IPathRouter` implementation to map the incoming requests to an :py:class:`~weblayer.interfaces.IRequestHandler` that is instantiated with a :py:class:`~weblayer.interfaces.IRequest`, :py:class:`~weblayer.interfaces.IResponse` and the :py:class:`~weblayer.interfaces.ISettings`.  The :py:class:`~weblayer.interfaces.IRequestHandler` then uses the :py:class:`~weblayer.interfaces.IMethodSelector` implementation to select which of its methods will handle the request.
+When HTTP requests come in to your application, :py:class:`~weblayer.interfaces.IWSGIApplication` uses the :py:class:`~weblayer.interfaces.IPathRouter` to map the incoming requests to an :py:class:`~weblayer.interfaces.IRequestHandler` that is instantiated with an :py:class:`~weblayer.interfaces.IRequest` that encapsulates the incoming request, a vanilla :py:class:`~weblayer.interfaces.IResponse` and the :py:class:`~weblayer.interfaces.ISettings`.
+
+The :py:class:`~weblayer.interfaces.IRequestHandler` then uses the :py:class:`~weblayer.interfaces.IMethodSelector` to select a method (`def get()`, `def post()` etc.) to call to handle the request.  The method is then called with `*args` and `**kwargs` derived from the incoming request path by the :py:class:`~weblayer.interfaces.IPathRouter`.
 
 When writing :py:class:`~weblayer.interfaces.IRequestHandler` code, you can access your :py:class:`~weblayer.interfaces.IStaticURLGenerator` at `self.static`, your :py:class:`~weblayer.interfaces.IAuthenticationManager` at `self.auth` and your :py:class:`~weblayer.interfaces.ISecureCookieWrapper` at `self.cookies`.  Your :py:class:`~weblayer.interfaces.ITemplateRenderer` is available through `self.render()`.
     
-Finally, the return value of your handler method is passed to your :py:class:`~weblayer.interfaces.IResponseNormaliser` implementation which uses it to either replace or update the :py:class:`~weblayer.interfaces.IResponse` originally passed in to your :py:class:`~weblayer.interfaces.IRequestHandler` and now returned as the response of your :py:class:`~weblayer.interfaces.IWSGIApplication`.
+Finally, the return value of your handler method is passed to your :py:class:`~weblayer.interfaces.IResponseNormaliser`, which uses it to either replace or update the :py:class:`~weblayer.interfaces.IResponse` originally passed in to your :py:class:`~weblayer.interfaces.IRequestHandler` before the :py:class:`~weblayer.interfaces.IResponse` is returned as the response of your :py:class:`~weblayer.interfaces.IWSGIApplication`.
 
 
 Overriding
@@ -232,6 +243,70 @@ If you then run this, all requests will meet with a 404 response::
     ... "GET / HTTP/1.1" 404 0
     ... "GET /foo HTTP/1.1" 404 0
 
+
+.. _api:
+
+Request Handler API
+===================
+
+@@ ...
+
+Request
+-------
+
+`self.request`
+
+Response
+--------
+
+`self.response`
+
+Settings
+--------
+
+`self.settings`
+
+Arguments
+---------
+
+`self.get_argument(name, default=None, strip=False)`
+`self.get_arguments(name, strip=False)`    
+
+Authentication
+--------------
+
+`self.auth`
+
+Secure Cookies
+--------------
+
+`self.cookies`
+
+Templates
+---------
+
+`self.render(tmpl_name, **kwargs)`
+
+Static URLs
+-----------
+
+`self.static`
+
+XSRF
+----
+
+`self.xsrf_token`
+`self.xsrf_input`
+
+Redirection
+-----------
+
+`self.redirect(url, status=302, content_type=None)`
+
+Errors
+------
+
+`self.error(status=500, body=u'System Error')`
 
 
 .. _`helloworld.py`: http://github.com/thruflo/weblayer/tree/master/src/weblayer/examples/helloworld.py

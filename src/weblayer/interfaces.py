@@ -40,12 +40,11 @@ class IRequestHandler(Interface):
     
     request = Attribute(u'Request')
     response = Attribute(u'Response')
-    settings = Attribute(u'Application settings')
-    template_rendered = Attribute(u'Template renderer')
+    settings = Attribute(u'Settings')
     
     auth = Attribute(u'Authentication manager')
     cookies = Attribute(u'Cookie wrapper')
-    xsrf = Attribute(u'XSRF validator')
+    static = Attribute(u'Static url generator')
     
     def get_argument(name, default=None, strip=False):
         """ Get request param with single value.
@@ -58,22 +57,9 @@ class IRequestHandler(Interface):
         
     
     
-    def get_static_url(path):
-        """ Returns a static URL for the given path.
-        """
-        
-    
-    def get_xsrf_token():
-        """ Returns XSRF-prevention token
-        """
-        
-    
-    def get_xsrf_form_html():
-        """ Returns <input/> element to be included in POST forms.
-        """
-        
-    
-    def validate_xsrf():
+    xsrf_token = Attribute(u'XSRF-prevention token')
+    xsrf_input = Attribute(u'<input/> element to be included in POST forms.')
+    def xsrf_validate():
         """ Validate the request.
         """
         
@@ -167,7 +153,7 @@ class IPathRouter(Interface):
     """
     
     def match(path):
-        """ Return a handler that matches path.
+        """ Return `handler, args, kwargs` from `path`.
         """
     
 

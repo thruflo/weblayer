@@ -30,26 +30,26 @@
   
   And use the path router to get handlers for request paths::
   
-      >>> path_router.match('/') == (DummyIndex, ())
+      >>> path_router.match('/') == (DummyIndex, (), {})
       True
   
   Returning the handler and the match groups if any::
   
-      >>> path_router.match('/foobar') == (Dummy404, ('/foobar',))
+      >>> path_router.match('/foobar') == (Dummy404, ('/foobar',), {})
       True
   
   The mapping items are looked up in order::
   
       >>> mapping.reverse()
       >>> path_router = RegExpPathRouter(mapping)
-      >>> path_router.match('/') == (Dummy404, ('/',))
+      >>> path_router.match('/') == (Dummy404, ('/',), {})
       True
   
   If the path doesn't match, returns `(None, None)`::
   
       >>> path_router = RegExpPathRouter([])
       >>> path_router.match('/')
-      (None, None)
+      (None, None, None)
   
 """
 
@@ -185,16 +185,17 @@ class RegExpPathRouter(object):
     
     def match(self, path):
         """ Iterate through self._mapping.  If the path matches an item, 
-          return the handler class and the `re` `match` object's groups, 
-          otherwise return `(None, None)`.
+          return the handler class, the `re` `match` object's groups (as args
+          to pass to the handler) and an empty dict (as kwargs to pass to the
+          handler).  Otherwise return `(None, None, None)`.
         """
         
         for regexp, handler_class in self._mapping:
             match = regexp.match(path)
             if match:
-                return handler_class, match.groups()
+                return handler_class, match.groups(), {}
         
-        return None, None
+        return None, None, None
         
     
     
