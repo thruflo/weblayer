@@ -17,7 +17,9 @@ weblayer.bootstrap
 ------------------
 
 .. automodule:: weblayer.bootstrap
-   :members:
+
+.. autoclass:: weblayer.bootstrap.Bootstrapper
+   :members: require_settings, register_components, __call__, __init__   
 
 weblayer.component
 ------------------
@@ -64,7 +66,10 @@ weblayer.request
 ----------------
 
 .. automodule:: weblayer.request
+
+.. autoclass:: weblayer.request.RequestHandler
    :members:
+   :inherited-members:
 
 weblayer.route
 --------------

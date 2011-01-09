@@ -88,8 +88,8 @@ class Bootstrapper(object):
             scan_framework=True, 
             extra_categories=None
         ):
-        """ Init and return `RequirableSettings`, scanning 
-          `packages` for required settings in the process.
+        """ Init and return `RequirableSettings`, scanning `packages` for
+          required settings in the process.
         """
         
         if packages is None:

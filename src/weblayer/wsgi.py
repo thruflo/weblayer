@@ -67,11 +67,11 @@ class WSGIApplication(object):
         request = self._Request(environ)
         response = self._Response(status=200, content_type=self._content_type)
         
-        handler_class, groups = self._path_router.match(request.path)
+        handler_class, args, kwargs = self._path_router.match(request.path)
         if handler_class is not None:
             handler = handler_class(request, response, self._settings)
             try:
-                response = handler(environ['REQUEST_METHOD'], *groups)
+                response = handler(environ['REQUEST_METHOD'], *args, **kwargs)
             except Exception: # handler should catch all exceptions
                 response.status = 500
         else: # to handle 404 nicely, define a catch all url handler

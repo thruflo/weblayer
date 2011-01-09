@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" An example showing how to override an inidividual component.
+""" Example showing how to override the 
+  :py:class:`~weblayer.interfaces.IPathRouter` component.
   
   Note that despite the :py:class:`Hello` request handler being mapped
   to all request paths in the :py:obj:`mapping`, the :py:class:`LazyPathRouter`
-  will always return `None, None`, resulting in a 404 response.
+  will always return `None, None, None`, resulting in a 404 response.
 """
 
 from zope.interface import implements
@@ -19,7 +20,7 @@ class LazyPathRouter(object):
     implements(IPathRouter)
     
     def match(self, path):
-        return None, None
+        return None, None, None
     
 
 

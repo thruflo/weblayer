@@ -205,8 +205,9 @@ class BaseHandler(object):
           is `True`.
           
           `kwargs` (with `kwargs['location']` set to `location` are passed
-          to the appropriate `web.exc`_ class constructor.
+          to the appropriate `webob_exception`_ class constructor.
           
+          .. _`webob_exception`: http://pythonpaste.org/webob/module-webob.exc.html
         """
         
         status = permanent is True and '301' or '302'
@@ -262,7 +263,7 @@ class BaseHandler(object):
         
     
     
-    def __call__(self, method_name, *groups):
+    def __call__(self, method_name, *args, **kwargs):
         """
         """
         
@@ -278,7 +279,7 @@ class BaseHandler(object):
                 handler_response = self.handle_xsrf_error(err)
             else:
                 try:
-                    handler_response = method(*groups)
+                    handler_response = method(*args, **kwargs)
                 except webob_exceptions.HTTPException, err:
                     handler_response = self.error(exception=err)
                 except Exception, err:

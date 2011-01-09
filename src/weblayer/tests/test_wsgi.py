@@ -135,7 +135,7 @@ class TestCallWSGIApplication(unittest.TestCase):
         self.handler_class.return_value = self.handler_instance
         self.path_router = Mock()
         self.path_router.match = Mock()
-        self.path_router.match.return_value = (self.handler_class, ('a', 'b',))
+        self.path_router.match.return_value = (self.handler_class, ('a', 'b',), {})
         self.Request = Mock()
         self.request_instance = Mock()
         self.request_instance.path = '/path'
@@ -190,7 +190,7 @@ class TestCallWSGIApplication(unittest.TestCase):
           `response.status` is set to 404.
         """
         
-        self.path_router.match.return_value = (None, None)
+        self.path_router.match.return_value = (None, None, None)
         
         response = self.app(self.environ, 'start response')
         self.assertTrue(self.response_instance.status == 404)
@@ -201,7 +201,7 @@ class TestCallWSGIApplication(unittest.TestCase):
           `response.status` is set to 404.
         """
         
-        self.path_router.match.return_value = (None, None)
+        self.path_router.match.return_value = (None, None, None)
         
         response = self.app(self.environ, 'start response')
         self.assertTrue(response == 'minimal response')
@@ -242,7 +242,7 @@ class TestCallWSGIApplication(unittest.TestCase):
         
         self.handler_instance = raise_exception
         self.handler_class.return_value = self.handler_instance
-        self.path_router.match.return_value = (self.handler_class, ('a', 'b',))
+        self.path_router.match.return_value = (self.handler_class, ('a', 'b',), {})
         
         response = self.app(self.environ, 'start response')
         self.assertTrue(self.response_instance.status == 500)
@@ -258,7 +258,7 @@ class TestCallWSGIApplication(unittest.TestCase):
         
         self.handler_instance = raise_exception
         self.handler_class.return_value = self.handler_instance
-        self.path_router.match.return_value = (self.handler_class, ('a', 'b',))
+        self.path_router.match.return_value = (self.handler_class, ('a', 'b',), {})
         
         response = self.app(self.environ, 'start response')
         self.assertTrue(response == 'minimal response')

@@ -26,7 +26,13 @@
   see `./tests/test_settings.py` for real integration tests)::
   
       >>> settings = RequirableSettings()
-      >>> settings._require('api_key') # never call this directly!
+      >>> def mock_require_setting(*args, **kwargs):
+      ...     settings._require(*args, **kwargs) # never call this directly!
+      ... 
+      >>> def mock_override_setting(*args, **kwargs):
+      ...     settings._override(*args, **kwargs) # never call this directly!
+      ... 
+      >>> mock_require_setting('api_key')
   
   You can call the `RequirableSettings` instance with a dictionary of settings
   provided by the user / your application.
@@ -44,27 +50,25 @@
   
   You can specify default values and help strings ala:
   
-      require_setting('baz', default='blah', help=u'what is this?')
-      settings({'api_key': '123'})
-      # settings['baz'] would be 'blah'
+      >>> mock_require_setting('baz', default='blah', help=u'what is this?')
+      >>> settings({'api_key': '123'})
+      >>> settings['baz']
+      'blah'
   
   You can't require the same setting twice with different values:
   
-      require_setting('baz', default='something else')
-      # would raise a KeyError
+      >>> mock_require_setting('baz', default='something else')
+      Traceback (most recent call last):
+      ...
+      KeyError: u'baz is already defined'
   
-  Unless you explicitly use `override_setting`:
+  Unless you explicitly use `override_setting` (also available as the
+  `@override` decorator):
   
-      override_setting('baz', default='something else')
-      settings({'api_key': '123'})
-      # settings['baz'] would be 'something else'
-  
-  Which is also available as the `@override` decorator:
-  
-      @override('api_key', default="...")
-      def foo(object): 
-          pass
-      
+      >>> mock_override_setting('baz', default='something else')
+      >>> settings({'api_key': '123'})
+      >>> settings['baz']
+      'something else'
   
 """
 
@@ -188,6 +192,21 @@ class RequirableSettings(object):
         """
         
         return self._items.__iter__()
+        
+    
+    def __repr__(self):
+        """ Represent class and items::
+          
+              >>> settings = RequirableSettings()
+              >>> settings
+              <weblayer.settings.RequirableSettings {}>
+              >>> settings({'a': 'foobar', 'b': ''})
+              >>> settings
+              <weblayer.settings.RequirableSettings {'a': 'foobar', 'b': ''}>
+          
+        """
+        
+        return u'<weblayer.settings.RequirableSettings %s>' % (self._items)
         
     
     

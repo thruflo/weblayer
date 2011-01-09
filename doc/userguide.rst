@@ -3,9 +3,7 @@
 User Guide
 ==========
 
-:ref:`weblayer` is made up of a number of components.  You can use it "out of the box", as shown by the :ref:`helloworld` example, or you can get stuck in under the hood and setup :ref:`weblayer` just the way you want, as explained in the :ref:`Components` section.
-
-Once you have your application setup and configured the way you want it, you can write code that takes advantage of the :ref:`api`.
+:ref:`weblayer` is made up of a number of components.  You can use them out of the box, as shown by the :ref:`helloworld` example, taking advantage of the :ref:`api`.  Or you can pick and choose from and override them, as introduced in the :ref:`Components` section.
 
 
 .. _helloworld:
@@ -16,7 +14,6 @@ Hello World
 `helloworld.py`_ shows how to start writing a web application using :ref:`weblayer`'s default configuration:
 
 .. literalinclude:: ../src/weblayer/examples/helloworld.py
-   :linenos: 
    :lines: 7-
 
 Let's walk through it.  First up, we import :py:class:`~weblayer.bootstrap.Bootstrapper`, :py:class:`~weblayer.request.RequestHandler` and :py:class:`~weblayer.wsgi.WSGIApplication`:
@@ -32,7 +29,7 @@ We then see :py:class:`Hello`, a simple request handler (aka "view") that subcla
 .. literalinclude:: ../src/weblayer/examples/helloworld.py
    :lines: 9-13
 
-:py:class:`Hello` has a single method defined called :py:meth:`get`.  This method will be called when :py:class:`Hello` receives an `HTTP GET request`_.
+:py:class:`Hello` defines a single method: :py:meth:`get`, which will be called when :py:class:`Hello` receives an `HTTP GET request`_.
 
 .. note::
 
@@ -81,43 +78,41 @@ And then opening http://localhost:8080/foo in a web browser.
     
     You may, of course, disagree with this analysis and :ref:`override <components>` the :py:class:`~weblayer.interfaces.IPathRouter` implementation as you see fit.
 
-Required Settings
------------------
+Bootstrapping
+-------------
 
-With :ref:`weblayer`'s default configuration, you need to tell it where your static files and templates are and provide a secret string that your secure cookies are signed with so they can't be forged:
+Carrying on through the example, we next hardcode three configuration settings that are required by default:
 
 .. literalinclude:: ../src/weblayer/examples/helloworld.py
    :lines: 17-21
 
-You can explicitly require your own settings using a module level function call.  For example, the :py:attr:`cookie_secret` requirement is defined at the top of :py:mod:`weblayer.cookie` using:
-
-.. literalinclude:: ../src/weblayer/cookie.py
-   :lines: 26
-
-See :py:mod:`weblayer.settings` for more details.
-
-.. note::
-
-    This pattern of optional explicit declaration of settings is borrowed from `tornado.options`_ and allows the application to throw an error on initialisation, rather than further down the line (e.g.: when a request happens to come in).
-    
-    :ref:`weblayer`'s implementation uses a `venusian scan`_ to prevent duplicate import issues.  This introduces a slight complexity: you must tell :ref:`weblayer` which modules or packages to scan for settings to be required.
-    
-    This can be done using the :py:obj:`packages` keyword argument when calling the :py:obj:`bootstrapper`, e.g.::
-    
-        settings, path_router = bootstrapper(packages=['your.package',])
-    
-
-Bootstrapping
--------------
-
-:py:class:`~weblayer.bootstrap.Bootstrapper` is a helper class that simplifies component registration.  Here, we use it to bootstrap a :py:class:`~weblayer.wsgi.WSGIApplication` with some hardcoded application settings and the :ref:`url mapping` we defined above:
+We then initialise a :py:class:`~weblayer.bootstrap.Bootstrapper` with these configuration settings and the url mapping we made earlier and use it to bootstrap a :py:class:`~weblayer.wsgi.WSGIApplication`:
 
 .. literalinclude:: ../src/weblayer/examples/helloworld.py
    :lines: 23-24
 
 .. note::
+    
+    The :py:class:`~weblayer.bootstrap.Bootstrapper` is similar to `repoze.bfg's Configurator`_ in that it allows for imperative configuration of components.
 
-    The :py:class:`weblayer.bootstrap.Bootstrapper` is similar to `repoze.bfg's Configurator`_ in that it allows for imperative configuration of components.
+.. note::
+    
+    :py:mod:`~weblayer.settings.RequiredSettings` implements a pattern of optional explicit declaration of settings that is borrowed from `tornado.options`_.  Explicitly requiring settings allows the application to throw an error on initialisation, rather than further down the line (e.g.: when a request happens to come in).  
+    
+    If you choose to, you can explicitly require your own settings by calling :py:func:`~weblayer.settings.require_setting` at module level.  For example, the :py:attr:`cookie_secret` requirement is defined at the top of :py:mod:`weblayer.cookie` using:
+    
+    .. literalinclude:: ../src/weblayer/cookie.py
+       :lines: 26
+    
+    Because :py:func:`~weblayer.settings.require_setting` works in tandem with a `venusian scan`_ to prevent `duplicate import issues`_, to require your own settings, you must tell :ref:`weblayer` to scan the modules you've required them in.  This can be done most simply by passing in a list of dotted names of modules or packages using the :py:obj:`packages` keyword argument of :py:meth:`Bootstrapper.__call__ <weblayer.bootstrap.Bootstrapper.__call__>`.
+    
+    For example, to require all settings declared using :py:func:`~weblayer.settings.require_setting` in modules in the :py:mod:`my.webapp` and :py:mod:`some.dependency` packages, use::
+    
+        application = WSGIApplication(
+            *bootstrapper(packages=['my.webapp', 'some.dependency',])
+        )
+    
+
 
 Serving
 -------
@@ -228,14 +223,14 @@ Alternative component implementations need to declare that they implement the ap
         implements(IPathRouter)
         
         def match(self, path):
-            return None, None
+            return None, None, None
         
     
 
-The simplest way to then register this component is using the :py:class:`~weblayer.bootstrap.Bootstrapper` when bootstrapping the :py:class:`~weblayer.wsgi.WSGIApplication`.  The `override_path_router.py`_ example shows how:
+The simplest way to then register this component is using the :py:class:`~weblayer.bootstrap.Bootstrapper` when bootstrapping the :py:class:`~weblayer.wsgi.WSGIApplication`.  The `override/path_router.py`_ example shows how:
 
-.. literalinclude:: ../src/weblayer/examples/override_path_router.py
-   :lines: 11-
+.. literalinclude:: ../src/weblayer/examples/override/path_router.py
+   :lines: 12-
 
 If you then run this, all requests will meet with a 404 response::
 
@@ -243,13 +238,14 @@ If you then run this, all requests will meet with a 404 response::
     ... "GET / HTTP/1.1" 404 0
     ... "GET /foo HTTP/1.1" 404 0
 
+You can see two further examples at `override/authentication_manager.py`_ and `override/template_renderer.py`_
 
 .. _api:
 
 Request Handler API
 ===================
 
-@@ ...
+
 
 Request
 -------
@@ -310,7 +306,9 @@ Errors
 
 
 .. _`helloworld.py`: http://github.com/thruflo/weblayer/tree/master/src/weblayer/examples/helloworld.py
-.. _`override_path_router.py`: http://github.com/thruflo/weblayer/tree/master/src/weblayer/examples/override_path_router.py
+.. _`override/path_router.py`: http://github.com/thruflo/weblayer/tree/master/src/weblayer/examples/override/path_router.py
+.. _`override/authentication_manager.py`: http://github.com/thruflo/weblayer/tree/master/src/weblayer/examples/override/authentication_manager.py
+.. _`override/template_renderer.py`: http://github.com/thruflo/weblayer/tree/master/src/weblayer/examples/override/template_renderer.py
 
 .. _`HTTP GET request`: http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.3
 .. _`regular expression`: http://docs.python.org/library/re.html
@@ -322,6 +320,7 @@ Errors
 .. _`declarative configuration`: http://docs.repoze.org/bfg/1.2/narr/configuration.html
 .. _`decorators`: http://bottle.paws.de/docs/dev/tutorial.html#routing
 .. _`explained here`: http://docs.repoze.org/bfg/current/designdefense.html#application-programmers-don-t-control-the-module-scope-codepath-import-time-side-effects-are-evil
+.. _`duplicate import issues`: http://docs.repoze.org/bfg/current/designdefense.html#application-programmers-don-t-control-the-module-scope-codepath-import-time-side-effects-are-evil
 .. _`tornado.options`: https://github.com/facebook/tornado/blob/master/tornado/options.py
 
 .. _`venusian scan`: http://docs.repoze.org/venusian/
