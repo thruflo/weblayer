@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" IPathRouter implementation that uses regexp patterns.
-  
-  Say, for example, you have some request handlers::
+""" :py:mod:`weblayer.route` provides :py:class:`RegExpPathRouter`, an 
+  implementation of :py:class:`~weblayer.interfaces.IPathRouter` that uses
+  `regular expression`_ patterns.  Say, for example, you have some request
+  handlers::
   
       >>> class DummyIndex(object):
       ...     implements(IRequestHandler)
@@ -12,8 +13,7 @@
       ...     implements(IRequestHandler)
       ... 
   
-  You can then map request paths to them using a simple list 
-  of two item tuples::
+  You can then map request paths to them using a list of two item tuples::
   
       >>> mapping = [(
       ...         # string or compiled regexp pattern to match
@@ -45,12 +45,13 @@
       >>> path_router.match('/') == (Dummy404, ('/',), {})
       True
   
-  If the path doesn't match, returns `(None, None)`::
+  If the path doesn't match, returns `(None, None, None)`::
   
       >>> path_router = RegExpPathRouter([])
       >>> path_router.match('/')
       (None, None, None)
   
+  .. _`regular expression`: http://docs.python.org/library/re.html
 """
 
 __all__ = [
@@ -122,7 +123,7 @@ class RegExpPathRouter(object):
     def __init__(self, raw_mapping, compile_=None):
         """ Takes a list of raw regular expressions mapped to request 
           handler classes, compiles the regular expressions and 
-          provides `.mapping`.
+          provides :py:attr:`_mapping`.
           
               >>> from mock import Mock
               >>> mock_compile = Mock()
@@ -135,7 +136,10 @@ class RegExpPathRouter(object):
               ...         MockHandler
               ...     )
               ... ]
-              >>> path_router = RegExpPathRouter(raw_mapping, compile_=mock_compile)
+              >>> path_router = RegExpPathRouter(
+              ...     raw_mapping, 
+              ...     compile_=mock_compile
+              ... )
               >>> isinstance(path_router._mapping, list)
               True
               >>> isinstance(path_router._mapping[0], tuple)
@@ -143,14 +147,15 @@ class RegExpPathRouter(object):
               >>> path_router._mapping[0][1] == MockHandler
               True
           
-          The first item of each pair is passed to `compile`::
+          The first item of each pair is passed to :py:func:`compile`::
           
               >>> mock_compile.call_args[0][0] == r'/foo'
               True
               >>> path_router._mapping[0][0] == mock_compile.return_value
               True
           
-          As long as `raw_mapping` can be unpacked into pairs of items::
+          As long as :py:obj:`raw_mapping` can be unpacked into pairs of 
+          items::
           
               >>> raw_mapping = [('a')]
               >>> RegExpPathRouter(raw_mapping) #doctest: +ELLIPSIS
@@ -158,7 +163,8 @@ class RegExpPathRouter(object):
               ...
               ValueError: need more than 1 value to unpack
           
-          And the second item implements `IRequestHandler`::
+          And the second item implements 
+          :py:class:`~weblayer.interfaces.IRequestHandler`::
           
               >>> RegExpPathRouter([(r'/foo', Mock)]) #doctest: +ELLIPSIS
               Traceback (most recent call last):
@@ -184,10 +190,18 @@ class RegExpPathRouter(object):
         
     
     def match(self, path):
-        """ Iterate through self._mapping.  If the path matches an item, 
-          return the handler class, the `re` `match` object's groups (as args
-          to pass to the handler) and an empty dict (as kwargs to pass to the
-          handler).  Otherwise return `(None, None, None)`.
+        """ If the path matches, return the handler class, the 
+          `regular expression`_ match object's `groups`_ (as args to pass to
+          the handler) and an empty dict (as kwargs to pass to the handler),
+          as per::
+          
+              >>> path_router = RegExpPathRouter([])
+              >>> handler_class, args, kwargs = path_router.match('/foo')
+          
+          Otherwise return :py:obj:`(None, None, None)`.
+          
+          .. _`regular expression`: http://docs.python.org/library/re.html
+          .. _`groups`: http://docs.python.org/library/re.html#re.MatchObject.groups
         """
         
         for regexp, handler_class in self._mapping:

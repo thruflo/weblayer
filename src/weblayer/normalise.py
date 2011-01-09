@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" IResponseNormaliser implementation.
+""" :py:mod:`weblayer.normalise` provides 
+  :py:class:`DefaultToJSONResponseNormaliser`, an implementation of
+  :py:class:`~weblayer.interfaces.IResponseNormaliser`.
   
-  Adapts a response object::
+  :py:class:`DefaultToJSONResponseNormaliser` adapts a response object::
   
       >>> from mock import Mock
       >>> response = Mock()
@@ -11,10 +13,8 @@
       >>> normaliser.response == response
       True
   
-  Provides a `normalise` method that takes a variety of values 
-  (intended to be the return values of request handler method 
-  calls) and uses them to update and or replace the original
-  response and then return it::
+  Provides a `normalise` method that takes a single argument and uses it to
+  update and or replace the original response object before returning it::
   
       >>> class MockResponse(object):
       ...     implements(IResponse)
@@ -30,19 +30,21 @@
       >>> r.unicode_body == u'a'
       True
   
-  This implementation's default behaviour for stuff it can't
-  identify as a response or a basestring is to try to JSON
-  encode it::
+  This implementation's default behaviour for stuff it can't identify as a
+  response or a basestring is to try to `JSON`_ encode it::
   
       >>> r = normaliser.normalise({'a': u'b'})
-      >>> r.content_type == normaliser._json_content_type
-      True
+      >>> r.content_type
+      'application/json; charset=UTF-8'
       >>> r.unicode_body
       u'{"a": "b"}'
   
-  All this then allows request handler methods to return strings, 
-  data and / or response objects naturally.
+  When used to normalise the return value of a request handler method, this
+  lets the request handler method return a string or JSON encodable object, 
+  without having to worry about constructing a response object, whilst still
+  allowing for a response object to be returned when necessary.
   
+  .. _`json`: http://www.json.org/
 """
 
 __all__ = [

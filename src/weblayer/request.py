@@ -1,7 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" `IRequestHandler` implementation.
+""" :py:mod:`weblayer.request` provides :py:class:`RequestHandler`, an
+  implementation of :py:class:`~weblayer.interfaces.IRequestHandler`.
+  
+  :py:class:`RequestHandler` is designed to be used as a base class in which
+  you can write code that handles incoming requests to a web application, as
+  per::
+  
+      class Hello(RequestHandler):
+          def get(self, world):
+              return u'hello %s' % world
+              
+          
+      
+  
+  The main point being to take advantage of the :ref:`api` that the class
+  provides.
 """
 
 __all__ = [
@@ -33,7 +48,6 @@ class XSRFError(ValueError):
     """ Raised when xsrf validation fails.
     """
     
-
 
 class BaseHandler(object):
     """ A request handler (aka view class) implementation.
@@ -113,6 +127,41 @@ class BaseHandler(object):
         self._response_normaliser_adapter = response_normaliser_adapter
         
     
+    def __call__(self, method_name, *args, **kwargs):
+        """
+        """
+        
+        method = self._method_selector.select_method(method_name)
+        
+        if method is None:
+            handler_response = self.handle_method_not_found(method_name)
+        else:
+            try:
+                if self.settings["check_xsrf"]:
+                    self.xsrf_validate()
+            except XSRFError, err:
+                handler_response = self.handle_xsrf_error(err)
+            else:
+                try:
+                    handler_response = method(*args, **kwargs)
+                except webob_exceptions.HTTPException, err:
+                    handler_response = self.error(exception=err)
+                except Exception, err:
+                    handler_response = self.handle_system_error(err)
+            
+        if self._response_normaliser_adapter is None:
+            response_normaliser = registry.getAdapter(
+                self.response, 
+                IResponseNormaliser
+            )
+        else:
+            response_normaliser = self._response_normaliser_adapter(
+                self.response
+            )
+        
+        return response_normaliser.normalise(handler_response)
+        
+    
     
     def get_argument(self, name, default=None, strip=False):
         """ Get a single value for an argument from the request, no matter
@@ -141,7 +190,9 @@ class BaseHandler(object):
     
     @property
     def xsrf_token(self):
-        """ The XSRF-prevention token for the current user/session.
+        """ A token we can check to prevent `XSRF`_ attacks.
+          
+          .. _`xsrf`: http://en.wikipedia.org/wiki/Cross-site_request_forgery
         """
         
         if not hasattr(self, '_xsrf_token'):
@@ -155,7 +206,7 @@ class BaseHandler(object):
     
     @property
     def xsrf_input(self):
-        """ An HTML <input /> element to be included with all POST forms.
+        """ An HTML `<input />` element to be included with all POST forms.
         """
         
         if not hasattr(self, '_xsrf_input'):
@@ -166,8 +217,8 @@ class BaseHandler(object):
         
     
     def xsrf_validate(self):
-        """ Raise an `XSRFError` if the '_xsrf' argument isn't present
-          or if it doesn't match the '_xsrf'.
+        """ Raise an :ref:`XSRFError` if the :py:obj:`'_xsrf'` argument isn't present
+          or if it doesn't match :py:attr:`xsrf_token`.
         """
         
         if self.request.method != 'post':
@@ -187,7 +238,8 @@ class BaseHandler(object):
     
     
     def render(self, tmpl_name, **kwargs):
-        """ Render template.
+        """ Render the template called :py:obj:`tmpl_name`, passing through
+          :py:obj:`params` and :py:obj:`kwargs`.
         """
         
         params = dict(
@@ -201,11 +253,12 @@ class BaseHandler(object):
         
     
     def redirect(self, location, permanent=False, **kwargs):
-        """ Redirect to location.  Defaults to `302` unless `permanent`
-          is `True`.
+        """ Redirect to :py:obj:`location`.  The response statuc defaults to
+          :py:obj:`302` unless :py:obj:`permanent is True`.
           
-          `kwargs` (with `kwargs['location']` set to `location` are passed
-          to the appropriate `webob_exception`_ class constructor.
+          :py:obj:`kwargs` (with :py:obj:`kwargs['location']` set to 
+          :py:obj:`location` are passed to the appropriate `webob_exception`_
+          class constructor.
           
           .. _`webob_exception`: http://pythonpaste.org/webob/module-webob.exc.html
         """
@@ -220,12 +273,16 @@ class BaseHandler(object):
         
     
     def error(self, exception=None, status=500, **kwargs):
-        """ Return a response corresponding to `exception` or if `exception`
-          is `None`, corresponding to `status`.  `kwargs` are passed to the
-          appropriate `webob.exc` class constructor.
+        """ Return a response corresponding to :py:obj:`exception` or if 
+          :py:obj:`exception` is `None`, corresponding to :py:obj:`status`.  
           
-          @@ Override at an application level to generate error messages that
+          :py:obj:`kwargs` are passed to the appropriate `webob_exception_` 
+          class constructor.
+          
+          n.b.: Override at an application level to generate error messages that
           are more user friendly.
+          
+          .. _`webob_exception`: http://pythonpaste.org/webob/module-webob.exc.html
         """
         
         status = str(status)
@@ -263,68 +320,19 @@ class BaseHandler(object):
         
     
     
-    def __call__(self, method_name, *args, **kwargs):
-        """
-        """
-        
-        method = self._method_selector.select_method(method_name)
-        
-        if method is None:
-            handler_response = self.handle_method_not_found(method_name)
-        else:
-            try:
-                if self.settings["check_xsrf"]:
-                    self.xsrf_validate()
-            except XSRFError, err:
-                handler_response = self.handle_xsrf_error(err)
-            else:
-                try:
-                    handler_response = method(*args, **kwargs)
-                except webob_exceptions.HTTPException, err:
-                    handler_response = self.error(exception=err)
-                except Exception, err:
-                    handler_response = self.handle_system_error(err)
-            
-        if self._response_normaliser_adapter is None:
-            response_normaliser = registry.getAdapter(
-                self.response, 
-                IResponseNormaliser
-            )
-        else:
-            response_normaliser = self._response_normaliser_adapter(
-                self.response
-            )
-        
-        return response_normaliser.normalise(handler_response)
-        
-    
-    
 
 class RequestHandler(BaseHandler):
-    """ Accepts 'GET' and 'HEAD' requests by default, when used in tandem with
-      an `ExposedMethodSelector` (or any method selector implementation that 
-      checks to see if the request method name is listed in 
-      `RequestHandler.__all__`).
+    """ A request handler (aka view class) implementation.
+      
+      Accepts GET and HEAD requests by default, when used in tandem with an 
+      :py:class:`~weblayer.method.ExposedMethodSelector` (or any method selector 
+      implementation that checks to see if the request method name is listed in 
+      :py:attr:`RequestHandler.__all__`).
     """
     
     __all__ = (
         'head', 
         'get'
     )
-    
-    def get(self, *args):
-        """ Override to handle 'GET' requests.
-        """
-        
-        raise NotImplementedError
-        
-    
-    def head(self, *args):
-        """ Override to handle 'HEAD' requests.
-        """
-        
-        raise NotImplementedError
-        
-    
     
 

@@ -1,7 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" A trivial authentication manager.
+""" :py:mod:`weblayer.auth` provides :py:class:`TrivialAuthenticationManager`,
+  an implementation of :py:class:`~weblayer.interfaces.IAuthenticationManager`.
+  
+  The implementation is deliberately trivial as it's envisaged that a bespoke 
+  application that requires authentication will:
+  
+  * use WSGI middleware (for example `AuthKit`_ or `repoze.who`_) to handle
+    authentication; and / or
+  * override the :py:class:`~weblayer.interfaces.IAuthenticationManager`
+    implementation to work with the individual application's persistence and
+    caching layers.
+  
+  .. _`AuthKit`: http://authkit.org/
+  .. _`repoze.who`: http://docs.repoze.org/who
 """
 
 __all__ = [
@@ -14,7 +27,20 @@ from zope.interface import implements
 from interfaces import IRequest, IAuthenticationManager
 
 class TrivialAuthenticationManager(object):
-    """ Uses `self.request.remote_user` .
+    """ A very simple :py:class:`~weblayer.interfaces.IAuthenticationManager`
+      implementation that uses the `webob.Request`_ attribute 
+      :py:obj:`request.remote_user` which, under the `WebOb`_ hood, is derived
+      from :py:obj:`request.environ['REMOTE_USER']`, which is 
+      `the standard place`_ for authentication middleware to put a user id.
+      
+      :py:class:`TrivialAuthenticationManager` is thus perfectly usable in
+      many cases with :py:attr:`is_authenticated` returning `True` or `False`
+      appropriately and :py:attr:`current_user` returning a user id if present
+      or `None` if not.
+      
+      .. _`webob`: http://pythonpaste.org/webob
+      .. _`webob.request`: http://pythonpaste.org/webob/reference.html#id1
+      .. _`the standard place`: http://wsgi.org/wsgi/Specifications/simple_authentication
     """
     
     adapts(IRequest)

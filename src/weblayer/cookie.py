@@ -1,7 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" Secure cookie wrapper.
+""" :py:mod:`weblayer.cookie` provides :py:class:`SignedSecureCookieWrapper`, an 
+  implementation of :py:class:`~weblayer.interfaces.ISecureCookieWrapper`.
+  
+  :py:class:`SignedSecureCookieWrapper` provides two key methods,
+  :py:meth:`~SignedSecureCookieWrapper.set` and 
+  :py:meth:`~SignedSecureCookieWrapper.get` to set and get cookies whose value
+  is signed using the required :py:obj:`cookie_secret` setting.
+  
+  The resulting cookies are secure, in the sense that they can't be forged
+  (without the forger knowing the :py:obj:`cookie_secret`).  However, it's 
+  important to note that they are just as vulnerable to `sidejacking`_ as 
+  normal cookies.  The only way to secure cookies against `sidejacking`_ is to
+  serve your application over `HTTPS`_ and that is a matter for web server 
+  configuration, outside the scope of :ref:`weblayer`.
+  
+  .. _`sidejacking`: http://codebutler.com/firesheep
+  .. _`https`: http://techcrunch.com/2010/10/25/firesheep/
 """
 
 __all__ = [
@@ -146,7 +162,9 @@ def _generate_cookie_signature(cookie_secret, *parts):
 
 
 class SignedSecureCookieWrapper(object):
-    """ Adapts a request handler to provide methods to get 
+    """ Adapts an :py:class:`~weblayer.interfaces.IRequest`, 
+      :py:class:`~weblayer.interfaces.IResponse` and
+      :py:class:`~weblayer.interfaces.ISettings` to provide methods to get
       and set cookies that can't be forged.
     """
     

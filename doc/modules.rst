@@ -12,6 +12,7 @@ weblayer.base
 
 .. automodule:: weblayer.base
    :members:
+   :inherited-members:
 
 weblayer.bootstrap
 ------------------
@@ -25,7 +26,6 @@ weblayer.component
 ------------------
 
 .. automodule:: weblayer.component
-   :members:
 
 weblayer.cookie
 ---------------
@@ -105,10 +105,4 @@ weblayer.wsgi
 -------------
 
 .. automodule:: weblayer.wsgi
-   :members:
-
-weblayer.examples.helloworld
-----------------------------
-
-.. automodule:: weblayer.examples.helloworld
    :members:

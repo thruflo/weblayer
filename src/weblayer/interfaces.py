@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" `Interface`_ definitions.
+""" :py:mod:`weblayer.interfaces` provides `Interface`_ definitions that show
+  the contracts that :ref:`weblayer`'s :ref:`components` implement and are
+  registered against and looked up by through the :py:mod:`weblayer.component`
+  :py:obj:`registry`.
   
   .. _`Interface`: http://pypi.python.org/pypi/zope.interface
 """
@@ -21,75 +24,49 @@ __all__ = [
     'IWSGIApplication'
 ]
 
-from zope.interface import Interface, Attribute
+from zope.interface import Attribute, Interface
 
-class IWSGIApplication(Interface):
-    """ Callable WSGI application.
+class IAuthenticationManager(Interface):
+    """ Authentication manager.  Default implementation is 
+      :py:class:`~weblayer.auth.TrivialAuthenticationManager`. 
     """
     
-    def __call__(environ, start_response):
-        """ Handle a new request.
+    is_authenticated = Attribute(u'Boolean -- is there an authenticated user?')
+    current_user = Attribute(u'The authenticated user, or `None`')
+    
+
+class IMethodSelector(Interface):
+    """ Selects request handler methods by name.  Default implementation is 
+      :py:class:`~weblayer.method.ExposedMethodSelector`.
+    """
+    
+    def select_method(method_name):
+        """ Return a method using :py:obj:`method_name`.
         """
         
     
     
 
-class IRequestHandler(Interface):
-    """ Takes a request and returns a response.
+class IPathRouter(Interface):
+    """ Maps incoming requests to request handlers using the request path.
+      Default implementation is :py:class:`~weblayer.route.RegExpPathRouter`.
     """
     
-    request = Attribute(u'Request')
-    response = Attribute(u'Response')
-    settings = Attribute(u'Settings')
-    
-    auth = Attribute(u'Authentication manager')
-    cookies = Attribute(u'Cookie wrapper')
-    static = Attribute(u'Static url generator')
-    
-    def get_argument(name, default=None, strip=False):
-        """ Get request param with single value.
+    def match(path):
+        """ Return :py:obj:`handler, args, kwargs` from :py:obj:`path`.
         """
         
-    
-    def get_arguments(name, strip=False):
-        """ Get request param with multiple values.
-        """
-        
-    
-    
-    xsrf_token = Attribute(u'XSRF-prevention token')
-    xsrf_input = Attribute(u'<input/> element to be included in POST forms.')
-    def xsrf_validate():
-        """ Validate the request.
-        """
-        
-    
-    
-    def render(tmpl_name, **kwargs):
-        """ Render template.
-        """
-        
-    
-    def redirect(url, status=302, content_type=None):
-        """ Redirect.
-        """
-        
-    
-    def error(status=500, body=u'System Error'):
-        """ Clear response and return error.
-        """
-        
-    
-    
-    def __call__(method_name, *groups):
-        """ Call the appropriate method to return a response.
-        """
-        
-    
     
 
 class IRequest(Interface):
-    """ An HTTP Request object.
+    """ A Request object, based on `webob.Request`_.  Default implementation
+      is :py:class:`~weblayer.base.Request`.
+      
+      This interface details only the attributes of `webob.Request`_ that 
+      :ref:`weblayer` uses by default, not the full interface `webob.Request`_
+      actually provides.
+      
+      .. _`webob.Request`: http://pythonpaste.org/webob/reference.html#id1
     """
     
     url = Attribute(u'Full request URL, including QUERY_STRING')
@@ -107,8 +84,70 @@ class IRequest(Interface):
     cookies = Attribute(u'Dictionary of cookies found in the request')
     
 
+class IRequestHandler(Interface):
+    """ A request handler.  Default implementation is 
+      :py:class:`~weblayer.request.RequestHandler`.
+    """
+    
+    request = Attribute(u'Request instance')
+    response = Attribute(u'Response instance')
+    settings = Attribute(u'Settings instance')
+    
+    auth = Attribute(u'Authentication manager')
+    cookies = Attribute(u'Cookie wrapper')
+    static = Attribute(u'Static url generator')
+    
+    def get_argument(name, default=None, strip=False):
+        """ Get single value for request param called :py:obj:`name`.
+        """
+        
+    
+    def get_arguments(name, strip=False):
+        """ Get multiple values for request param called :py:obj:`name`.
+        """
+        
+    
+    
+    xsrf_token = Attribute(u'XSRF prevention token')
+    xsrf_input = Attribute(u'<input/> element to be included in POST forms.')
+    def xsrf_validate():
+        """ Validate against XSRF.
+        """
+        
+    
+    
+    def render(tmpl_name, **kwargs):
+        """ Render the template called :py:obj:`tmpl_name`.
+        """
+        
+    
+    def redirect(url, status=302, content_type=None):
+        """ Redirect to :py:obj:`url`.
+        """
+        
+    
+    def error(status=500, body=u'System Error'):
+        """ Clear response and return an error.
+        """
+        
+    
+    
+    def __call__(method_name, *args, **kwargs):
+        """ Call the appropriate method to return a response.
+        """
+        
+    
+    
+
 class IResponse(Interface):
-    """ An HTTP Response object.
+    """ A Response object, based on `webob.Response`_.  Default implementation
+      is :py:class:`~weblayer.base.Response`.
+      
+      This interface details only the attributes of `webob.Response`_ that 
+      :ref:`weblayer` uses by default, not the full interface `webob.Response`_
+      actually provides.
+      
+      .. _`webob.Response`: http://pythonpaste.org/webob/reference.html#id2
     """
     
     headers = Attribute(u'The headers in a dictionary-like object')
@@ -121,99 +160,28 @@ class IResponse(Interface):
     status = Attribute(u'The `status` string')
     
     def set_cookie(key, value='', **kwargs):
-        """ Set (add) a cookie for the response.
-        """
-        
-    
-    def unset_cookie(key, strict=True):
-        """ Unset a cookie with the given name.
-        """
-        
-    
-    def delete_cookie(key, **kwargs):
-        """ Delete a cookie from the client.
-        """
-        
-    
-    
-
-class ITemplateRenderer(Interface):
-    """ A utility which renders templates.
-    """
-    
-    def render(tmpl_name, **kwargs):
-        """ Render a template identified with `tmpl_name`.
-        """
-        
-    
-    
-
-class IPathRouter(Interface):
-    """ Maps incoming requests to request handlers using the request path.
-    """
-    
-    def match(path):
-        """ Return `handler, args, kwargs` from `path`.
-        """
-    
-
-class IMethodSelector(Interface):
-    """ Selects methods by name.
-    """
-    
-    def select_method(method_name):
-        """ Return a method using `method_name`.
+        """ Set :py:obj:`value` for cookie called :py:obj:`key`.
         """
         
     
     
 
 class IResponseNormaliser(Interface):
-    """ Normalise the response provided by a 
-      request handler method.
+    """ Normalise the response provided by a request handler method.  Default
+      implementation is 
+      :py:class:`~weblayer.normalise.DefaultToJSONResponseNormaliser`.
     """
     
     def normalise(handler_response):
-        """ Update self.context.response and return it.
-        """
-        
-    
-    
-
-class ISettings(Interface):
-    """ Provides dictionary-like access to global 
-      application settings.
-    """
-    
-    def __getitem__(name):
-        """ Get item.
-        """
-        
-    
-    def __setitem__(name, value):
-        """ Set item.
-        """
-        
-    
-    def __delitem__(name):
-        """ Delete item.
-        """
-        
-    
-    def __contains__(name):
-        """ Contains item.
-        """
-        
-    
-    def __iter__():
-        """ Iterate.
+        """ Normalise :py:obj:`handler_response` into an :py:class:`IResponse`.
         """
         
     
     
 
 class ISecureCookieWrapper(Interface):
-    """ Get and set cookies.
+    """ Get and set cookies that can't be forged.  Default implementation is
+      :py:class:`~weblayer.cookie.SignedSecureCookieWrapper`.
     """
     
     def set(name, value, expires_days=30, **kwargs):
@@ -233,20 +201,74 @@ class ISecureCookieWrapper(Interface):
     
     
 
-class IAuthenticationManager(Interface):
-    """ @@ placeholder for now ...
+class ISettings(Interface):
+    """ Provides dictionary-like access to global application settings.
+      Default implementation is 
+      :py:class:`~weblayer.settings.RequirableSettings`.
     """
     
-    is_authenticated = Attribute(u'Boolean -- is there an authenticated user?')
-    current_user = Attribute(u'The authenticated user, or `None`')
+    def __getitem__(name):
+        """ Get item called :py:obj:`name`.
+        """
+        
+    
+    def __setitem__(name, value):
+        """ Set item called :py:obj:`name` to :py:obj:`value`.
+        """
+        
+    
+    def __delitem__(name):
+        """ Delete item called :py:obj:`name`.
+        """
+        
+    
+    def __contains__(name):
+        """ Return whether contains item called :py:obj:`name`.
+        """
+        
+    
+    def __iter__():
+        """ Iterate through items.
+        """
+        
+    
+    def __repr__():
+        """ Represent as a string.
+        """
+        
     
 
 class IStaticURLGenerator(Interface):
-    """ Adapter to generate static URLs from a request.
+    """ Static url generator.  Default implementation is 
+      :py:class:`~weblayer.static.MemoryCachedStaticURLGenerator`.
     """
     
-    def get_url(path, snip_digest_at=7):
-        """ Get a fully expanded url for the given static resource `path`.
+    def get_url(path):
+        """ Get a fully expanded url for the given :py:obj:`path`.
+        """
+        
+    
+    
+
+class ITemplateRenderer(Interface):
+    """ A template renderer.  Default implementation is 
+      :py:class:`~weblayer.template.MakoTemplateRenderer`.
+    """
+    
+    def render(tmpl_name, **kwargs):
+        """ Render the template called :py:obj:`tmpl_name`.
+        """
+        
+    
+    
+
+class IWSGIApplication(Interface):
+    """ A callable WSGI application.  Default implementation is 
+      :py:class:`~weblayer.wsgi.WSGIApplication`.
+    """
+    
+    def __call__(environ, start_response):
+        """ Handle a new request.
         """
         
     

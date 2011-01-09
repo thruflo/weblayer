@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" Use `RequestHandler.__all__` to explicitly expose public request
-  handler methods::
+""" :py:mod:`weblayer.method` provides :py:class:`ExposedMethodSelector`, an 
+  implementation of :py:class:`~weblayer.interfaces.IMethodSelector`.
+  
+  :py:class:`ExposedMethodSelector` works in tandem with 
+  :py:obj:`RequestHandler.__all__` to select only explicitly exposed request handler
+  methods to handle incoming requests::
   
       >>> class MockHandler(object):
       ...     implements(IRequestHandler)
@@ -38,7 +42,7 @@ from interfaces import IRequestHandler, IMethodSelector
 
 class ExposedMethodSelector(object):
     """ Method selector adapter that works in tandem with the
-      `RequestHandler.__all__` attribute.
+      :py:obj:`RequestHandler.__all__` attribute.
     """
     
     adapts(IRequestHandler)

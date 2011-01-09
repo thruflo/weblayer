@@ -1,8 +1,46 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" Provides `Bootstrapper`, a helper class that simplifies setting up
-  and registering `weblayer` components.
+""" :py:mod:`weblayer.bootstrap` provides :py:class:`Bootstrapper`, a helper
+  class that simplifies setting up and registering :ref:`weblayer` components.
+  To bootstrap a default configuration, pass a dictionary of settings
+  and list of url mappings to the :py:class:`Bootstrapper` constructor::
+  
+      >>> bootstrapper = Bootstrapper(settings={}, url_mapping=[])
+  
+  Then call the :py:obj:`bootstrapper` instance to register components and get
+  :py:class:`~weblayer.interfaces.ISettings` and 
+  :py:class:`~weblayer.interfaces.IPathRouter` utilities.
+  
+  By default, the bootstrapper uses 
+  :py:class:`~weblayer.settings.RequirableSettings` and performs a 
+  `venusian scan`_ of the :ref:`weblayer` package to require settings declared
+  explicitly with :py:class:`~weblayer.settings.require_setting`.
+  
+  This means that you must pass the required settings into the 
+  :py:class:`Bootstrapper` constructor when instantiating the 
+  :py:obj:`bootstrapper` or get a :py:exc:`KeyError`::
+  
+      >>> settings, path_router = bootstrapper() #doctest: +NORMALIZE_WHITESPACE
+      Traceback (most recent call last):
+      ...
+      KeyError: u'Required setting `template_directories` () is missing, 
+                Required setting `static_files_path` () is missing, 
+                Required setting `cookie_secret` (a long, random sequence 
+                of bytes) is missing'
+  
+  Whereas if the required settings are provided, all is well::
+  
+      >>> config = {
+      ...     'cookie_secret': '...', 
+      ...     'static_files_path': '/var/www/static',
+      ...     'template_directories': ['templates']
+      ... }
+      >>> bootstrapper = Bootstrapper(settings=config, url_mapping=[])
+      >>> settings, path_router = bootstrapper()
+  
+  .. _`venusian scan`: http://docs.repoze.org/venusian/
+  
 """
 
 __all__ = [
@@ -24,63 +62,95 @@ from static import MemoryCachedStaticURLGenerator
 from template import MakoTemplateRenderer
 
 class Bootstrapper(object):
-    """ To bootstrap a default configuration, pass a dictionary of settings
-      and list of url mappings to the constructor::
-      
-          >>> config = {
-          ...     'cookie_secret': '...', 
-          ...     'static_files_path': '/var/www/static',
-          ...     'template_directories': ['templates']
-          ... }
-          >>> bootstrapper = Bootstrapper(settings=config, url_mapping=[])
-      
-      Then call the instance to register components and get `ISettings` and 
-      `IPathRouter` utilities::
-      
-          >>> settings, path_router = bootstrapper()
-      
-      To override specific components, either pass in `False` to skip
-      registering them, e.g. this will skip registering a template renderer::
-      
-          >>> settings, path_router = bootstrapper(TemplateRenderer=False)
-      
-      Or pass in your own implementation, e.g.::
-      
-          >>> from mock import Mock
-          >>> mock_router = Mock()
-          >>> settings, path_router = bootstrapper(path_router=mock_router)
-          >>> path_router == mock_router
-          True
-      
-      By default, calling the bootstrapper explicitly requires settings, 
-      performing a `venusian scan`_ of the `weblayer` package to find the
-      required settings and raising a `KeyError` if they weren't passed in
-      when the `bootstrapper` was initialised::
-      
-          >>> bootstrapper = Bootstrapper(settings={}, url_mapping=[])
-          >>> bootstrapper(require_settings=True) #doctest: +NORMALIZE_WHITESPACE
-          Traceback (most recent call last):
-          ...
-          KeyError: u'Required setting `template_directories` () is missing, 
-                    Required setting `static_files_path` () is missing, 
-                    Required setting `cookie_secret` (a long, random sequence 
-                    of bytes) is missing'
-          
-      If the required settings are provided, all is well::
-      
-          >>> bootstrapper = Bootstrapper(settings=config, url_mapping=[])
-          >>> settings, path_router = bootstrapper(require_settings=True)
-      
-      If you require your own settings (see the :py:mod:`~weblayer.settings`
-      module for more information), pass in the dotted names of the modules
-      or packages they are required in::
-      
-          bootstrapper(packages=['foo', 'baz.bar'])
-      
-      Your settings will then also be required.
-      
-      .. _`venusian scan`: http://docs.repoze.org/venusian/
+    """ Simplifies setting up and registering :ref:`weblayer` components.
     """
+    
+    def __init__(self, settings=None, url_mapping=None):
+        """ Stores the :py:obj:`settings` and :py:obj:`url_mapping` provided::
+          
+              >>> config = {'a': 'b'}
+              >>> mapping = [()]
+              >>> b = Bootstrapper(settings=config, url_mapping=mapping)
+              >>> b._user_settings
+              {'a': 'b'}
+              >>> b._url_mapping
+              [()]
+          
+        """
+        
+        if settings is None:
+            self._user_settings = {}
+        else:
+            self._user_settings = settings
+        
+        if url_mapping is None:
+            self._url_mapping = []
+        else:
+            self._url_mapping = url_mapping
+        
+    
+    def __call__(
+            self, 
+            packages=None, 
+            scan_framework=True, 
+            extra_categories=None,
+            require_settings=True,
+            **kwargs
+        ):
+        """ If :py:obj:`require_settings is True` and 
+          :py:obj:`settings` isn't provided as a keyword argument, call 
+          :py:meth:`require_settings`, :py:meth:`register_components` and
+          return :py:obj:`settings, path_router`.
+          
+          If you require your own settings (see the :py:mod:`~weblayer.settings`
+          module for more information), pass in the dotted names of the modules
+          or packages they are required in::
+          
+              >>> config = {
+              ...     'cookie_secret': '...', 
+              ...     'static_files_path': '/var/www/static',
+              ...     'template_directories': ['templates']
+              ... }
+              >>> bootstrapper = Bootstrapper(settings=config, url_mapping=[])
+              >>> settings, path_router = bootstrapper(packages=['foo', 'baz.bar'])
+              Traceback (most recent call last):
+              ...
+              ImportError: No module named foo
+          
+          To override specific components, either pass in `False` to skip
+          registering them, e.g. this will skip registering a template renderer::
+          
+              >>> bootstrapper = Bootstrapper(settings=config, url_mapping=[])
+              >>> settings, path_router = bootstrapper(TemplateRenderer=False)
+          
+          Or pass in your own implementation, e.g.::
+          
+              >>> from mock import Mock
+              >>> mock_router = Mock()
+              >>> bootstrapper = Bootstrapper(settings=config, url_mapping=[])
+              >>> settings, path_router = bootstrapper(path_router=mock_router)
+              >>> path_router == mock_router
+              True
+          
+        """
+        
+        if 'settings' in kwargs or not require_settings:
+            settings_component = kwargs.get('settings', None)
+        else:
+            settings_component = self.require_settings(
+                packages=packages,
+                scan_framework=scan_framework,
+                extra_categories=extra_categories
+            )
+        
+        kwargs['settings'] = settings_component
+        self.register_components(**kwargs)
+        
+        settings = registry.getUtility(ISettings)
+        path_router = registry.getUtility(IPathRouter)
+        
+        return settings, path_router
+        
     
     def require_settings(
             self, 
@@ -88,8 +158,8 @@ class Bootstrapper(object):
             scan_framework=True, 
             extra_categories=None
         ):
-        """ Init and return `RequirableSettings`, scanning `packages` for
-          required settings in the process.
+        """ Init and return a :py:class:`~weblayer.settings.RequirableSettings`
+          instance, scanning :py:obj:`packages` for required settings.
         """
         
         if packages is None:
@@ -124,7 +194,8 @@ class Bootstrapper(object):
             ResponseNormaliser=None
         ):
         """ Setup component registrations. Pass in alternative implementations
-          here to override, or `False` to avoid registering a component.
+          here to override, or pass in :py:obj:`False` to avoid registering a
+          component.
         """
         
         if settings is not False:
@@ -191,52 +262,6 @@ class Bootstrapper(object):
                 required=[IResponse],
                 provided=IResponseNormaliser
             )
-        
-    
-    
-    def __call__(
-            self, 
-            packages=None, 
-            scan_framework=True, 
-            extra_categories=None,
-            require_settings=True,
-            **kwargs
-        ):
-        """ If `require_settings` is `True`, call :py:meth:`require_settings`, 
-          :py:meth:`register_components` and return `settings, path_router`.
-        """
-        
-        if 'settings' in kwargs or not require_settings:
-            settings_component = kwargs.get('settings', None)
-        else:
-            settings_component = self.require_settings(
-                packages=packages,
-                scan_framework=scan_framework,
-                extra_categories=extra_categories
-            )
-        
-        kwargs['settings'] = settings_component
-        self.register_components(**kwargs)
-        
-        settings = registry.getUtility(ISettings)
-        path_router = registry.getUtility(IPathRouter)
-        
-        return settings, path_router
-        
-    
-    def __init__(self, settings=None, url_mapping=None):
-        """ Stores the `settings` and `url_mapping` provided.
-        """
-        
-        if settings is None:
-            self._user_settings = {}
-        else:
-            self._user_settings = settings
-        
-        if url_mapping is None:
-            self._url_mapping = []
-        else:
-            self._url_mapping = url_mapping
         
     
     
