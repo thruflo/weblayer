@@ -54,7 +54,7 @@ class Bootstrapper(object):
       
       By default, calling the bootstrapper explicitly requires settings, 
       performing a `venusian scan`_ of the `weblayer` package to find the
-      required settings and raise a `KeyError` if they weren't passed in
+      required settings and raising a `KeyError` if they weren't passed in
       when the `bootstrapper` was initialised::
       
           >>> bootstrapper = Bootstrapper(settings={}, url_mapping=[])
@@ -202,7 +202,7 @@ class Bootstrapper(object):
             require_settings=True,
             **kwargs
         ):
-        """ If `require_settings` is `True, call :py:meth:`require_settings`, 
+        """ If `require_settings` is `True`, call :py:meth:`require_settings`, 
           :py:meth:`register_components` and return `settings, path_router`.
         """
         
