@@ -9,11 +9,14 @@ weblayer
 Introduction
 ============
 
-:ref:`weblayer` is a `Python`_ package for web developers who like making their own design decisions.
+:ref:`weblayer` is a `Python`_ package, built on `WebOb`_, that provides a set
+of components that can be used to handle requests within a `WSGI`_ application.
 
-Built on `WebOb`_ it provides a set of components that can be used to handle requests and create a `WSGI`_ application.  It is not a framework.  In contrast, :ref:`weblayer` tries to prescribe as little as possible, allowing you to swap out components and work with your weapons of choice.
+It is not a framework.  In contrast, :ref:`weblayer` tries to prescribe as
+little as possible, allowing you to swap out components and work with your
+weapons of choice.
 
-It's fast and fully tested.  The `source code`_ is in the `public domain`_.
+It's fast and fully tested.  The `source code`_ is `public domain`_.
 
 
 Contents
