@@ -68,7 +68,7 @@ weblayer.request
 .. automodule:: weblayer.request
 
 .. autoclass:: weblayer.request.RequestHandler
-   :members:
+   :members: 
    :inherited-members:
 
 weblayer.route
@@ -105,4 +105,6 @@ weblayer.wsgi
 -------------
 
 .. automodule:: weblayer.wsgi
-   :members:
+
+.. autoclass:: weblayer.wsgi.WSGIApplication
+   :members: __call__

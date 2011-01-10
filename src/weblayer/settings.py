@@ -1,16 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" Require specific settings to be provided to the application
-  by declaring the dependency at a module, class or function level.
+""" :py:mod:`weblayer.settings` provides :py:class:`RequirableSettings`, an 
+  implementation of :py:class:`~weblayer.interfaces.ISettings` that allows you
+  to (optionally) declare the settings that your application requires.
   
-  For example, say your application code needs to know the value
-  of a particular webservice api key.  You can require it by 
-  calling the `require_setting` method at module level::
+  For example, say your application code needs to know the value of a
+  particular webservice api key.  You can require it by calling the 
+  :py:func:`require_setting` method (by convention at the top of a module, so
+  the requirement is clear)::
   
       >>> require_setting('api_key')
   
-  Or by decorating a function or method::
+  Or by decorating a function or method with :py:func:`require`::
   
       >>> class Foo(object):
       ...     @require('api_key')
@@ -22,8 +24,8 @@
       ... def foo(self): pass
       ... 
   
-  Then, once we've executed a `venusian` scan (which we fake here
-  see `./tests/test_settings.py` for real integration tests)::
+  Then, once we've executed a `venusian scan`_ (which we fake here: see 
+  `./tests/test_settings.py`_ for real integration tests)::
   
       >>> settings = RequirableSettings()
       >>> def mock_require_setting(*args, **kwargs):
@@ -34,50 +36,50 @@
       ... 
       >>> mock_require_setting('api_key')
   
-  You can call the `RequirableSettings` instance with a dictionary of settings
-  provided by the user / your application.
+  You can call the :py:class:`RequirableSettings` instance with a dictionary
+  of settings provided by the user / your application.  If you pass in a value
+  for :py:obj:`api_key`, great, otherwise, you'll get a :py:exc:`KeyError`::
   
-  If you pass in a value for `api_key`, great, otherwise, you'll get a 
-  `KeyError`::
-  
+      >>> settings({'api_key': '123'})
+      >>> settings['api_key']
+      '123'
       >>> settings({})
       Traceback (most recent call last):
       ...
       KeyError: u'Required setting `api_key` () is missing'
-      >>> settings({'api_key': '123'})
-      >>> settings['api_key']
-      '123'
   
-  You can specify default values and help strings ala:
+  You can specify default values and help strings ala::
   
       >>> mock_require_setting('baz', default='blah', help=u'what is this?')
       >>> settings({'api_key': '123'})
       >>> settings['baz']
       'blah'
   
-  You can't require the same setting twice with different values:
+  You can't require the same setting twice with different values::
   
       >>> mock_require_setting('baz', default='something else')
       Traceback (most recent call last):
       ...
       KeyError: u'baz is already defined'
   
-  Unless you explicitly use `override_setting` (also available as the
-  `@override` decorator):
+  Unless you explicitly use :py:func:`override_setting` (also available as the
+  :py:func:`override` decorator):
   
       >>> mock_override_setting('baz', default='something else')
       >>> settings({'api_key': '123'})
       >>> settings['baz']
       'something else'
   
+  .. _`venusian scan`: http://docs.repoze.org/venusian/
+  .. _`./tests/test_settings.py`: http://github.com/thruflo/weblayer/tree/master/src/weblayer/tests/test_settings.py
 """
 
 __all__ = [
-    'require',
-    'override',
+    'RequirableSettings',
     'require_setting',
+    'require',
     'override_setting',
-    'RequirableSettings'
+    'override'
 ]
 
 import inspect
@@ -93,9 +95,10 @@ _HANGER_NAME = '__weblayer_require_settings_venusian_hanger__'
 class RequirableSettings(object):
     """ Utility that provides dictionary-like access to application settings.
       
-      Do not use the `_require` and `_override` methods directly.  Instead,
-      use the `require_setting` and `override_setting` functions or the 
-      `@require` and `@override` decorators defined below.
+      Do not use the :py:meth:`_require` and :py:meth:`_override` methods 
+      directly.  Instead, use the :py:func:`require_setting` and 
+      :py:func:`override_setting` functions or the :py:func:`require` and 
+      :py:func:`override` decorators defined below.
     """
     
     implements(ISettings)
@@ -351,9 +354,11 @@ def _attach_callback(
     """ Hangs a callback to `_require` or `_override` off the module that
       this method is called from.
       
-      N.b.: attaches the callback manually, rather than using `venusian.attach`
-      to avoid depending on a CPython implementation detail.
-      
+      Attaches the callback manually, rather than using `venusian.attach`_ so
+      that :ref:`weblayer` doesn't depend on a `CPython implementation detail`_.
+          
+      .. `venusian.attach`_: http://svn.repoze.org/venusian/trunk/venusian/__init__.py
+      .. _`CPython implementation detail`: http://docs.python.org/library/sys.html#sys._getframe
     """
     
     # get the module we're being called in
@@ -389,7 +394,7 @@ def _attach_callback(
     
 
 def require_setting(name, default=None, help=u'', category=_CATEGORY):
-    """ Call function at module level to require a setting.
+    """ Require a setting.
     """
     
     _attach_callback(
@@ -402,7 +407,7 @@ def require_setting(name, default=None, help=u'', category=_CATEGORY):
     
 
 def override_setting(name, default=None, help=u'', category=_CATEGORY):
-    """ Call function at module level to override a setting.
+    """ Override a setting.
     """
     
     _attach_callback(

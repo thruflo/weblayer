@@ -1,7 +1,42 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" ITemplateRenderer implementation that uses `Mako`_ templates.
+""" :py:mod:`weblayer.template` provides :py:class:`MakoTemplateRenderer`, an
+  implementation of :py:class:`~weblayer.interfaces.ITemplateRenderer` that 
+  uses `Mako`_ templates.
+  
+  :py:class:`MakoTemplateRenderer` requires 
+  :py:obj:`settings['template_directories']`::
+  
+      >>> settings = {'template_directories': ['/tmp']}
+      >>> template_renderer = MakoTemplateRenderer(settings)
+  
+  And provides a :py:meth:`~MakoTemplateRenderer.render` method that accepts
+  a :py:obj:`tmpl_name` which is resolved relative to 
+  :py:obj:`settings['template_directories']` and passes through a set of built
+  in functions and the keyword arguments provided to 
+  :py:meth:`~MakoTemplateRenderer.render` to the template's global namespace::
+  
+      >>> tmpl = u'<h1>${escape(foo)}</h1>'
+      >>> sock = open('/tmp/weblayer-template-demo.tmpl', 'w')
+      >>> sock.write(tmpl)
+      >>> sock.close()
+      >>> template_renderer.render('weblayer-template-demo.tmpl', foo='&')
+      '<h1>&amp;</h1>'
+  
+  The built ins available by default are::
+  
+      DEFAULT_BUILT_INS = {
+          "escape": utils.xhtml_escape,
+          "url_escape": utils.url_escape,
+          "json_encode": utils.json_encode,
+          "datetime": datetime
+      }
+  
+  Cleanup::
+  
+      >>> import os
+      >>> os.remove('/tmp/weblayer-template-demo.tmpl')
   
   .. _`Mako`: http://www.makotemplates.org/
 """
@@ -31,7 +66,7 @@ DEFAULT_BUILT_INS = {
 require_setting('template_directories')
 
 class MakoTemplateRenderer(object):
-    """ `Mako` template renderer.
+    """ `Mako <http://www.makotemplates.org/>`_ template renderer.
     """
     
     adapts(ISettings)
@@ -69,8 +104,8 @@ class MakoTemplateRenderer(object):
         
     
     def render(self, tmpl_name, **kwargs):
-        """ Render `tmpl_name`, unpacking `self.built_ins` and `kwargs`
-          into the template's global namespace.
+        """ Render :py:obj:`tmpl_name`, unpacking :py:attr:`self.built_ins`
+          and :py:obj:`kwargs` into the template's global namespace.
         """
         
         params = self.built_ins.copy()

@@ -1,7 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" `WSGIApplication <http://pythonpaste.org/>`_ implementation.
+""" :py:mod:`weblayer.wsgi` provides :py:class:`WSGIApplication`, an
+  implementation of :py:class:`~weblayer.interfaces.IWSGIApplication` that
+  adapts :py:class:`~weblayer.interfaces.ISettings` and an 
+  :py:class:`~weblayer.interfaces.IPathRouter`::
+  
+      >>> settings = {}
+      >>> path_router = object()
+  
+  To provide a callable `WSGI`_ application::
+  
+      >>> application = WSGIApplication(settings, path_router)
+  
+  .. _`WSGI`: http://www.python.org/dev/peps/pep-0333/
 """
 
 __all__ = [
@@ -15,11 +27,6 @@ from base import Request, Response
 from interfaces import IPathRouter, ISettings, IWSGIApplication
 
 class WSGIApplication(object):
-    """ Implementation of a callable WSGI application that 
-      accepts requests and uses a path router to select
-      a request handler to handle them.
-    
-    """
     
     adapts(ISettings, IPathRouter)
     implements(IWSGIApplication)
@@ -52,15 +59,33 @@ class WSGIApplication(object):
         
     
     def __call__(self, environ, start_response):
-        """ Checks the path router for a match against the incoming request
-          path.  If it finds one, instantiates the corresponding request 
-          handler and calls it with the request method and the match groups.
+        """ Checks :py:attr:`self._path_router` for a 
+          :py:meth:`~weblayer.interfaces.IPathRouter.match` against the
+          incoming :py:attr:`~weblayer.interfaces.IRequest.path`::
           
-          If calling the handler errors (which is shouldn't normally do -- 
-          the handler should catch the error), returns a minimalist 500 
-          response.
+              handler_class, args, kwargs = self._path_router.match(request.path)
           
-          If no match is found, returns a minimalist 404 response.
+          If :py:obj:`handler_class is not None`, instantiates the
+          :py:class:`~weblayer.interfaces.IRequestHandler`::
+          
+              handler = handler_class(request, response, self._settings)
+          
+          And calls it with :py:obj:`environ['REQUEST_METHOD']` and the
+          :py:obj:`args` and :py:obj:`kwargs` returned from 
+          :py:meth:`~weblayer.interfaces.IPathRouter.match`::
+          
+              response = handler(environ['REQUEST_METHOD'], *args, **kwargs)
+          
+          .. note::
+          
+              If calling the handler errors (which is shouldn't normally do, as
+              the handler *should* catch the error), returns a minimalist 500 
+              response.
+          
+          .. note::
+          
+              If no match is found, returns a minimalist 404 response.  To handle
+              404 responses more elegantly, define a catch all URL handler.
           
         """
         
