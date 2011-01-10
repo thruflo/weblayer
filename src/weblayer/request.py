@@ -253,7 +253,7 @@ class BaseHandler(object):
         
     
     def redirect(self, location, permanent=False, **kwargs):
-        """ Redirect to :py:obj:`location`.  The response statuc defaults to
+        """ Redirect to :py:obj:`location`.  The response status defaults to
           :py:obj:`302` unless :py:obj:`permanent is True`.
           
           :py:obj:`kwargs` (with :py:obj:`kwargs['location']` set to 

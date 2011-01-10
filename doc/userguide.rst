@@ -245,65 +245,62 @@ You can see two further examples at `override/authentication_manager.py`_ and `o
 Request Handler API
 ===================
 
-
+:py:class:`~weblayer.request.RequestHandler` provides the following attributes and methods.
 
 Request
 -------
 
-`self.request`
+:py:attr:`~weblayer.request.RequestHandler.request` is an :py:class:`~weblayer.interfaces.IRequest` instance, encapsulating the incoming HTTP request.
 
 Response
 --------
 
-`self.response`
+:py:attr:`~weblayer.request.RequestHandler.response` is an :py:class:`~weblayer.interfaces.IResponse` instance.  You can manipulate it directly or indirectly through the :py:class:`~weblayer.interfaces.IResponseNormaliser`.
 
 Settings
 --------
 
-`self.settings`
+:py:attr:`~weblayer.request.RequestHandler.settings` is an :py:class:`~weblayer.interfaces.ISettings` instance.  It provides dictionary like access to your application :py:mod:`~weblayer.settings`.
 
-Arguments
----------
+Request Parameters
+------------------
 
-`self.get_argument(name, default=None, strip=False)`
-`self.get_arguments(name, strip=False)`    
+:py:meth:`~weblayer.request.RequestHandler.get_argument` and :py:meth:`~weblayer.request.RequestHandler.get_arguments` provide HTTP method agnostic access to the request parameters.
 
 Authentication
 --------------
 
-`self.auth`
+:py:attr:`~weblayer.request.RequestHandler.auth` is an :py:class:`~weblayer.interfaces.IAuthenticationManager` instance.  If provides :py:attr:`~weblayer.interfaces.IAuthenticationManager.is_authenticated` and :py:attr:`~weblayer.interfaces.IAuthenticationManager.current_user` properties.
 
 Secure Cookies
 --------------
 
-`self.cookies`
+:py:attr:`~weblayer.request.RequestHandler.cookies` is an :py:class:`~weblayer.interfaces.ISecureCookieManager` instance.  If provides :py:meth:`~weblayer.interfaces.ISecureCookieManager.set` and :py:meth:`~weblayer.interfaces.IAuthenticationManager.get` methods to set and get cookies that can't be forged.
 
 Templates
 ---------
 
-`self.render(tmpl_name, **kwargs)`
+:py:meth:`~weblayer.request.RequestHandler.render` wraps :py:meth:`ITemplateRenderer.render <weblayer.interfaces.ITemplateRenderer.render>` with additional built ins.
 
 Static URLs
 -----------
 
-`self.static`
+:py:attr:`~weblayer.request.RequestHandler.static` is an an :py:class:`~weblayer.interfaces.IStaticURLGenerator` instance.  It provides :py:meth:`~weblayer.interfaces.IStaticURLGenerator.get_url` (passed in as one of the additional built ins to :py:meth:`ITemplateRenderer.render <weblayer.interfaces.ITemplateRenderer.render>` as :py:func:`get_static_url`).
 
 XSRF
 ----
 
-`self.xsrf_token`
-`self.xsrf_input`
+:py:attr:`~weblayer.request.RequestHandler.xsrf_input` is an html `<input />` element (passed in as one of the additional built ins to :py:meth:`ITemplateRenderer.render <weblayer.interfaces.ITemplateRenderer.render>` as :py:obj:`xsrf_input`).
 
 Redirection
 -----------
 
-`self.redirect(url, status=302, content_type=None)`
+:py:meth:`~weblayer.request.RequestHandler.redirect` is a method you can use to redirect the request.
 
 Errors
 ------
 
-`self.error(status=500, body=u'System Error')`
-
+:py:meth:`~weblayer.request.RequestHandler.error` is a method you can use to return an error.
 
 .. _`helloworld.py`: http://github.com/thruflo/weblayer/tree/master/src/weblayer/examples/helloworld.py
 .. _`override/path_router.py`: http://github.com/thruflo/weblayer/tree/master/src/weblayer/examples/override/path_router.py
