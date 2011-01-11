@@ -48,6 +48,7 @@ setup(
     ],
     extras_require = {
         'dev': [
+            'WebTest >= 1.2.3, < 1.3',
             'nose >= 1.0, < 2.0',
             'coverage >= 3.4, < 4.0',
             'mock >= 0.7.0b4, < 0.8',

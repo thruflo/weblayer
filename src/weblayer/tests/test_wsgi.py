@@ -172,6 +172,7 @@ class TestCallWSGIApplication(unittest.TestCase):
         
         response = self.app(self.environ, 'start response')
         self.Response.assert_called_with(
+            request=self.request_instance,
             status=200, 
             content_type='content type'
         )
@@ -237,7 +238,7 @@ class TestCallWSGIApplication(unittest.TestCase):
            `response.status` is set to 500.
         """
         
-        def raise_exception(): # pragma: no coverage
+        def raise_exception(*args):
             raise Exception
         
         self.handler_instance = raise_exception
@@ -253,7 +254,7 @@ class TestCallWSGIApplication(unittest.TestCase):
           minimal response.
         """
         
-        def raise_exception(): # pragma: no coverage
+        def raise_exception(*args):
             raise Exception
         
         self.handler_instance = raise_exception
@@ -262,6 +263,34 @@ class TestCallWSGIApplication(unittest.TestCase):
         
         response = self.app(self.environ, 'start response')
         self.assertTrue(response == 'minimal response')
+        
+    
+    def test_handler_does_not_throw_exception_with_paste_throw_errors(self):
+        """ When calling the handler raises an exception, then the exception
+          is raised if ``request.environ['paste.throw_errors']`` is present
+          and true.
+        """
+        
+        class SomeException(Exception):
+            pass
+        
+        
+        def raise_exception(*args):
+            raise SomeException
+            
+        
+        self.environ['paste.throw_errors'] = True
+        
+        self.handler_instance = raise_exception
+        self.handler_class.return_value = self.handler_instance
+        self.path_router.match.return_value = (self.handler_class, ('a', 'b',), {})
+        
+        self.assertRaises(
+            SomeException,
+            self.app,
+            self.environ,
+            'start response'
+        )
         
     
     def test_handler_response_called(self):

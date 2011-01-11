@@ -969,10 +969,10 @@ class TestCallBaseHandler(unittest.TestCase):
     """ Test the logic of `BaseHandler.__call__`.
     """
     
-    def _make_one(self):
+    def _make_one(self, request):
         from weblayer.request import BaseHandler
         return BaseHandler(
-            Mock(),
+            request,
             Mock(), {
               'check_xsrf': True
             },
@@ -986,7 +986,9 @@ class TestCallBaseHandler(unittest.TestCase):
         
     
     def setUp(self):
-        self.handler = self._make_one()
+        self.request = Mock()
+        self.request.environ = {}
+        self.handler = self._make_one(request=self.request)
         self.method = Mock()
         self.handler._method_selector.select_method.return_value = self.method
         self.normaliser = Mock()
@@ -1174,6 +1176,30 @@ class TestCallBaseHandler(unittest.TestCase):
         self.normaliser.normalise.assert_called_with('500')
         
     
+    def test_handle_system_error_not_called_with_paste_throw_errors(self):
+        """ If `method(*groups)` raises an `Exception` that isn't an
+          `HTTPException` then the exception is raised if
+          ``request.environ['paste.throw_errors']`` is present and true.
+        """
+        
+        class SomeException(Exception):
+            pass
+        
+        
+        def raise_err(*args):
+            raise SomeException
+            
+        
+        self.request.environ['paste.throw_errors'] = True
+        self.handler._method_selector.select_method.return_value = raise_err
+        self.assertRaises(
+            SomeException,
+            self.handler,
+            'foo'
+        )
+        
+    
+    
     def test_response_normaliser_adapter_looked_up_if_none(self):
         """ If `handler._response_normaliser_adapter is None` it's
           looked up from the component registry.
@@ -1212,21 +1238,6 @@ class TestCallBaseHandler(unittest.TestCase):
 class TestRequestHandler(unittest.TestCase):
     """ Test the logic of `RequestHandler`.
     """
-    
-    def make_one(self):
-        from weblayer.request import RequestHandler
-        return RequestHandler(
-            Mock(),
-            Mock(), 
-            {},
-            template_renderer_adapter=Mock(),
-            static_url_generator_adapter=Mock(),
-            authentication_manager_adapter=Mock(),
-            secure_cookie_wrapper_adapter=Mock(),
-            method_selector_adapter=Mock(),
-            response_normaliser_adapter=Mock()
-        )
-        
     
     def test_exposes_get_and_head(self):
         """ `RequestHandler.__all__` contains just `'get'` and `'head'`.

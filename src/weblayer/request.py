@@ -147,6 +147,8 @@ class BaseHandler(object):
                 except webob_exceptions.HTTPException, err:
                     handler_response = self.error(exception=err)
                 except Exception, err:
+                    if self.request.environ.get('paste.throw_errors', False):
+                        raise err
                     handler_response = self.handle_system_error(err)
             
         if self._response_normaliser_adapter is None:
