@@ -26,7 +26,7 @@ class TestInitBootstrapper(unittest.TestCase):
         
     
     def test_init_url_map(self):
-        """ `settings` is available as `self._user_settings`.
+        """ `url_mapping` is available as `self._url_mapping`.
         """
         
         url_mapping = Mock()
@@ -62,15 +62,6 @@ class TestCallBootstrapper(unittest.TestCase):
         return bootstrapper
         
     
-    def test_register_components(self):
-        """ Calls `self.register_components(settings=None)`.
-        """
-        
-        bootstrapper = self.make_one()
-        bootstrapper()
-        bootstrapper.register_components.assert_called_with(settings='required settings')
-        
-    
     def test_register_components_settings_kwarg(self):
         """ Calls `self.register_components(settings={'a': 'b'})`.
         """
@@ -93,8 +84,17 @@ class TestCallBootstrapper(unittest.TestCase):
         )
         
     
+    def test_require_settings_by_default(self):
+        """ Calls `self.register_components(settings=settings)` by default.
+        """
+        
+        bootstrapper = self.make_one()
+        bootstrapper()
+        bootstrapper.register_components.assert_called_with(settings='required settings')
+        
+    
     def test_require_settings_false_register_components(self):
-        """ Calls `self.register_components(settings=settings)`.
+        """ Calls `self.register_components(settings=None)`.
         """
         
         bootstrapper = self.make_one()

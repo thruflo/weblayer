@@ -105,11 +105,10 @@ Async / Non-blocking
 
 To use :ref:`weblayer` with `Gunicorn`_:
 
-* see the `Gunicorn documentation`_ for information about installing, using, configuring and deploying it
 * follow the instructions above on deploying with :ref:`Paste`
-* amend your `[server:main]` section, as per `these instructions  <http://gunicorn.org/configure.html#paster-applications>`_, to include `use = egg:gunicorn#main`
+* amend your `[server:main]` section, as per `these instructions  <http://gunicorn.org/configure.html#paster-applications>`_, e.g.:
 
-For example, for a non-blocking server using `gevent`_ you might use the following configuration::
+::
 
     [server:main]
     use = egg:gunicorn#main
