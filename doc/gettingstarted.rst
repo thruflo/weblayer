@@ -6,7 +6,8 @@ Getting Started
 Install
 -------
 
-:ref:`weblayer` requires `Python`_ version 2.5 to 2.7.  Install it via the `Python Package Index`_, e.g.::
+:ref:`weblayer` requires `Python`_ version 2.5 to 2.7.  Install it via the
+`Python Package Index`_, e.g.::
 
     easy_install weblayer
 
@@ -18,7 +19,8 @@ Or::
 Develop
 -------
 
-To develop (or play around with) it, get the `source code`_, either using `Git`_::
+To develop (or play around with) it, get the `source code`_, either using
+`Git`_::
 
     git clone git://github.com/thruflo/weblayer.git
     cd weblayer

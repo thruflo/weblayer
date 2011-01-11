@@ -15,8 +15,8 @@
           
       
   
-  The main point being to take advantage of the :ref:`api` that the class
-  provides.
+  The main point being to take advantage of the :ref:`request handler api`
+  that the class provides.
 """
 
 __all__ = [
@@ -206,7 +206,7 @@ class BaseHandler(object):
     
     @property
     def xsrf_input(self):
-        """ An HTML `<input />` element to be included with all POST forms.
+        """ An HTML ``<input />`` element to be included with all POST forms.
         """
         
         if not hasattr(self, '_xsrf_input'):
@@ -217,8 +217,8 @@ class BaseHandler(object):
         
     
     def xsrf_validate(self):
-        """ Raise an :ref:`XSRFError` if the :py:obj:`'_xsrf'` argument isn't present
-          or if it doesn't match :py:attr:`xsrf_token`.
+        """ Raise an ``XSRFError`` if the ``_xsrf`` argument isn't present
+          or if it doesn't match ``self.xsrf_token``.
         """
         
         if self.request.method != 'post':
@@ -238,8 +238,8 @@ class BaseHandler(object):
     
     
     def render(self, tmpl_name, **kwargs):
-        """ Render the template called :py:obj:`tmpl_name`, passing through
-          :py:obj:`params` and :py:obj:`kwargs`.
+        """ Render the template called ``tmpl_name``, passing through the
+          ``params`` and ``kwargs``.
         """
         
         params = dict(
@@ -253,12 +253,11 @@ class BaseHandler(object):
         
     
     def redirect(self, location, permanent=False, **kwargs):
-        """ Redirect to :py:obj:`location`.  The response status defaults to
-          :py:obj:`302` unless :py:obj:`permanent is True`.
+        """ Redirect to ``location``.  The response status defaults to ``302``
+          unless ``permanent`` is ``True``.
           
-          :py:obj:`kwargs` (with :py:obj:`kwargs['location']` set to 
-          :py:obj:`location` are passed to the appropriate `webob_exception`_
-          class constructor.
+          ``kwargs`` (with ``kwargs['location']`` set to ``location`` are
+          passed to the appropriate `webob_exception`_ class constructor.
           
           .. _`webob_exception`: http://pythonpaste.org/webob/module-webob.exc.html
         """
@@ -273,14 +272,16 @@ class BaseHandler(object):
         
     
     def error(self, exception=None, status=500, **kwargs):
-        """ Return a response corresponding to :py:obj:`exception` or if 
-          :py:obj:`exception` is `None`, corresponding to :py:obj:`status`.  
+        """ Return a response corresponding to either ``exception`` or (if 
+          ``exception`` is ``None``) ``status``.  
           
-          :py:obj:`kwargs` are passed to the appropriate `webob_exception_` 
+          ``kwargs`` are passed to the appropriate `webob_exception_` 
           class constructor.
           
-          n.b.: Override at an application level to generate error messages that
-          are more user friendly.
+          .. note::
+          
+              Override this method to generate error messages that are more
+              user friendly.
           
           .. _`webob_exception`: http://pythonpaste.org/webob/module-webob.exc.html
         """
@@ -327,7 +328,7 @@ class RequestHandler(BaseHandler):
       Accepts GET and HEAD requests by default, when used in tandem with an 
       :py:class:`~weblayer.method.ExposedMethodSelector` (or any method selector 
       implementation that checks to see if the request method name is listed in 
-      :py:attr:`RequestHandler.__all__`).
+      ``RequestHandler.__all__``).
     """
     
     __all__ = (

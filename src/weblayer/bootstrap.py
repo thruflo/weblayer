@@ -8,18 +8,18 @@
   
       >>> bootstrapper = Bootstrapper(settings={}, url_mapping=[])
   
-  Then call the :py:obj:`bootstrapper` instance to register components and get
+  Then call the ``bootstrapper`` instance to register components and get
   :py:class:`~weblayer.interfaces.ISettings` and 
   :py:class:`~weblayer.interfaces.IPathRouter` utilities.
   
   By default, the bootstrapper uses 
   :py:class:`~weblayer.settings.RequirableSettings` and performs a 
   `venusian scan`_ of the :ref:`weblayer` package to require settings declared
-  explicitly with :py:class:`~weblayer.settings.require_setting`.
+  explicitly with :py:func:`~weblayer.settings.require_setting`.
   
   This means that you must pass the required settings into the 
   :py:class:`Bootstrapper` constructor when instantiating the 
-  :py:obj:`bootstrapper` or get a :py:exc:`KeyError`::
+  ``bootstrapper`` or get a ``KeyError``::
   
       >>> settings, path_router = bootstrapper() #doctest: +NORMALIZE_WHITESPACE
       Traceback (most recent call last):
@@ -66,7 +66,7 @@ class Bootstrapper(object):
     """
     
     def __init__(self, settings=None, url_mapping=None):
-        """ Stores the :py:obj:`settings` and :py:obj:`url_mapping` provided::
+        """ Stores the ``settings`` and ``url_mapping`` provided::
           
               >>> config = {'a': 'b'}
               >>> mapping = [()]
@@ -97,10 +97,9 @@ class Bootstrapper(object):
             require_settings=True,
             **kwargs
         ):
-        """ If :py:obj:`require_settings is True` and 
-          :py:obj:`settings` isn't provided as a keyword argument, call 
-          :py:meth:`require_settings`, :py:meth:`register_components` and
-          return :py:obj:`settings, path_router`.
+        """ If ``require_settings`` is ``True`` and ``settings`` isn't provided
+          as a keyword argument, call :py:meth:`require_settings`, 
+          :py:meth:`register_components` and return ``settings, path_router``.
           
           If you require your own settings (see the :py:mod:`~weblayer.settings`
           module for more information), pass in the dotted names of the modules
@@ -117,8 +116,8 @@ class Bootstrapper(object):
               ...
               ImportError: No module named foo
           
-          To override specific components, either pass in `False` to skip
-          registering them, e.g. this will skip registering a template renderer::
+          To override specific components, either pass in ``False`` to skip
+          registering them, e.g.::
           
               >>> bootstrapper = Bootstrapper(settings=config, url_mapping=[])
               >>> settings, path_router = bootstrapper(TemplateRenderer=False)
@@ -159,7 +158,7 @@ class Bootstrapper(object):
             extra_categories=None
         ):
         """ Init and return a :py:class:`~weblayer.settings.RequirableSettings`
-          instance, scanning :py:obj:`packages` for required settings.
+          instance, scanning ``packages`` for required settings.
         """
         
         if packages is None:
@@ -194,7 +193,7 @@ class Bootstrapper(object):
             ResponseNormaliser=None
         ):
         """ Setup component registrations. Pass in alternative implementations
-          here to override, or pass in :py:obj:`False` to avoid registering a
+          here to override, or pass in ``False`` to avoid registering a
           component.
         """
         

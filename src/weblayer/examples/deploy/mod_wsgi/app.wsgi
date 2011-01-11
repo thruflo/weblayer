@@ -5,7 +5,7 @@
   `Apache mod_wsgi`_.
   
   By default, `Apache mod_wsgi`_ looks for a callable WSGI application
-  entry point called `application` in a `.wsgi` file hooked up with
+  entry point called ``application`` in a ``.wsgi`` file hooked up with
   the `WSGIScriptAlias` directive, e.g.::
   
       WSGIScriptAlias / /path/to/app.wsgi

@@ -28,7 +28,7 @@ except ImportError: #pragma NO COVERAGE
     import json
 
 def encode_to_utf8(value):
-    """ Converts a :py:obj:`unicode` to a utf-8 encoded :py:obj:`str`::
+    """ Converts a ``unicode`` to a utf-8 encoded ``str``::
       
           >>> a = u'foo'
           >>> a
@@ -45,7 +45,7 @@ def encode_to_utf8(value):
           >>> encode_to_utf8(d)
           'foo'
       
-      Other types raise a :py:exc:`ValueError`::
+      Other types raise a ``ValueError``::
       
           >>> e = None
           >>> encode_to_utf8(e) #doctest: +NORMALIZE_WHITESPACE
@@ -63,8 +63,7 @@ def encode_to_utf8(value):
     
 
 def decode_to_unicode(value):
-    """ Converts a (hopefully) utf-8 encoded :py:obj:`str` to a 
-      :py:obj:`unicode`::
+    """ Converts a (hopefully) utf-8 encoded ``str`` to a ``unicode``::
       
           >>> a = 'foo'
           >>> decode_to_unicode(a)
@@ -79,7 +78,7 @@ def decode_to_unicode(value):
           >>> decode_to_unicode(c)
           u'foo'
       
-      Other types raise a :py:exc:`ValueError`::
+      Other types raise a ``ValueError``::
       
           >>> d = None
           >>> decode_to_unicode(d) #doctest: +NORMALIZE_WHITESPACE
@@ -97,7 +96,7 @@ def decode_to_unicode(value):
     
 
 def unicode_urlencode(items):
-    """ Ensures all :py:obj:`items` are encoded to utf-8 and passed to
+    """ Ensures all ``items`` are encoded to utf-8 and passed to
       :py:func:`~urllib.urlencode`.
       
       Pass it a dict, comes out like a query string::
@@ -127,7 +126,7 @@ def unicode_urlencode(items):
           >>> r4 == r3
           True
       
-      All values must be instances of :py:obj:`basestring`::
+      All values must be instances of ``basestring``::
       
           >>> unicode_urlencode({'a': object()}) #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
           Traceback (most recent call last):
@@ -184,7 +183,7 @@ def xhtml_escape(value):
     
 
 def url_escape(value):
-    """ Returns a URL-encoded version of :py:obj:`value`.
+    """ Returns a URL-encoded version of ``value``.
       
       Runs the value through :py:func:`~urllib.quote_plus`::
       
@@ -200,7 +199,7 @@ def url_escape(value):
           >>> url_escape(u'http://foo.com?bar=baz')
           'http%3A%2F%2Ffoo.com%3Fbar%3Dbaz'
       
-      Which means the value must be a :py:obj:`basestring`::
+      Which means the value must be a ``basestring``::
       
           >>> url_escape(None) #doctest: +ELLIPSIS
           Traceback (most recent call last):
@@ -214,7 +213,7 @@ def url_escape(value):
 
 
 def json_encode(value, ensure_ascii=False, **kwargs):
-    """ JSON encodes the given :py:obj:`value`::
+    """ JSON encodes the given ``value``::
       
           >>> json_encode({'a': 'b'}) == json.dumps({'a': 'b'})
           True
@@ -225,7 +224,7 @@ def json_encode(value, ensure_ascii=False, **kwargs):
           >>> json_encode([])
           '[]'
           
-      With :py:obj:`ensure_ascii` :py:obj:`False` by default::
+      With ``ensure_ascii`` ``False`` by default::
       
           >>> json_encode({'a': u'\u817e\u8baf\u9996\u9875'})
           u'{"a": "\u817e\u8baf\u9996\u9875"}'
@@ -233,7 +232,7 @@ def json_encode(value, ensure_ascii=False, **kwargs):
           >>> result == '{"a": "\\u817e\\u8baf"}'
           True
       
-      Raises a :py:exc:`TypeError` if the value isn't serializable::
+      Raises a ``TypeError`` if the ``value`` isn't serializable::
       
           >>> json_encode([object()]) #doctest: +ELLIPSIS
           Traceback (most recent call last):
@@ -246,7 +245,7 @@ def json_encode(value, ensure_ascii=False, **kwargs):
     
 
 def json_decode(value, **kwargs):
-    """ If :py:obj:`value` is valid JSON, parses it into a Python object::
+    """ If ``value`` is valid JSON, parses it into a Python object::
       
           >>> json_decode('{}') == json.loads('{}')
           True
@@ -262,7 +261,7 @@ def json_decode(value, **kwargs):
           >>> json_decode('{"a": "\\u817e\\u8baf\\u9996\\u9875"}')
           {u'a': u'\u817e\u8baf\u9996\u9875'}
       
-      Raises a :py:exc:`ValueError` if the decoded value can't be parsed::
+      Raises a ``ValueError`` if the decoded ``value`` can't be parsed::
       
           >>> json_decode('{"a": object()}') #doctest: +ELLIPSIS
           Traceback (most recent call last):
@@ -279,8 +278,8 @@ def generate_hash(algorithm='sha512', s=None, block_size=512):
     """ Generates a :py:func:`~hashlib.hash.hexdigest` string, either randomly
       or from a string or file like object (like an open file or a buffer).
       
-      By default, the hash is randomly generated and uses the 
-      :py:obj:`~hashlib.sha512` algorithm::
+      By default, the hash is randomly generated and uses the ``sha512``
+      algorithm::
       
           >>> s1 = generate_hash()
           >>> isinstance(s1, str)
@@ -299,16 +298,16 @@ def generate_hash(algorithm='sha512', s=None, block_size=512):
           >>> generate_hash(s='a')
           '1f40fc92da241694750979ee6cf582f2d5d7d28e18335de05abc54d0560e0f5302860c652bf08d560252aa5e74210546f369fbbbce8c12cfc7957b2652fe9a75'
       
-      Using :py:obj:`None` as the seed (which is the default) will, as we've 
-      seen, generate a random value::
+      Using ``None`` as the seed (which is the default) will, as we've seen, 
+      generate a random value::
       
           >>> s6 = generate_hash(s=None)
           >>> s7 = generate_hash(s=None)
           >>> s6 == s7
           False
       
-      Using a file like object (anything with a :py:func:`read` method) will
-      use the contents of the file like object::
+      Using a file like object (anything with a ``read()`` method) will use
+      the contents of the file like object::
       
           >>> from StringIO import StringIO
           >>> sock = StringIO()
@@ -319,8 +318,8 @@ def generate_hash(algorithm='sha512', s=None, block_size=512):
           >>> s8 == s9
           True
       
-      Reading the contents into memory in blocks of :py:obj:`block_size`, which
-      defaults to :py:obj:`512`::
+      Reading the contents into memory in blocks of ``block_size``, which
+      defaults to ``512``::
       
           >>> from mock import Mock
           >>> sock = Mock()
@@ -331,7 +330,7 @@ def generate_hash(algorithm='sha512', s=None, block_size=512):
           >>> sock.read.assert_called_with(1024)
       
       Using other types as a seed (anything that :py:mod:`hashlib` doesn't
-      like) will raise a :py:exc:`TypeError`::
+      like) will raise a ``TypeError``::
       
           >>> generate_hash(s=[]) #doctest: +ELLIPSIS
           Traceback (most recent call last):

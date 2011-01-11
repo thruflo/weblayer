@@ -5,7 +5,7 @@
   implementation of :py:class:`~weblayer.interfaces.IMethodSelector`.
   
   :py:class:`ExposedMethodSelector` works in tandem with 
-  :py:obj:`RequestHandler.__all__` to select only explicitly exposed request handler
+  ``RequestHandler.__all__`` to select only explicitly exposed request handler
   methods to handle incoming requests::
   
       >>> class MockHandler(object):
@@ -42,7 +42,7 @@ from interfaces import IRequestHandler, IMethodSelector
 
 class ExposedMethodSelector(object):
     """ Method selector adapter that works in tandem with the
-      :py:obj:`RequestHandler.__all__` attribute.
+      ``RequestHandler.__all__`` attribute.
     """
     
     adapts(IRequestHandler)
@@ -53,8 +53,8 @@ class ExposedMethodSelector(object):
         
     
     def select_method(self, method_name):
-        """ Returns `getattr(self, method_name)` iff the method exists
-          and is exposed.  Otherwise returns `None`.
+        """ Returns ``getattr(self, method_name)`` iff the method exists
+          and is exposed.  Otherwise returns ``None``.
         """
         
         if not isinstance(method_name, basestring):

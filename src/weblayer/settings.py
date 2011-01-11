@@ -38,7 +38,7 @@
   
   You can call the :py:class:`RequirableSettings` instance with a dictionary
   of settings provided by the user / your application.  If you pass in a value
-  for :py:obj:`api_key`, great, otherwise, you'll get a :py:exc:`KeyError`::
+  for ``api_key``, great, otherwise, you'll get a ``KeyError``::
   
       >>> settings({'api_key': '123'})
       >>> settings['api_key']
@@ -95,16 +95,17 @@ _HANGER_NAME = '__weblayer_require_settings_venusian_hanger__'
 class RequirableSettings(object):
     """ Utility that provides dictionary-like access to application settings.
       
-      Do not use the :py:meth:`_require` and :py:meth:`_override` methods 
-      directly.  Instead, use the :py:func:`require_setting` and 
-      :py:func:`override_setting` functions or the :py:func:`require` and 
-      :py:func:`override` decorators defined below.
+      Do not use the ``_require`` and ``_override`` methods directly.  Instead,
+      use the :py:func:`require_setting` and :py:func:`override_setting`
+      functions or the :py:func:`require` and :py:func:`override` decorators.
     """
     
     implements(ISettings)
     
     def __init__(self, packages=None, extra_categories=None):
-        """ If `packages`, run a `venusian` scan.
+        """ If ``packages``, run a `venusian scan`_.
+          
+          .. _`venusian scan`: http://docs.repoze.org/venusian/
         """
         
         self.__required_settings__ = {}
@@ -216,7 +217,7 @@ class RequirableSettings(object):
     def _require(self, name, default=None, help=u''):
         """ Require an application setting.
           
-          Defaults to None::
+          Defaults to ``None``::
           
               >>> settings = RequirableSettings()
               >>> settings._require('a')
@@ -229,7 +230,7 @@ class RequirableSettings(object):
               >>> settings.__required_settings__['b']
               ('b', u'help msg')
           
-          You can call `require` as many times as you like::
+          You can call ``require`` as many times as you like::
           
               >>> settings = RequirableSettings()
               >>> settings._require('a')
@@ -262,10 +263,10 @@ class RequirableSettings(object):
         
     
     def _override(self, name, default=None, help=u''):
-        """ Require a setting regardless of whether it has already
-          been required or not.
+        """ Require a setting regardless of whether it has already been
+          required or not.
           
-          Defaults to None::
+          Defaults to ``None``::
           
               >>> settings = RequirableSettings()
               >>> settings._override('a')
@@ -278,7 +279,7 @@ class RequirableSettings(object):
               >>> settings.__required_settings__['b']
               ('b', u'help msg')
           
-          With `override`, you can require the same settings twice with 
+          With ``override``, you can require the same settings twice with 
           different values::
           
               >>> settings._override('a', default='a')
@@ -295,7 +296,7 @@ class RequirableSettings(object):
     
     
     def __call__(self, items):
-        """ `items` are checked against `self.__required_settings__`.
+        """ ``items`` are checked against ``self.__required_settings__``.
           If any required settings are missing, if they were declared
           with a default value, the setting is set up with the
           default value::
@@ -313,7 +314,7 @@ class RequirableSettings(object):
               >>> settings['b']
               'b'
           
-          Otherwise we throw a KeyError.
+          Otherwise we throw a ``KeyError``.
           
               >>> reqs = {'a': (None, u'help msg a'), 'b': ('b', u'help msg b')}
               >>> settings.__required_settings__ = reqs
@@ -351,11 +352,12 @@ def _attach_callback(
         category=_CATEGORY,
         override=False
     ):
-    """ Hangs a callback to `_require` or `_override` off the module that
+    """ Hangs a callback to ``_require`` or ``_override`` off the module that
       this method is called from.
       
       Attaches the callback manually, rather than using `venusian.attach`_ so
-      that :ref:`weblayer` doesn't depend on a `CPython implementation detail`_.
+      that :ref:`weblayer` doesn't depend on a 
+      `CPython implementation detail`_.
           
       .. `venusian.attach`_: http://svn.repoze.org/venusian/trunk/venusian/__init__.py
       .. _`CPython implementation detail`: http://docs.python.org/library/sys.html#sys._getframe

@@ -53,7 +53,7 @@ class IPathRouter(Interface):
     """
     
     def match(path):
-        """ Return :py:obj:`handler, args, kwargs` from :py:obj:`path`.
+        """ Return ``handler, args, kwargs`` from ``path``.
         """
         
     
@@ -98,18 +98,18 @@ class IRequestHandler(Interface):
     static = Attribute(u'Static url generator')
     
     def get_argument(name, default=None, strip=False):
-        """ Get single value for request param called :py:obj:`name`.
+        """ Get single value for request param called ``name``.
         """
         
     
     def get_arguments(name, strip=False):
-        """ Get multiple values for request param called :py:obj:`name`.
+        """ Get multiple values for request param called ``name``.
         """
         
     
     
     xsrf_token = Attribute(u'XSRF prevention token')
-    xsrf_input = Attribute(u'<input/> element to be included in POST forms.')
+    xsrf_input = Attribute(u'``<input/>`` element to be included in forms.')
     def xsrf_validate():
         """ Validate against XSRF.
         """
@@ -117,12 +117,12 @@ class IRequestHandler(Interface):
     
     
     def render(tmpl_name, **kwargs):
-        """ Render the template called :py:obj:`tmpl_name`.
+        """ Render the template called ``tmpl_name``.
         """
         
     
     def redirect(url, status=302, content_type=None):
-        """ Redirect to :py:obj:`url`.
+        """ Redirect to ``url``.
         """
         
     
@@ -160,7 +160,7 @@ class IResponse(Interface):
     status = Attribute(u'The `status` string')
     
     def set_cookie(key, value='', **kwargs):
-        """ Set :py:obj:`value` for cookie called :py:obj:`key`.
+        """ Set ``value`` for cookie called ``key``.
         """
         
     
@@ -173,7 +173,7 @@ class IResponseNormaliser(Interface):
     """
     
     def normalise(handler_response):
-        """ Normalise :py:obj:`handler_response` into an :py:class:`IResponse`.
+        """ Normalise ``handler_response``.
         """
         
     
@@ -208,22 +208,22 @@ class ISettings(Interface):
     """
     
     def __getitem__(name):
-        """ Get item called :py:obj:`name`.
+        """ Get item.
         """
         
     
     def __setitem__(name, value):
-        """ Set item called :py:obj:`name` to :py:obj:`value`.
+        """ Set item.
         """
         
     
     def __delitem__(name):
-        """ Delete item called :py:obj:`name`.
+        """ Delete item.
         """
         
     
     def __contains__(name):
-        """ Return whether contains item called :py:obj:`name`.
+        """ Return whether contains item.
         """
         
     
@@ -244,7 +244,7 @@ class IStaticURLGenerator(Interface):
     """
     
     def get_url(path):
-        """ Get a fully expanded url for the given :py:obj:`path`.
+        """ Get a fully expanded url for the given static resource ``path``.
         """
         
     
@@ -256,7 +256,7 @@ class ITemplateRenderer(Interface):
     """
     
     def render(tmpl_name, **kwargs):
-        """ Render the template called :py:obj:`tmpl_name`.
+        """ Render the template called ``tmpl_name``.
         """
         
     

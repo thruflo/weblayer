@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" :py:mod:`weblayer.component` provides :py:obj:`registry`, an instance of
+""" :py:mod:`weblayer.component` provides ``registry``, an instance of
   a `zope.component.registry.Components`_ component management registry.
   
-  :py:obj:`registry` provides methods to register and lookup `utilities`_ and
+  ``registry`` provides methods to register and lookup `utilities`_ and
   `adapters`_ against :py:mod:`~weblayer.interfaces`.  For example::
   
       >>> from mock import Mock

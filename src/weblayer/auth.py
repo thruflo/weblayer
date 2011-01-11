@@ -28,15 +28,14 @@ from interfaces import IRequest, IAuthenticationManager
 
 class TrivialAuthenticationManager(object):
     """ A very simple :py:class:`~weblayer.interfaces.IAuthenticationManager`
-      implementation that uses the `webob.Request`_ attribute 
-      :py:obj:`request.remote_user` which, under the `WebOb`_ hood, is derived
-      from :py:obj:`request.environ['REMOTE_USER']`, which is 
-      `the standard place`_ for authentication middleware to put a user id.
+      implementation that uses the `webob.Request`_ ``request.remote_user``
+      attribute which, under the `WebOb`_ hood, is derived from 
+      ``request.environ['REMOTE_USER']``, which is `the standard place`_ for
+      authentication middleware to put a user id.
       
       :py:class:`TrivialAuthenticationManager` is thus perfectly usable in
-      many cases with :py:attr:`is_authenticated` returning `True` or `False`
-      appropriately and :py:attr:`current_user` returning a user id if present
-      or `None` if not.
+      many cases with ``is_authenticated`` returning ``True`` or ``False``
+      appropriately and ``current_user`` returning a user id if present.
       
       .. _`webob`: http://pythonpaste.org/webob
       .. _`webob.request`: http://pythonpaste.org/webob/reference.html#id1
@@ -53,19 +52,19 @@ class TrivialAuthenticationManager(object):
     
     @property
     def is_authenticated(self):
-        """ Is there a `remote_user` in the request?
+        """ Is there a ``remote_user`` in the request?
           
               >>> from mock import Mock
               >>> request = Mock()
           
-          If `remote_user` is None, returns `False`::
+          If ``remote_user`` is ``None``, returns ``False``::
           
               >>> request.remote_user = None
               >>> am = TrivialAuthenticationManager(request)
               >>> am.is_authenticated
               False
           
-          Otherwise returns `True`::
+          Otherwise returns ``True``::
           
               >>> request.remote_user = 'foo'
               >>> am = TrivialAuthenticationManager(request)
@@ -80,7 +79,7 @@ class TrivialAuthenticationManager(object):
     
     @property
     def current_user(self):
-        """ Returns `request.remote_user`::
+        """ Returns ``request.remote_user``::
           
               >>> from mock import Mock
               >>> request = Mock()

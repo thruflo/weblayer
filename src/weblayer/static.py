@@ -5,11 +5,13 @@
   :py:class:`MemoryCachedStaticURLGenerator`, an implementation of
   :py:class:`~weblayer.interfaces.IStaticURLGenerator`.
   
+  The purpose of an :py:class:`~weblayer.interfaces.IStaticURLGenerator` is to
+  generate static urls for use in templates.  It does not serve static files.
+  
   :py:class:`MemoryCachedStaticURLGenerator` adapts an 
   :py:class:`~weblayer.interfaces.IRequest` and requires two 
-  :py:mod:`~weblayer.settings`, :py:obj:`settings['static_files_path']` and 
-  :py:obj:`settings['static_url_prefix']` (which defaults to 
-  :py:obj:`u'/static/'`).  
+  :py:mod:`~weblayer.settings`, ``settings['static_files_path']`` and 
+  ``settings['static_url_prefix']`` (which defaults to ``u'/static/'``).
   
       >>> from mock import Mock
       >>> request = Mock()
@@ -22,11 +24,11 @@
       >>> static._cache_path = Mock()
   
   When :py:meth:`~MemoryCachedStaticURLGenerator.get_url` is called, it looks
-  for a file at the :py:obj:`path` passed in, relative to 
-  :py:obj:`settings['static_files_path']`.  If the file exists, it hashes it
+  for a file at the ``path`` passed in, relative to 
+  ``settings['static_files_path']``.  If the file exists, it hashes it
   and appends the first few characters of the hash digest to the returned url.
   
-  For example, imagine we've hashed and cached `/var/www/static/foo.js`::
+  For example, imagine we've hashed and cached ``/var/www/static/foo.js``::
   
       >>> static._cache['/var/www/static/foo.js'] = 'abcdefghijkl'
   
@@ -44,7 +46,7 @@
   * each time the application is restarted, the cache is cleared
   
   The last two points mean that applications serving static files may incur
-  CPU and memory overhead that could be avoided using a dedicated cache (like,
+  CPU and memory overhead that could be avoided using a dedicated cache (like
   `memcached`_ or `redis`_).  Production systems thus may want to provide their
   own :py:class:`~weblayer.interfaces.IStaticURLGenerator` implementation, 
   (potentially by subclassing 
@@ -114,7 +116,7 @@ class MemoryCachedStaticURLGenerator(object):
             open_file_=None, 
             generate_hash_=None
         ):
-        """ `request.host_url` is available as `self._host_url`::
+        """ ``request.host_url`` is available as ``self._host_url``::
           
               >>> from mock import Mock
               >>> req = Mock()
@@ -129,8 +131,10 @@ class MemoryCachedStaticURLGenerator(object):
               >>> static._host_url
               'foo.com'
           
-          `settings['static_files_path']` and `settings['static_url_prefix']` are
-          available as `self._static_files_path` and `self._static_url_prefix`::
+          ``settings['static_files_path']`` and
+          ``settings['static_url_prefix']`` are
+          available as ``self._static_files_path`` and 
+          ``self._static_url_prefix``::
           
               >>> static = MemoryCachedStaticURLGenerator(
               ...     req, 
@@ -141,8 +145,8 @@ class MemoryCachedStaticURLGenerator(object):
               >>> static._static_url_prefix
               u'/static/'
           
-          `join_path_` defaults to `join` and is available as 
-          `self._join_path`::
+          ``join_path_`` defaults to ``join`` and is available as 
+          ``self._join_path``::
           
               >>> static = MemoryCachedStaticURLGenerator(req, settings)
               >>> static._join_path == join
@@ -155,8 +159,8 @@ class MemoryCachedStaticURLGenerator(object):
               >>> static._join_path
               'join'
           
-          `open_file_` defaults to `open` and is available as 
-          `self._open_file`::
+          ``open_file_`` defaults to ``open`` and is available as 
+          ``self._open_file``::
           
               >>> static = MemoryCachedStaticURLGenerator(req, settings)
               >>> static._open_file == open
@@ -169,8 +173,8 @@ class MemoryCachedStaticURLGenerator(object):
               >>> static._open_file
               'open'
           
-          `generate_hash_` defaults to `generate_hash` and is available as 
-          `self._generate_hash`::
+          ``generate_hash_`` defaults to ``generate_hash`` and is available as 
+          ``self._generate_hash``::
           
               >>> static = MemoryCachedStaticURLGenerator(req, settings)
               >>> static._generate_hash == generate_hash
@@ -206,9 +210,8 @@ class MemoryCachedStaticURLGenerator(object):
         
     
     def _cache_path(self, file_path):
-        """ Expand the request `path` into a `file_path`, check to see if
-          it exists, if it does, hash it and store the `digest` against
-          the `path` in the `_cache`.
+        """ Check to see if ``file_path`` exists.  I it does, hash it and store
+          the ``digest`` against the ``file_path`` in ``self._cache``.
           
               >>> from mock import Mock
               >>> from StringIO import StringIO
@@ -230,7 +233,7 @@ class MemoryCachedStaticURLGenerator(object):
               ... )
               >>> static._cache_path('/var/www/static/foo.js')
           
-          If `file_path` exists::
+          If ``file_path`` exists::
           
               >>> open_file.assert_called_with('/var/www/static/foo.js')
           
@@ -272,7 +275,7 @@ class MemoryCachedStaticURLGenerator(object):
         
     
     def get_url(self, path, snip_digest_at=7):
-        """ Get a fully expanded url for the given static resource :py:obj:`path`::
+        """ Get a fully expanded url for the given static resource ``path``::
           
               >>> from mock import Mock
               >>> request = Mock()
@@ -290,26 +293,23 @@ class MemoryCachedStaticURLGenerator(object):
               ... )
               >>> static._cache_path = Mock()
           
-          :py:obj:`path` is expanded into :py:obj:`file_path`::
+          ``path`` is expanded into ``file_path``::
           
               >>> url = static.get_url('foo.js')
               >>> join_path.assert_called_with('/var/www/static', 'foo.js')
           
-          If :py:obj:`path` isn't in :py:attr:`self._cache`, calls 
-          :py:meth:`self._cache_path`::
+          If ``path`` isn't in ``self._cache``, calls ``self._cache_path()``::
           
               >>> static._cache_path.assert_called_with('/var/www/static/foo.js')
           
-          If the digest is :py:obj:`None`, just joins the host url, prefix and
-          path::
+          If the digest is ``None``, just joins the host url, prefix and path::
           
               >>> static._cache['/var/www/static/foo.js'] = None
               >>> static.get_url('foo.js')
               u'http://static.foo.com/static/foo.js'
           
-          Else also appends :py:obj:`'?v='` plus upto the first 
-          :py:obj:`snip_digest_at` chars of the digest, which defaults to 
-          :py:obj:`7`::
+          Else also appends ``'?v='`` plus upto the first ``snip_digest_at``
+          chars of the digest, which defaults to ``7``::
           
               >>> static._cache['/var/www/static/foo.js'] = 'abcdefghijkl'
               >>> static.get_url('foo.js')

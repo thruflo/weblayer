@@ -13,7 +13,7 @@
       >>> normaliser.response == response
       True
   
-  Provides a `normalise` method that takes a single argument and uses it to
+  Provides a ``normalise()`` method that takes a single argument and uses it to
   update and or replace the original response object before returning it::
   
       >>> class MockResponse(object):
@@ -30,8 +30,9 @@
       >>> r.unicode_body == u'a'
       True
   
-  This implementation's default behaviour for stuff it can't identify as a
-  response or a basestring is to try to `JSON`_ encode it::
+  This implementation's default behaviour for stuff it can't identify as an
+  :py:class:`~weblayer.interfaces.IResponse` or ``basestring`` is to try to
+  `JSON`_ encode it::
   
       >>> r = normaliser.normalise({'a': u'b'})
       >>> r.content_type
@@ -81,22 +82,22 @@ class DefaultToJSONResponseNormaliser(object):
               ...     json_encode=json_encode
               ... )
           
-          `response` is available as `self.response`::
+          ``response`` is available as ``self.response``::
           
               >>> normaliser.response == response
               True
               
-          `json_encode` is available as self._json_encode::
+          ``json_encode`` is available as ``self._json_encode``::
           
               >>> normaliser._json_encode == json_encode
               True
           
-          `json_content_type` is available as `self._json_content_type`::
+          ``json_content_type`` is available as ``self._json_content_type``::
               
               >>> normaliser._json_content_type == json_content_type
               True
               
-          which defaults to `'application/json; charset=UTF-8'`::
+          which defaults to ``'application/json; charset=UTF-8'``::
           
               >>> default = 'application/json; charset=UTF-8'
               >>> normaliser = DefaultToJSONResponseNormaliser(
@@ -119,8 +120,8 @@ class DefaultToJSONResponseNormaliser(object):
     def normalise(self, handler_response):
         """ Update and return self.response appropriately.
           
-          If `handler_response` implements `IResponse` then
-          just use that::
+          If ``handler_response`` implements 
+          :py:class:`~weblayer.interfaces.IResponse` then just use that::
           
               >>> from mock import Mock
               >>> response = Mock()
@@ -136,8 +137,8 @@ class DefaultToJSONResponseNormaliser(object):
               >>> r == mock_response
               True
           
-          Otherwise if it's a `str` or a `unicode` use that
-          as the response body::
+          Otherwise if it's a ``str`` or a ``unicode`` use that as the
+          response body::
           
               >>> r = normaliser.normalise('a')
               >>> r.body == 'a'
@@ -146,7 +147,7 @@ class DefaultToJSONResponseNormaliser(object):
               >>> r.unicode_body == u'a'
               True
           
-          If it's `None` then just return the origin `response`::
+          If it's ``None`` then just return the origin ``response``::
           
               >>> normaliser = DefaultToJSONResponseNormaliser(
               ...     42,
@@ -155,9 +156,9 @@ class DefaultToJSONResponseNormaliser(object):
               >>> normaliser.normalise(None)
               42
           
-          Otherwise (with this particular implementation) assume
-          we want to encode `handler_response` as a json string
-          as use that as the response body::
+          Otherwise (with this particular implementation) assume we want to
+          encode ``handler_response`` as a JSON string as use that as the
+          response body::
           
               >>> response = Mock()
               >>> json_encode = Mock()

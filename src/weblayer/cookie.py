@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" :py:mod:`weblayer.cookie` provides :py:class:`SignedSecureCookieWrapper`, an 
-  implementation of :py:class:`~weblayer.interfaces.ISecureCookieWrapper`.
+""" :py:mod:`weblayer.cookie` provides :py:class:`SignedSecureCookieWrapper`,
+  an implementation of :py:class:`~weblayer.interfaces.ISecureCookieWrapper`.
   
   :py:class:`SignedSecureCookieWrapper` provides two key methods,
   :py:meth:`~SignedSecureCookieWrapper.set` and 
   :py:meth:`~SignedSecureCookieWrapper.get` to set and get cookies whose value
-  is signed using the required :py:obj:`cookie_secret` setting.
+  is signed using the required ``settings['cookie_secret']``.
   
   The resulting cookies are secure, in the sense that they can't be forged
-  (without the forger knowing the :py:obj:`cookie_secret`).  However, it's 
-  important to note that they are just as vulnerable to `sidejacking`_ as 
+  (without the forger knowing the ``settings['cookie_secret']``).  However,
+  it's important to note that they are just as vulnerable to `sidejacking`_ as
   normal cookies.  The only way to secure cookies against `sidejacking`_ is to
   serve your application over `HTTPS`_ and that is a matter for web server 
   configuration, outside the scope of :ref:`weblayer`.
@@ -42,7 +42,7 @@ from utils import encode_to_utf8
 require_setting('cookie_secret', help='a long, random sequence of bytes')
 
 def _time_independent_equals(a, b):
-    """ Logically equal to `a == b`::
+    """ Logically equal to ``a == b``::
       
           >>> _time_independent_equals('a', 'a')
           True
@@ -53,7 +53,7 @@ def _time_independent_equals(a, b):
           >>> _time_independent_equals('abc', 'acb')
           False
       
-      As long as you give it basestrings::
+      As long as you give it ``basestring``s::
       
           >>> _time_independent_equals(None, [])
           Traceback (most recent call last):
@@ -90,7 +90,7 @@ def _time_independent_equals(a, b):
           >>> difference_as_percentage_of_time < 10
           True
       
-      As opposed to the native python implementation of `a == b`::
+      As opposed to the native python implementation of ``a == b``::
       
           >>> t1 = time.time()
           >>> for i in range_:
@@ -202,7 +202,7 @@ class SignedSecureCookieWrapper(object):
         
     
     def get(self, name, value=None):
-        """ Returns the given signed cookie if it validates, or None.
+        """ Returns the given signed cookie if it validates, or ``None``.
         """
         
         if value is None:

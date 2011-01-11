@@ -20,7 +20,7 @@ weblayer.bootstrap
 .. automodule:: weblayer.bootstrap
 
 .. autoclass:: weblayer.bootstrap.Bootstrapper
-   :members: require_settings, register_components, __call__, __init__   
+   :members: require_settings, register_components, __call__
 
 weblayer.component
 ------------------

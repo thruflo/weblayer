@@ -4,9 +4,9 @@
 """ Example showing how to override the 
   :py:class:`~weblayer.interfaces.IPathRouter` component.
   
-  Note that despite the :py:class:`Hello` request handler being mapped
-  to all request paths in the :py:obj:`mapping`, the :py:class:`LazyPathRouter`
-  will always return `None, None, None`, resulting in a 404 response.
+  Note that despite the ``Hello`` request handler being mapped to all request
+  paths in the ``mapping``, the :py:class:`LazyPathRouter` will always return
+  ``None, None, None``, resulting in a 404 response.
 """
 
 from zope.interface import implements

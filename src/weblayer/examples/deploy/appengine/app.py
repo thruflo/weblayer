@@ -5,8 +5,8 @@
   on `Google App Engine`_.
   
   Note that you must have :ref:`weblayer` and its dependencies included 
-  in `sys.path`, e.g.: by copying them into this folder.  Check the
-  `install_requires` list in `setup.py` but at the time of writing this
+  in :py:obj:`sys.path`, e.g.: by copying them into this folder.  Check the
+  ``install_requires`` list in ``setup.py`` but at the time of writing this
   means you need to include:
   
   * `mako`, 

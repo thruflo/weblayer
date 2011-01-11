@@ -6,15 +6,15 @@
   uses `Mako`_ templates.
   
   :py:class:`MakoTemplateRenderer` requires 
-  :py:obj:`settings['template_directories']`::
+  ``settings['template_directories']``::
   
       >>> settings = {'template_directories': ['/tmp']}
       >>> template_renderer = MakoTemplateRenderer(settings)
   
   And provides a :py:meth:`~MakoTemplateRenderer.render` method that accepts
-  a :py:obj:`tmpl_name` which is resolved relative to 
-  :py:obj:`settings['template_directories']` and passes through a set of built
-  in functions and the keyword arguments provided to 
+  a ``tmpl_name`` which is resolved relative to
+  ``settings['template_directories']`` and passes through a set of built in
+  functions and the keyword arguments provided to 
   :py:meth:`~MakoTemplateRenderer.render` to the template's global namespace::
   
       >>> tmpl = u'<h1>${escape(foo)}</h1>'
@@ -104,8 +104,8 @@ class MakoTemplateRenderer(object):
         
     
     def render(self, tmpl_name, **kwargs):
-        """ Render :py:obj:`tmpl_name`, unpacking :py:attr:`self.built_ins`
-          and :py:obj:`kwargs` into the template's global namespace.
+        """ Render ``tmpl_name``, unpacking ``self.built_ins`` and ``kwargs``
+          into the template's global namespace.
         """
         
         params = self.built_ins.copy()

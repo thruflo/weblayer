@@ -59,20 +59,19 @@ class WSGIApplication(object):
         
     
     def __call__(self, environ, start_response):
-        """ Checks :py:attr:`self._path_router` for a 
+        """ Checks ``self._path_router`` for a 
           :py:meth:`~weblayer.interfaces.IPathRouter.match` against the
           incoming :py:attr:`~weblayer.interfaces.IRequest.path`::
           
               handler_class, args, kwargs = self._path_router.match(request.path)
           
-          If :py:obj:`handler_class is not None`, instantiates the
+          If ``handler_class`` is not ``None``, instantiates the
           :py:class:`~weblayer.interfaces.IRequestHandler`::
           
               handler = handler_class(request, response, self._settings)
           
-          And calls it with :py:obj:`environ['REQUEST_METHOD']` and the
-          :py:obj:`args` and :py:obj:`kwargs` returned from 
-          :py:meth:`~weblayer.interfaces.IPathRouter.match`::
+          And calls it with ``environ['REQUEST_METHOD']`` and the ``args`` and 
+          ``kwargs`` from :py:meth:`~weblayer.interfaces.IPathRouter.match`::
           
               response = handler(environ['REQUEST_METHOD'], *args, **kwargs)
           
