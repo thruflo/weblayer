@@ -181,7 +181,7 @@ class BaseHandler(object):
           whether it came from the query string or form body::
         """
         
-        values = self.request.params.get(name, [])
+        values = self.request.params.getall(name)
         if not bool(isinstance(values, list) or isinstance(values, tuple)):
            values = [values]
         if strip:

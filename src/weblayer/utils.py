@@ -274,7 +274,7 @@ def json_decode(value, **kwargs):
     
 
 
-def generate_hash(algorithm='sha512', s=None, block_size=512):
+def generate_hash(s=None, algorithm='sha512', block_size=512):
     """ Generates a :py:func:`~hashlib.hash.hexdigest` string, either randomly
       or from a string or file like object (like an open file or a buffer).
       

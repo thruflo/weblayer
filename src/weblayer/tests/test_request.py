@@ -421,27 +421,12 @@ class TestBaseHandlerGetArguments(unittest.TestCase):
         
     
     def test_get_arguments_calls_get_arguments(self):
-        """ `get_argument` calls `request.params.get`.
+        """ `get_argument` calls `request.params.getall`.
         """
         
+        self.request.params.getall.return_value = ['a', 'b']
         self.handler.get_arguments('foo')
-        self.request.params.get.assert_called_with('foo', [])
-        
-    
-    def test_get_arguments_calls_wraps_single_value(self):
-        """ If `request.params.get` returns a single value, wraps it in 
-          a `list`.
-        """
-        
-        self.request.params.get.return_value = 'a'
-        self.assertTrue(self.handler.get_arguments('foo') == ['a'])
-        
-    
-    def test_get_arguments_calls_multiple_value(self):
-        """ If `request.params.get` returns a list, returns it.
-        """
-        
-        self.request.params.get.return_value = ['a', 'b']
+        self.request.params.getall.assert_called_with('foo')
         self.assertTrue(self.handler.get_arguments('foo') == ['a', 'b'])
         
     
@@ -449,7 +434,7 @@ class TestBaseHandlerGetArguments(unittest.TestCase):
         """ Doesn't strip by default.
         """
         
-        self.request.params.get.return_value = [' a ', ' b ']
+        self.request.params.getall.return_value = [' a ', ' b ']
         self.assertTrue(self.handler.get_arguments('foo') == [' a ', ' b '])
         
     
@@ -457,7 +442,7 @@ class TestBaseHandlerGetArguments(unittest.TestCase):
         """ Strips if told to.
         """
         
-        self.request.params.get.return_value = [' a ', ' b ']
+        self.request.params.getall.return_value = [' a ', ' b ']
         self.assertTrue(
             self.handler.get_arguments('foo', strip=True) == ['a', 'b']
         )
