@@ -126,7 +126,6 @@ And then opening http://localhost:8080/foo in a web browser.
     :ref:`override <components>` the 
     :py:class:`~weblayer.interfaces.IPathRouter` implementation as you see fit.
 
-
 Bootstrapping
 -------------
 
@@ -179,7 +178,6 @@ bootstrap a :py:class:`~weblayer.wsgi.WSGIApplication`:
             *bootstrapper(packages=['my.webapp', 'some.dependency',])
         )
     
-
 
 Serving
 -------
@@ -250,7 +248,6 @@ Is one particular implementation of
         
     
 
-
 Default Implementations
 -----------------------
 
@@ -281,7 +278,6 @@ The default implementations are as follows:
 * :py:class:`~weblayer.interfaces.IWSGIApplication` is implemented by
   :py:class:`~weblayer.wsgi.WSGIApplication`
 
-
 Workflow
 --------
 
@@ -295,8 +291,8 @@ When HTTP requests come in to your application,
 :py:class:`~weblayer.interfaces.IWSGIApplication` uses the
 :py:class:`~weblayer.interfaces.IPathRouter` to map the incoming requests to an
 :py:class:`~weblayer.interfaces.IRequestHandler` that is instantiated with an
-:py:class:`~weblayer.interfaces.IRequest` that encapsulates the incoming 
-request, a vanilla :py:class:`~weblayer.interfaces.IResponse` and the
+:py:class:`~weblayer.interfaces.IRequest`, 
+:py:class:`~weblayer.interfaces.IResponse` and the
 :py:class:`~weblayer.interfaces.ISettings`.
 
 The :py:class:`~weblayer.interfaces.IRequestHandler` then uses the
@@ -313,13 +309,12 @@ your :py:class:`~weblayer.interfaces.ISecureCookieWrapper` at ``self.cookies``.
 Your :py:class:`~weblayer.interfaces.ITemplateRenderer` is available through 
 ``self.render()``.
 
-Finally, the return value of your handler method is passed to your
+The return value of your handler method is passed to your
 :py:class:`~weblayer.interfaces.IResponseNormaliser`, which uses it to either
 replace or update the :py:class:`~weblayer.interfaces.IResponse` originally
 passed in to your :py:class:`~weblayer.interfaces.IRequestHandler` before the
-:py:class:`~weblayer.interfaces.IResponse` is returned as the response of your
-:py:class:`~weblayer.interfaces.IWSGIApplication`.
-
+:py:class:`~weblayer.interfaces.IResponse` is called to provide a `WSGI`_
+compliant response from your application.
 
 Overriding
 ----------
@@ -358,6 +353,7 @@ If you then run this, all requests will meet with a 404 response::
 You can see two further examples at `override/authentication_manager.py`_
 and `override/template_renderer.py`_
 
+
 .. _`request handler api`:
 
 Request Handler API
@@ -395,10 +391,12 @@ attributes and methods:
 .. note::
     
     When you use ``self.render()``, it passes through any keyword arguments
-    you provide, along with ``request``, ``current_user``, ``get_static_url``
-    and ``xsrf_input`` as variables to the template namespace (along with any
-    built-ins your :py:class:`~weblayer.interfaces.ITemplateRenderer` 
-    implementation provides).
+    you provide, along with ``self.request`` as ``request``, 
+    ``self.auth.current_user`` as ``current_user``, ``self.static.get_url()``
+    as ``get_static_url()`` and ``self.xsrf_input`` as ``xsrf_input`` to the
+    template namespace (along with any built-ins your 
+    :py:class:`~weblayer.interfaces.ITemplateRenderer` implementation 
+    provides).
 
 
 .. _`helloworld.py`: http://github.com/thruflo/weblayer/tree/master/src/weblayer/examples/helloworld.py
