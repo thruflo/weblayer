@@ -62,7 +62,7 @@ receives an `HTTP GET request`_.
                 return u'What is your name? %s' % form
             
             def post(self):
-                return u'Hello %s!' % self.get_argument('name')
+                return u'Hello %s!' % self.request.params.get('name')
             
             def dofoo(self):
                 return u'I just did foo!'
@@ -363,11 +363,6 @@ attributes and methods:
   :py:class:`~weblayer.interfaces.IResponseNormaliser`)
 * ``self.settings`` is an :py:class:`~weblayer.interfaces.ISettings` instance
   that provides dictionary-like access to your :py:mod:`~weblayer.settings`
-* ``self.get_argument()`` and ``self.get_arguments()`` wrap 
-  ``self.request.params`` and can be used to get either single 
-  (``self.get_argument()``) and multiple (``self.get_arguments()``) values
-  for a request parameter, irrespective of whether came from the query
-  string or body
 * ``self.auth`` is an :py:class:`~weblayer.interfaces.IAuthenticationManager`
   instance that provides 
   :py:attr:`~weblayer.interfaces.IAuthenticationManager.is_authenticated` and

@@ -97,17 +97,6 @@ class IRequestHandler(Interface):
     cookies = Attribute(u'Cookie wrapper')
     static = Attribute(u'Static url generator')
     
-    def get_argument(name, default=None, strip=False):
-        """ Get single value for request param called ``name``.
-        """
-        
-    
-    def get_arguments(name, strip=False):
-        """ Get multiple values for request param called ``name``.
-        """
-        
-    
-    
     xsrf_token = Attribute(u'XSRF prevention token')
     xsrf_input = Attribute(u'``<input/>`` element to be included in forms.')
     def xsrf_validate():

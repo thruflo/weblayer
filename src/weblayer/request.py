@@ -165,31 +165,6 @@ class BaseHandler(object):
         
     
     
-    def get_argument(self, name, default=None, strip=False):
-        """ Get a single value for an argument from the request, no matter
-          whether it came from the query string or form body.
-        """
-        
-        args = self.get_arguments(name, strip=strip)
-        if not args:
-            return default
-        return args[-1]
-        
-    
-    def get_arguments(self, name, strip=False):
-        """ Get a list of values for an argument from the request, no matter
-          whether it came from the query string or form body::
-        """
-        
-        values = self.request.params.getall(name)
-        if not bool(isinstance(values, list) or isinstance(values, tuple)):
-           values = [values]
-        if strip:
-            values = [x.strip() for x in values]
-        return values
-        
-    
-    
     @property
     def xsrf_token(self):
         """ A token we can check to prevent `XSRF`_ attacks.
@@ -229,7 +204,7 @@ class BaseHandler(object):
         if self.request.headers.get("X-Requested-With") == "XMLHttpRequest":
             return None
         
-        request_token = self.get_argument('_xsrf', None)
+        request_token = self.request.params.get('_xsrf', None)
         if request_token is None:
             raise XSRFError(u'`_xsrf` argument missing from POST')
             

@@ -345,111 +345,6 @@ class TestInitBaseHandler(unittest.TestCase):
     
     
 
-class TestBaseHandlerGetArguments(unittest.TestCase):
-    """ Test the logic of `handler.get_argument` and 
-      `handler.get_arguments`.
-    """
-    
-    def _make_one(self, *args, **kwargs):
-        from weblayer.request import BaseHandler
-        return BaseHandler(*args, **kwargs)
-        
-    
-    def setUp(self):
-        self.request = Mock()
-        self.response = Mock()
-        self.settings = {}
-        self.template_renderer_adapter = Mock()
-        self.static_url_generator_adapter = Mock()
-        self.authentication_manager_adapter = Mock()
-        self.secure_cookie_wrapper_adapter = Mock()
-        self.method_selector_adapter = Mock()
-        self.handler = self._make_one(
-            self.request,
-            self.response,
-            self.settings,
-            template_renderer_adapter=self.template_renderer_adapter,
-            static_url_generator_adapter=self.static_url_generator_adapter,
-            authentication_manager_adapter=self.authentication_manager_adapter,
-            secure_cookie_wrapper_adapter=self.secure_cookie_wrapper_adapter,
-            method_selector_adapter=self.method_selector_adapter
-        )
-        
-    
-    def test_get_argument_calls_get_arguments(self):
-        """ `get_argument` calls `get_arguments` with `strip` defaulting to
-          `False`.
-        """
-        
-        self.handler.get_arguments = Mock()
-        self.handler.get_arguments.return_value = []
-        self.handler.get_argument('foo')
-        self.handler.get_arguments.assert_called_with('foo', strip=False)
-        
-    
-    def test_get_argument_strip(self):
-        """ `strip` is passed through.
-        """
-        
-        self.handler.get_arguments = Mock()
-        self.handler.get_arguments.return_value = []
-        self.handler.get_argument('foo', strip=True)
-        self.handler.get_arguments.assert_called_with('foo', strip=True)
-        
-    
-    def test_get_argument_return_value(self):
-        """ `get_argument` returns the last item from the list `get_arguments`
-          returns.
-        """
-        
-        self.handler.get_arguments = Mock()
-        self.handler.get_arguments.return_value = ['a', 'b']
-        self.assertTrue(self.handler.get_argument('foo') == 'b')
-        
-    
-    def test_get_argument_default(self):
-        """ Unless get_arguments returns `[]` in which case `get_argument`
-          returns `default` which defaults to `None`.
-        """
-        
-        self.handler.get_arguments = Mock()
-        self.handler.get_arguments.return_value = []
-        self.assertTrue(self.handler.get_argument('foo') is None)
-        self.assertTrue(
-            self.handler.get_argument('foo', default='abc') == 'abc'
-        )
-        
-    
-    def test_get_arguments_calls_get_arguments(self):
-        """ `get_argument` calls `request.params.getall`.
-        """
-        
-        self.request.params.getall.return_value = ['a', 'b']
-        self.handler.get_arguments('foo')
-        self.request.params.getall.assert_called_with('foo')
-        self.assertTrue(self.handler.get_arguments('foo') == ['a', 'b'])
-        
-    
-    def test_get_arguments_doesnt_strip(self):
-        """ Doesn't strip by default.
-        """
-        
-        self.request.params.getall.return_value = [' a ', ' b ']
-        self.assertTrue(self.handler.get_arguments('foo') == [' a ', ' b '])
-        
-    
-    def test_get_arguments_unless_told_to_strip(self):
-        """ Strips if told to.
-        """
-        
-        self.request.params.getall.return_value = [' a ', ' b ']
-        self.assertTrue(
-            self.handler.get_arguments('foo', strip=True) == ['a', 'b']
-        )
-        
-    
-    
-
 class TestBaseHandlerXSRF(unittest.TestCase):
     """ Test the logic of `handler.xsrf_token`, `handler.xsrf_input` 
       and `.xsrf_validate`.
@@ -576,13 +471,12 @@ class TestBaseHandlerXSRF(unittest.TestCase):
         
         self.handler.request.method = 'post'
         self.handler.request.headers.get.return_value = 'NotAnXMLHttpRequest'
-        self.handler.get_argument = Mock()
-        self.handler.get_argument.return_value = None
+        self.handler.request.params.get.return_value = None
         self.assertRaises(
             XSRFError,
             self.handler.xsrf_validate
         )
-        self.handler.get_argument.assert_called_with('_xsrf', None)
+        self.handler.request.params.get.assert_called_with('_xsrf', None)
         
     
     def test_xsrf_validate_raise_error_if_token_doesnt_match(self):
@@ -594,8 +488,7 @@ class TestBaseHandlerXSRF(unittest.TestCase):
         
         self.handler.request.method = 'post'
         self.handler.request.headers.get.return_value = 'NotAnXMLHttpRequest'
-        self.handler.get_argument = Mock()
-        self.handler.get_argument.return_value = 'foo'
+        self.handler.request.params.get.return_value = 'foo'
         self.handler._xsrf_token = 'bar'
         self.assertRaises(
             XSRFError,
@@ -610,8 +503,7 @@ class TestBaseHandlerXSRF(unittest.TestCase):
         
         self.handler.request.method = 'post'
         self.handler.request.headers.get.return_value = 'NotAnXMLHttpRequest'
-        self.handler.get_argument = Mock()
-        self.handler.get_argument.return_value = 'matches'
+        self.handler.request.params.get.return_value = 'matches'
         self.handler._xsrf_token = 'matches'
         self.assertTrue(self.handler.xsrf_validate() is None)
         
