@@ -14,14 +14,11 @@ def _get_long_description():
 setup(
     name = 'weblayer',
     version = '0.3',
-    description = '%s %s' % (
-        'weblayer is a lightweight, componentised package',
-        'for writing WSGI applications'
-    ),
+    description = 'A lightweight, componentised package for writing web applications',
     long_description = _get_long_description(),
     author = 'James Arthur',
-    author_email = 'thruflo@geemail.com',
-    url = 'http://github.com/thruflo/weblayer',
+    author_email = 'username: thruflo, domain: gmail.com',
+    url = 'http://packages.python.org/weblayer',
     classifiers = [
         'Development Status :: 3 - Alpha',
         'Environment :: Web Environment',
