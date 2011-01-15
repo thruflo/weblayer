@@ -55,6 +55,23 @@ class ExposedMethodSelector(object):
     def select_method(self, method_name):
         """ Returns ``getattr(self, method_name)`` iff the method exists
           and is exposed.  Otherwise returns ``None``.
+          
+          Special cases HEAD requests to use GET, iff ``'head'`` is exposed,
+          ``def get()`` exists and ``def head()`` doesn't.  This allows
+          applications to respond to HEAD requests without writing seperate
+          head methods and takes advantage of the special case in 
+          ``webob.Response.__call__``::
+          
+              def __call__(self, environ, start_response):
+                  
+                  # ... code removed for brevity
+                  
+                  if environ['REQUEST_METHOD'] == 'HEAD':
+                      # Special case here...
+                      return EmptyResponse(self.app_iter)
+                  return self.app_iter
+              
+          
         """
         
         if not isinstance(method_name, basestring):
@@ -65,8 +82,11 @@ class ExposedMethodSelector(object):
         
         method_name = method_name.lower()
         if method_name in self.context.__all__:
-            return getattr(self.context, method_name, None)
-        
+            method = getattr(self.context, method_name, None)
+            if method_name == 'head' and method is None: # special case
+                if 'get' in self.context.__all__:
+                    method = getattr(self.context, 'get', None)
+            return method
         
     
     

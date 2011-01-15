@@ -48,14 +48,14 @@ receives an `HTTP GET request`_.
     theoretically read only).  You can explicitly specify which methods of
     each request handler should be exposed using the ``__all__`` property.
     
-    For example, to handle GET, POST and DOFOO requests, you might write
+    For example, to handle HEAD, GET, POST and DOFOO requests, you might write
     something like::
     
         class Hello2(RequestHandler):
-            """ I explicitly accept only GET, POST and DOFOO requests.
+            """ I explicitly accept only HEAD, GET, POST and DOFOO requests.
             """
             
-            __all__ = ('get', 'post', 'dofoo')
+            __all__ = ('head', 'get', 'post', 'dofoo')
             
             def get(self):
                 form = u'<form method="post"><input name="name" /></form>'
@@ -68,6 +68,16 @@ receives an `HTTP GET request`_.
                 return u'I just did foo!'
             
         
+    
+
+.. note::
+    
+    In the above example, HEAD requests will be handled by the ``def get()``
+    method.  This special case is carried through from the underlying 
+    `webob.Response`_ implementation (and is documented in
+    :py:meth:`~weblayer.method.ExposedMethodSelector.select_method`).  In most
+    cases, the trick is simply to remember to include ``'head'`` in your 
+    ``__all__`` list of exposed methods wherever you expose ``'get'``.
     
 
 Handlers are mapped to incoming requests using the incoming request path.
@@ -396,6 +406,7 @@ attributes and methods:
 .. _`override/authentication_manager.py`: http://github.com/thruflo/weblayer/tree/master/src/weblayer/examples/override/authentication_manager.py
 .. _`override/template_renderer.py`: http://github.com/thruflo/weblayer/tree/master/src/weblayer/examples/override/template_renderer.py
 
+.. _`webob.Response`: http://pythonpaste.org/webob/reference.html#id2
 .. _`HTTP GET request`: http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.3
 .. _`regular expression`: http://docs.python.org/library/re.html
 .. _`groups`: http://docs.python.org/library/re.html#re.MatchObject.groups

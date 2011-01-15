@@ -99,3 +99,92 @@ class TestExposedMethodSelector(unittest.TestCase):
     
     
 
+class TestHEADSpecialCase(unittest.TestCase):
+    """ Test special casing HEAD requests to use ``def get()`` iff:
+      
+      * ``'head'`` is exposed
+      * ``def get()`` exists
+      * ``def head()`` doesn't
+      
+    """
+    
+    def make_one(self, context):
+        from weblayer.method import ExposedMethodSelector
+        return ExposedMethodSelector(context)
+        
+    
+    def test_head_not_exposed(self):
+        """ When ``'head'`` isn't exposed, selecting it will return ``None``.
+        """
+        
+        class MockContext(object):
+            __all__ = ['get']
+            get = 'method_get'
+            
+        
+        
+        method_selector = self.make_one(MockContext())
+        method = method_selector.select_method('head')
+        self.assertTrue(method is None)
+        
+    
+    def test_head_exposed_get_not_exposed(self):
+        """ When ``'head'`` is exposed but ``'get'`` isn't, selecting 
+          ``'head'`` will return ``None``.
+        """
+        
+        class MockContext(object):
+            __all__ = ['head']
+            get = 'method_get'
+        
+        
+        method_selector = self.make_one(MockContext())
+        method = method_selector.select_method('head')
+        self.assertTrue(method is None)
+        
+    
+    def test_head_exposed_get_exposed_get_not_defined(self):
+        """ When ``'head'`` is exposed but ``def get()`` isn't defined,
+          selecting ``'head'`` will return ``None``.
+        """
+        
+        class MockContext(object):
+            __all__ = ['head', 'get']
+            
+        
+        
+        method_selector = self.make_one(MockContext())
+        method = method_selector.select_method('head')
+        self.assertTrue(method is None)
+        
+    
+    def test_head_exposed_get_exposed_get_defined(self):
+        """ When ``'head'`` is exposed and ``def get()`` is defined,
+          selecting ``'head'`` will return it.
+        """
+        
+        class MockContext(object):
+            __all__ = ['head', 'get']
+            get = 'method_get'
+        
+        
+        method_selector = self.make_one(MockContext())
+        method = method_selector.select_method('head')
+        self.assertTrue(method is 'method_get')
+        
+    
+    def test_head_exposed_head_defined(self):
+        """ Unless, of course, ``def head()`` is defined.
+        """
+        
+        class MockContext(object):
+            __all__ = ['head', 'get']
+            get = 'method_get'
+            head = 'method_head'
+        
+        
+        method_selector = self.make_one(MockContext())
+        method = method_selector.select_method('head')
+        self.assertTrue(method is 'method_head')
+        
+    
