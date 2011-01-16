@@ -300,12 +300,71 @@ class TestResponse(unittest.TestCase):
         
     
     
+
+
+class TestSettings(unittest.TestCase):
+    """ Sanity check ``self.settings``.
+    """
+    
+    def make_app(self, config, mapping):
+        from webtest import TestApp
+        from weblayer import Bootstrapper, WSGIApplication
+        bootstrapper = Bootstrapper(settings=config, url_mapping=mapping)
+        application = WSGIApplication(*bootstrapper())
+        return TestApp(application)
+        
+    
+    def test_required_settings_misses_raises_error(self):
+        """ You must provide required settings by default.
+        """
+        
+        from weblayer import RequestHandler
+        
+        config = {}
+        mapping = [(r'/', RequestHandler)]
+        
+        self.assertRaises(
+            KeyError,
+            self.make_app,
+            config, 
+            mapping
+        )
+        
+        
+    
+    def test_settings_available(self):
+        """ Settings are available as self.settings.
+        """
+        
+        from weblayer import RequestHandler
+        
+        class A(RequestHandler):
+            def get(self):
+                return '%s %s' % (
+                    self.settings['cookie_secret'],
+                    self.settings.get('not_present', None)
+                )
+            
+        
+        
+        config = {
+            'cookie_secret': '...',
+            'static_files_path': 'static',
+            'template_directories': ['templates']
+        }
+        mapping = [(r'/', A)]
+        
+        app = self.make_app(config, mapping)
+        res = app.get('/')
+        
+        self.assertTrue(res.body == '... None')
+        
+    
     
 
 
+
 """
-* ``self.response`` / ``IResponseNormaliser``
-* ``self.settings``
 * ``self.auth``
 * ``self.cookies``
 * ``self.static``
