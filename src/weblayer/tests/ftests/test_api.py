@@ -3,18 +3,6 @@
 
 """ Functional tests for a :ref:`weblayer` application using the 
   :ref:`request handler api`.
-  
-  * ``self.request``
-  * ``self.response`` / ``IResponseNormaliser``
-  * ``self.settings``
-  * ``self.auth``
-  * ``self.cookies``
-  * ``self.static``
-  * ``self.xsrf_input``
-  * return ``self.error()`` to return an HTTP error
-  * return ``self.redirect()`` to redirect the request
-  * return ``self.render()`` to return a rendered template
-  
 """
 
 import unittest
@@ -192,3 +180,138 @@ class TestBasics(unittest.TestCase):
     
     
 
+
+class TestResponse(unittest.TestCase):
+    """ Sanity check response generation.
+    """
+    
+    def make_app(self, mapping):
+        from os.path import dirname, join as join_path
+        from webtest import TestApp
+        from weblayer import Bootstrapper, WSGIApplication
+        _here = dirname(__file__)
+        config = {
+            'cookie_secret': 'cf83e1357eefb8bdf1542850d66d8007d620e4050b5715d',
+            'static_files_path': join_path(_here, 'static'),
+            'template_directories': [join_path(_here, 'templates')]
+        }
+        bootstrapper = Bootstrapper(settings=config, url_mapping=mapping)
+        application = WSGIApplication(*bootstrapper())
+        return TestApp(application)
+        
+    
+    def test_return_basestring(self):
+        """ Returning a ``basestring`` from a request handler method should
+          update the ``response.body``.
+        """
+        
+        from weblayer import RequestHandler
+        
+        class A(RequestHandler):
+            def get(self):
+                return 'hello'
+            
+        
+        class B(RequestHandler):
+            def get(self):
+                return u'hellö'
+            
+        
+        
+        mapping = [(r'/a', A), (r'/b', B)]
+        app = self.make_app(mapping)
+        
+        res = app.get('/a')
+        self.assertTrue(res.body == 'hello')
+        
+        res = app.get('/b')
+        self.assertTrue(res.unicode_body == u'hellö')
+        
+    
+    def test_return_none(self):
+        """ Returning ``None`` should fallback on ``self.response``.
+        """
+        
+        from weblayer import RequestHandler
+        
+        class A(RequestHandler):
+            def get(self):
+                self.response.body = 'elephants'
+                return None
+            
+        
+        mapping = [(r'/', A)]
+        app = self.make_app(mapping)
+        
+        res = app.get('/')
+        self.assertTrue(res.body == 'elephants')
+        
+    
+    def test_return_response(self):
+        """ Returning an :py:class:`~weblayer.interfaces.IResponse` from a
+          request handler method should overwrite and use ``self.response``.
+        """
+        
+        from weblayer import RequestHandler
+        from weblayer.base import Response
+        
+        class A(RequestHandler):
+            def get(self):
+                response = Response(body='fandango', request=self.request)
+                response.environ['weblayer.test_return_response'] = 1
+                return response
+            
+        
+        mapping = [(r'/', A)]
+        app = self.make_app(mapping)
+        
+        res = app.get('/', extra_environ={'weblayer.test_return_response': 0})
+        self.assertTrue(res.body == 'fandango')
+        self.assertTrue(res.environ['weblayer.test_return_response'])
+        
+    
+    def test_return_data(self):
+        """ Returning something other than a ``basestring``, ``None`` or
+          :py:class:`~weblayer.interfaces.IResponse`` should JSON encode it.
+        """
+        
+        from weblayer import RequestHandler
+        
+        class A(RequestHandler):
+            def get(self):
+                return {'a': 'b'}
+            
+        
+        
+        class B(RequestHandler):
+            def get(self):
+                return {'a': u'ß'}
+            
+        
+        
+        mapping = [(r'/a', A), (r'/b', B)]
+        app = self.make_app(mapping)
+        
+        res = app.get('/a')
+        self.assertTrue(res.body == '{"a": "b"}')
+        
+        res = app.get('/b')
+        self.assertTrue(res.unicode_body == u'{"a": "ß"}')
+        
+    
+    
+    
+
+
+"""
+* ``self.response`` / ``IResponseNormaliser``
+* ``self.settings``
+* ``self.auth``
+* ``self.cookies``
+* ``self.static``
+* ``self.xsrf_input``
+* return ``self.error()`` to return an HTTP error
+* return ``self.redirect()`` to redirect the request
+* return ``self.render()`` to return a rendered template
+
+"""

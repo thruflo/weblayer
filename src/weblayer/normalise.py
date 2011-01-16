@@ -162,16 +162,20 @@ class DefaultToJSONResponseNormaliser(object):
           
               >>> response = Mock()
               >>> json_encode = Mock()
-              >>> json_encode.return_value = u'{"a": "b"}'
               >>> normaliser = DefaultToJSONResponseNormaliser(
               ...     response,
               ...     json_encode=json_encode
               ... )
-              >>> r = normaliser.normalise({'a': u'b'})
+              >>> json_encode.return_value = '{"a": "b"}'
+              >>> r = normaliser.normalise({'a': 'b'})
               >>> r.content_type == normaliser._json_content_type
               True
-              >>> json_encode.call_args[0][0] == {'a': u'b'}
+              >>> json_encode.call_args[0][0] == {'a': 'b'}
               True
+              >>> r.body
+              '{"a": "b"}'
+              >>> json_encode.return_value = u'{"a": "b"}'
+              >>> r = normaliser.normalise({'a': u'b'})
               >>> r.unicode_body
               u'{"a": "b"}'
           
@@ -187,7 +191,11 @@ class DefaultToJSONResponseNormaliser(object):
             pass
         else: # assume it's json data
             self.response.content_type = self._json_content_type
-            self.response.unicode_body = self._json_encode(handler_response)
+            json_string = self._json_encode(handler_response)
+            if isinstance(json_string, str):
+                self.response.body = json_string
+            else: # isinstance(json_string, unicode):
+                self.response.unicode_body = json_string
         return self.response
         
     
