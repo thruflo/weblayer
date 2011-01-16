@@ -13,14 +13,12 @@ class TestBasics(unittest.TestCase):
     """
     
     def make_app(self, mapping):
-        from os.path import dirname, join as join_path
         from webtest import TestApp
         from weblayer import Bootstrapper, WSGIApplication
-        _here = dirname(__file__)
         config = {
-            'cookie_secret': 'cf83e1357eefb8bdf1542850d66d8007d620e4050b5715d',
-            'static_files_path': join_path(_here, 'static'),
-            'template_directories': [join_path(_here, 'templates')]
+            'cookie_secret': '...',
+            'static_files_path': 'static',
+            'template_directories': ['templates']
         }
         bootstrapper = Bootstrapper(settings=config, url_mapping=mapping)
         application = WSGIApplication(*bootstrapper())
@@ -180,20 +178,17 @@ class TestBasics(unittest.TestCase):
     
     
 
-
 class TestResponse(unittest.TestCase):
     """ Sanity check response generation.
     """
     
     def make_app(self, mapping):
-        from os.path import dirname, join as join_path
         from webtest import TestApp
         from weblayer import Bootstrapper, WSGIApplication
-        _here = dirname(__file__)
         config = {
-            'cookie_secret': 'cf83e1357eefb8bdf1542850d66d8007d620e4050b5715d',
-            'static_files_path': join_path(_here, 'static'),
-            'template_directories': [join_path(_here, 'templates')]
+            'cookie_secret': '...',
+            'static_files_path': 'static',
+            'template_directories': ['templates']
         }
         bootstrapper = Bootstrapper(settings=config, url_mapping=mapping)
         application = WSGIApplication(*bootstrapper())
@@ -301,7 +296,6 @@ class TestResponse(unittest.TestCase):
     
     
 
-
 class TestSettings(unittest.TestCase):
     """ Sanity check ``self.settings``.
     """
@@ -362,15 +356,359 @@ class TestSettings(unittest.TestCase):
     
     
 
+class TestAuth(unittest.TestCase):
+    """ Sanity check ``self.auth``.
+    """
+    
+    def make_app(self, mapping):
+        from webtest import TestApp
+        from weblayer import Bootstrapper, WSGIApplication
+        config = {
+            'cookie_secret': '...',
+            'static_files_path': 'static',
+            'template_directories': ['templates']
+        }
+        bootstrapper = Bootstrapper(settings=config, url_mapping=mapping)
+        application = WSGIApplication(*bootstrapper())
+        return TestApp(application)
+        
+    
+    def test_unauthenticated(self):
+        """ If there's no ``environ['REMOTE_USER']``, 
+          ``self.auth.is_authenticated`` is ``False`` and 
+          ``self.auth.current_user`` is ``None``.
+        """
+        
+        from weblayer import RequestHandler
+        
+        class A(RequestHandler):
+            def get(self):
+                return '%s %s' % (
+                    self.auth.is_authenticated,
+                    self.auth.current_user
+                )
+            
+        
+        
+        mapping = [(r'/', A)]
+        
+        app = self.make_app(mapping)
+        res = app.get('/')
+        
+        self.assertTrue(res.body == 'False None')
+        
+    
+    def test_authenticated(self):
+        """ If there is a ``environ['REMOTE_USER']``, 
+          ``self.auth.is_authenticated`` is ``True`` and 
+          ``self.auth.current_user`` is ``environ['REMOTE_USER']``.
+        """
+        
+        from weblayer import RequestHandler
+        
+        class A(RequestHandler):
+            def get(self):
+                return '%s %s' % (
+                    self.auth.is_authenticated,
+                    self.auth.current_user
+                )
+            
+        
+        
+        mapping = [(r'/', A)]
+        
+        app = self.make_app(mapping)
+        res = app.get('/', extra_environ={'REMOTE_USER': '123456'})
+        
+        self.assertTrue(res.body == 'True 123456')
+        
+    
+    
+
+class TestCookies(unittest.TestCase):
+    """ Sanity check ``self.cookies``.
+    """
+    
+    def make_app(self, cookie_secret, mapping):
+        from webtest import TestApp
+        from weblayer import Bootstrapper, WSGIApplication
+        config = {
+            'cookie_secret': cookie_secret,
+            'static_files_path': 'static',
+            'template_directories': ['templates']
+        }
+        bootstrapper = Bootstrapper(settings=config, url_mapping=mapping)
+        application = WSGIApplication(*bootstrapper())
+        return TestApp(application)
+        
+    
+    def test_set_and_get(self):
+        """ We can set and get a cookie.
+        """
+        
+        from weblayer import RequestHandler
+        
+        class SetCookie(RequestHandler):
+            def get(self):
+                self.cookies.set('name', 'value')
+            
+        
+        class GetCookie(RequestHandler):
+            def get(self):
+                return self.cookies.get('name')
+            
+        
+        mapping = [(r'/set', SetCookie), (r'/get', GetCookie)]
+        app = self.make_app('abc', mapping)
+        
+        app.get('/set')
+        res = app.get('/get')
+        self.assertTrue(res.body == 'value')
+        
+    
+    def test_forged_returns_none(self):
+        """ If we set the value of the cookie without using 
+          ``self.cookies.set()``, ``self.cookies.get()`` returns None.
+        """
+        
+        from weblayer import RequestHandler
+        
+        class SetCookie(RequestHandler):
+            def get(self):
+                self.response.set_cookie('name', value='value')
+            
+        
+        class GetCookie(RequestHandler):
+            def get(self):
+                return '%s' % self.cookies.get('name')
+            
+        
+        mapping = [(r'/set', SetCookie), (r'/get', GetCookie)]
+        app = self.make_app('abc', mapping)
+        
+        app.get('/set')
+        res = app.get('/get')
+        self.assertTrue(res.body == 'None')
+        
+    
+    
+
+class TestStatic(unittest.TestCase):
+    """ Sanity check ``self.static``.
+    """
+    
+    def setUp(self):
+        """ Make sure ``./static/foo.js`` contains only::
+          
+              var foo = {};
+          
+        """
+        
+        from os.path import dirname, join as join_path
+        file_path = join_path(dirname(__file__), 'static', 'foo.js')
+        sock = open(file_path, 'w')
+        sock.write('var foo = {};')
+        sock.close()
+        
+    
+    def tearDown(self):
+        """ Make sure ``./static/foo.js`` contains only::
+          
+              var foo = {};
+          
+        """
+        
+        from os.path import dirname, join as join_path
+        file_path = join_path(dirname(__file__), 'static', 'foo.js')
+        sock = open(file_path, 'w')
+        sock.write('var foo = {};')
+        sock.close()
+        
+    
+    def make_app(self, mapping, **extra_config):
+        from os.path import dirname, join as join_path
+        from webtest import TestApp
+        from weblayer import Bootstrapper, WSGIApplication
+        config = {
+            'cookie_secret': '...',
+            'static_files_path': join_path(dirname(__file__), 'static'),
+            'template_directories': ['templates']
+        }
+        config.update(extra_config)
+        bootstrapper = Bootstrapper(settings=config, url_mapping=mapping)
+        application = WSGIApplication(*bootstrapper())
+        return TestApp(application)
+        
+    
+    def test_no_qs_if_file_doesnt_exist(self):
+        """ If the file doesn't exist, don't add a ``v=...`` part to the
+          query string.
+        """
+        
+        from weblayer import RequestHandler
+        
+        class A(RequestHandler):
+            def get(self):
+                return self.static.get_url('not_there.js')
+            
+        
+        mapping = [(r'/', A)]
+        app = self.make_app(mapping)
+        
+        res = app.get('/')
+        self.assertTrue(res.body == 'http://localhost/static/not_there.js')
+        
+    
+    def test_qs_if_file_exists(self):
+        """ If the file does exist, add the first few chars of a hash digest of
+          of the file contents to the query string.
+        """
+        
+        from weblayer import RequestHandler
+        
+        class A(RequestHandler):
+            def get(self):
+                return self.static.get_url('foo.js')
+            
+        
+        mapping = [(r'/', A)]
+        app = self.make_app(mapping)
+        
+        res = app.get('/')
+        self.assertTrue(res.body == 'http://localhost/static/foo.js?v=fc075b5')
+        
+    
+    def test_qs_cached_in_memory_despite_file_content_changing(self):
+        """ The hexdigest snippet is cached in memory and doesn't automatically
+          update when the underlying file changes.
+        """
+        
+        from os.path import dirname, join as join_path
+        from weblayer import RequestHandler
+        
+        class A(RequestHandler):
+            def get(self):
+                return self.static.get_url('foo.js')
+            
+        
+        mapping = [(r'/', A)]
+        app = self.make_app(mapping)
+        
+        res = app.get('/')
+        self.assertTrue(res.body == 'http://localhost/static/foo.js?v=fc075b5')
+        
+        # change the file
+        file_path = join_path(dirname(__file__), 'static', 'foo.js')
+        sock = open(file_path, 'w')
+        sock.write('var foo = {\'changed\': true};')
+        sock.close()
+        
+        # the qs *hasn't* changed
+        res = app.get('/')
+        self.assertTrue(res.body == 'http://localhost/static/foo.js?v=fc075b5')
+        
+    
+    def test_qs_changed_when_cache_cleared(self):
+        """ If we clear the cache, then the underlying file content change
+          is reflected in the query string.
+        """
+        
+        from os.path import dirname, join as join_path
+        from weblayer import RequestHandler
+        
+        class A(RequestHandler):
+            def get(self):
+                return self.static.get_url('foo.js')
+            
+        
+        class B(RequestHandler):
+            def get(self):
+                """ n.b.: this hack only clears the cache for this process.
+                  Don't do this in real code.
+                """
+                
+                static_files = self.settings['static_files_path']
+                file_path = join_path(static_files, 'foo.js')
+                
+                del self.static._cache[file_path]
+                
+            
+        
+        
+        mapping = [(r'/a', A), (r'/b', B)]
+        app = self.make_app(mapping)
+        
+        res = app.get('/a')
+        self.assertTrue(res.body == 'http://localhost/static/foo.js?v=fc075b5')
+        
+        # change the file
+        file_path = join_path(dirname(__file__), 'static', 'foo.js')
+        sock = open(file_path, 'w')
+        sock.write('var foo = {\'changed\': true};')
+        sock.close()
+        
+        # clear the cache
+        res = app.get('/b')
+        
+        # the qs *has* changed
+        res = app.get('/a')
+        self.assertTrue(res.body == 'http://localhost/static/foo.js?v=114b07a')
+        
+        # clear the cache
+        res = app.get('/b')
+        
+    
+    def test_host_url(self):
+        """ Uses the host url of the request.
+        """
+        
+        from weblayer import RequestHandler
+        
+        class A(RequestHandler):
+            def get(self):
+                return self.static.get_url('foo.js')
+            
+        
+        mapping = [(r'/', A)]
+        app = self.make_app(mapping)
+        
+        res = app.get('/', extra_environ={'HTTP_HOST': 'foo.com:1234'})
+        self.assertTrue(
+            res.body == 'http://foo.com:1234/static/foo.js?v=fc075b5'
+        )
+        
+    
+    def test_static_host_url(self):
+        """ Unless ``settings['static_host_url']`` is provided.
+        """
+        
+        from weblayer import RequestHandler
+        
+        class A(RequestHandler):
+            def get(self):
+                return self.static.get_url('foo.js')
+            
+        
+        mapping = [(r'/', A)]
+        app = self.make_app(mapping, static_host_url='http://static.foo.com')
+        
+        res = app.get('/')
+        self.assertTrue(
+            res.body == 'http://static.foo.com/static/foo.js?v=fc075b5'
+        )
+        
+        res = app.get('/', extra_environ={'HTTP_HOST': 'foo.com:1234'})
+        self.assertTrue(
+            res.body == 'http://static.foo.com/static/foo.js?v=fc075b5'
+        )
+        
+    
+    
 
 
 """
-* ``self.auth``
-* ``self.cookies``
-* ``self.static``
 * ``self.xsrf_input``
 * return ``self.error()`` to return an HTTP error
 * return ``self.redirect()`` to redirect the request
 * return ``self.render()`` to return a rendered template
-
 """
