@@ -148,7 +148,7 @@ class BaseHandler(object):
                     handler_response = self.error(exception=err)
                 except Exception, err:
                     if self.request.environ.get('paste.throw_errors', False):
-                        raise err
+                        raise
                     handler_response = self.handle_system_error(err)
             
         if self._response_normaliser_adapter is None:

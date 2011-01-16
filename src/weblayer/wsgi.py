@@ -100,9 +100,9 @@ class WSGIApplication(object):
             handler = handler_class(request, response, self._settings)
             try: # handler *should* catch all exceptions
                 response = handler(environ['REQUEST_METHOD'], *args, **kwargs)
-            except Exception, err: # unless deliberately bubbling them up
+            except Exception: # unless deliberately bubbling them up
                 if environ.get('paste.throw_errors', False): 
-                    raise err
+                    raise
                 else:
                     response.status = 500
         else: # to handle 404 nicely, define a catch all url handler
