@@ -211,8 +211,6 @@ class TestGetCookie(unittest.TestCase):
         sig = _generate_cookie_signature(cs, 'name', 'dmFsdWU=', too_old)
         value = 'dmFsdWU=|%s|%s' % (too_old, sig)
         
-        print value
-        
         result = self.cookie_wrapper.get('name', value=value)
         self.assertTrue(result is None)
         
