@@ -196,22 +196,28 @@ class ISettings(Interface):
       :py:class:`~weblayer.settings.RequirableSettings`.
     """
     
-    def __getitem__(name):
+    def __call__(items):
+        """ Update with items.
+        """
+        
+    
+    
+    def __getitem__(key):
         """ Get item.
         """
         
     
-    def __setitem__(name, value):
+    def __setitem__(key, value):
         """ Set item.
         """
         
     
-    def __delitem__(name):
+    def __delitem__(key):
         """ Delete item.
         """
         
     
-    def __contains__(name):
+    def __contains__(key):
         """ Return whether contains item.
         """
         
@@ -226,7 +232,84 @@ class ISettings(Interface):
         """
         
     
+    def __cmp__(self, other):
+        """ Compare against other.
+        """
+        
+    
+    def __len__(self):
+        """ Return number of items.
+        """
+        
+    
+    def has_key(key):
+        """ Has key.
+        """
+        
+    
+    def iteritems():
+        """ Iter items.
+        """
+        
+    
+    def iterkeys():
+        """ Iter keys.
+        """
+        
+    
+    def itervalues():
+        """ Iter values.
+        """
+        
+    
+    def items():
+        """ Items.
+        """
+        
+    
+    def keys():
+        """ Keys.
+        """
+        
+    
+    def values():
+        """ Values.
+        """
+    
+    def clear():
+        """ Clear items.
+        """
+        
+    
+    def setdefault(key, default=None):
+        """ Set default.
+        """
+        
+    
+    def pop(key, *args):
+        """ Pop.
+        """
+        
+    
+    def popitem():
+        """ Pop item.
+        """
+        
+    
+    def update(other=None, **kwargs):
+        """ Update.
+        """
+        
+    
+    def get(key, default=None):
+        """ Get item if exists, or return ``default``.
+        """
+        
+    
+    
 
+
+    
 class IStaticURLGenerator(Interface):
     """ Static url generator.  Default implementation is 
       :py:class:`~weblayer.static.MemoryCachedStaticURLGenerator`.

@@ -85,6 +85,8 @@ __all__ = [
 import inspect
 import venusian
 
+from UserDict import DictMixin
+
 from zope.interface import implements
 
 from interfaces import ISettings
@@ -92,12 +94,14 @@ from interfaces import ISettings
 _CATEGORY = 'weblayer'
 _HANGER_NAME = '__weblayer_require_settings_venusian_hanger__'
 
-class RequirableSettings(object):
+class RequirableSettings(object, DictMixin):
     """ Utility that provides dictionary-like access to application settings.
       
       Do not use the ``_require`` and ``_override`` methods directly.  Instead,
       use the :py:func:`require_setting` and :py:func:`override_setting`
       functions or the :py:func:`require` and :py:func:`override` decorators.
+      
+      Note that the 
     """
     
     implements(ISettings)
@@ -168,34 +172,17 @@ class RequirableSettings(object):
         return self._items.__delitem__(name)
         
     
-    def __contains__(self, name):
-        """ Contains item::
+    def keys(self):
+        """ Return keys::
           
               >>> settings = RequirableSettings()
-              >>> settings({'a': 'foobar'})
-              >>> 'a' in settings
-              True
-              >>> 'b' in settings
-              False
+              >>> settings({'a': None, 'b': None})
+              >>> settings.keys()
+              ['a', 'b']
           
         """
         
-        return self._items.__contains__(name)
-        
-    
-    def __iter__(self):
-        """ Iterate through items::
-          
-              >>> settings = RequirableSettings()
-              >>> settings({'a': 'foobar', 'b': ''})
-              >>> for k in settings:
-              ...     k
-              'a'
-              'b'
-          
-        """
-        
-        return self._items.__iter__()
+        return self._items.keys()
         
     
     def __repr__(self):
