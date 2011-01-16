@@ -15,7 +15,7 @@
   
       >>> from mock import Mock
       >>> request = Mock()
-      >>> request.host_url = 'http://static.foo.com'
+      >>> request.host_url = 'http://foo.com'
       >>> settings = {}
       >>> settings['static_files_path'] = '/var/www/static'
       >>> settings['static_url_prefix'] = u'/static/'
@@ -34,6 +34,14 @@
   
   The static URL returned is::
   
+      >>> static.get_url('foo.js')
+      u'http://foo.com/static/foo.js?v=abcdefg'
+  
+  Use ``settings['static_host_url']`` to specify the url static files should
+  be requested on (if this is different from the request url)::
+  
+      >>> settings['static_host_url'] = 'http://static.foo.com'
+      >>> static = MemoryCachedStaticURLGenerator(request, settings)
       >>> static.get_url('foo.js')
       u'http://static.foo.com/static/foo.js?v=abcdefg'
   
@@ -120,7 +128,7 @@ class MemoryCachedStaticURLGenerator(object):
           
               >>> from mock import Mock
               >>> req = Mock()
-              >>> req.host_url = 'foo.com'
+              >>> req.host_url = 'http://foo.com'
               >>> settings = {}
               >>> settings['static_files_path'] = '/var/www/static'
               >>> settings['static_url_prefix'] = u'/static/'
@@ -129,7 +137,17 @@ class MemoryCachedStaticURLGenerator(object):
               ...     settings
               ... )
               >>> static._host_url
-              'foo.com'
+              'http://foo.com'
+          
+          Unless ``settings['static_host_url']`` is provided::
+          
+              >>> settings['static_host_url'] = 'http://static.foo.com'
+              >>> static = MemoryCachedStaticURLGenerator(
+              ...     req, 
+              ...     settings
+              ... )
+              >>> static._host_url
+              'http://static.foo.com'
           
           ``settings['static_files_path']`` and
           ``settings['static_url_prefix']`` are
@@ -189,7 +207,7 @@ class MemoryCachedStaticURLGenerator(object):
           
         """
         
-        self._host_url = request.host_url
+        self._host_url = settings.get('static_host_url', request.host_url)
         self._static_files_path = settings['static_files_path']
         self._static_url_prefix = settings['static_url_prefix']
         
