@@ -423,3 +423,5 @@ attributes and methods:
 .. _`deployment`: recipes#deployment
 
 .. _`implement`: http://pypi.python.org/pypi/zope.interface#declaring-implemented-interfaces
+
+.. _`wsgi`: http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
