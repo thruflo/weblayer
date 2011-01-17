@@ -16,7 +16,7 @@
   Provides a ``normalise()`` method that takes a single argument and uses it to
   update and or replace the original response object before returning it::
   
-      >>> class MockResponse(object):
+      >>> class MockResponse(Mock):
       ...     implements(IResponse)
       ... 
       >>> mock_response = MockResponse()
@@ -29,21 +29,18 @@
       >>> r = normaliser.normalise(u'a')
       >>> r.unicode_body == u'a'
       True
+      >>> r = normaliser.normalise(None)
+      >>> r == normaliser.response
+      True
   
-  This implementation's default behaviour for stuff it can't identify as an
-  :py:class:`~weblayer.interfaces.IResponse` or ``basestring`` is to try to
-  `JSON`_ encode it::
+  If the argument provided isn't ``callable()``, a ``basestring`` or ``None``,
+  the default implementation tries to `JSON`_ encode it::
   
       >>> r = normaliser.normalise({'a': u'b'})
       >>> r.content_type
       'application/json; charset=UTF-8'
       >>> r.unicode_body
       u'{"a": "b"}'
-  
-  When used to normalise the return value of a request handler method, this
-  lets the request handler method return a string or JSON encodable object, 
-  without having to worry about constructing a response object, whilst still
-  allowing for a response object to be returned when necessary.
   
   .. _`json`: http://www.json.org/
 """
@@ -120,21 +117,32 @@ class DefaultToJSONResponseNormaliser(object):
     def normalise(self, handler_response):
         """ Update and return self.response appropriately.
           
-          If ``handler_response`` implements 
-          :py:class:`~weblayer.interfaces.IResponse` then just use that::
-          
               >>> from mock import Mock
               >>> response = Mock()
               >>> normaliser = DefaultToJSONResponseNormaliser(
               ...     response,
               ...     json_encode=None
               ... )
-              >>> class MockResponse(object):
-              ...     implements(IResponse)
+          
+          If ``handler_response`` is ``callable()`` then just use that.  The
+          intention being that the ``callable()`` is a WSGI application::
+          
+              >>> def app(environ, start_response):
+              ...     headers = [('Content-type', 'text/plain')]
+              ...     start_response('200 OK', headers)
+              ...     return ['']
               ... 
-              >>> mock_response = MockResponse()
-              >>> r = normaliser.normalise(mock_response)
-              >>> r == mock_response
+              >>> r = normaliser.normalise(app)
+              >>> r == app
+              True
+          
+          But, any old ``callable()`` will sneak through::
+          
+              >>> def foo():
+              ...     pass
+              ... 
+              >>> r = normaliser.normalise(foo)
+              >>> r == foo
               True
           
           Otherwise if it's a ``str`` or a ``unicode`` use that as the
@@ -181,7 +189,7 @@ class DefaultToJSONResponseNormaliser(object):
           
         """
         
-        if IResponse.providedBy(handler_response):
+        if callable(handler_response):
             self.response = handler_response
         elif isinstance(handler_response, str):
             self.response.body = handler_response
