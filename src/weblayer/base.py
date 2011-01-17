@@ -46,3 +46,6 @@ class Response(webob.Response):
     implements(IResponse)
     
 
+
+Request.ResponseClass = Response
+Response.RequestClass = Request
