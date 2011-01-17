@@ -795,9 +795,161 @@ class TestXSRF(unittest.TestCase):
     
     
 
+class TestError(unittest.TestCase):
+    """ Sanity check ``self.error()``.
+    """
+    
+    def make_app(self, mapping):
+        from os.path import dirname, join as join_path
+        from webtest import TestApp
+        from weblayer import Bootstrapper, WSGIApplication
+        config = {
+            'cookie_secret': '...',
+            'static_files_path': 'static',
+            'template_directories': ['templates']
+        }
+        bootstrapper = Bootstrapper(settings=config, url_mapping=mapping)
+        application = WSGIApplication(*bootstrapper())
+        return TestApp(application)
+        
+    
+    def test_return_vanilla_error(self):
+        """ Returning ``self.error()`` results in a 500 response.
+        """
+        
+        from webtest import AppError
+        from weblayer import RequestHandler
+        
+        class A(RequestHandler):
+            def get(self):
+                return self.error()
+            
+        
+        
+        mapping = [(r'/', A)]
+        app = self.make_app(mapping)
+        
+        self.assertRaisesRegexp(
+            AppError, 
+            '500 Internal Server Error', 
+            app.get, 
+            '/'
+        )
+        
+    
+    def test_return_specific_error(self):
+        """ Returning a specific error results in an appropriate response.
+        """
+        
+        from webtest import AppError
+        from weblayer import RequestHandler
+        
+        class A(RequestHandler):
+            def get(self):
+                return self.error(status=501)
+            
+        
+        
+        mapping = [(r'/', A)]
+        app = self.make_app(mapping)
+        
+        self.assertRaisesRegexp(
+            AppError, 
+            '501 Not Implemented',
+            app.get, 
+            '/'
+        )
+        
+    
+    
+
+class TestRedirect(unittest.TestCase):
+    """ Sanity check ``self.redirect()``.
+    """
+    
+    def make_app(self, mapping):
+        from os.path import dirname, join as join_path
+        from webtest import TestApp
+        from weblayer import Bootstrapper, WSGIApplication
+        config = {
+            'cookie_secret': '...',
+            'static_files_path': 'static',
+            'template_directories': ['templates']
+        }
+        bootstrapper = Bootstrapper(settings=config, url_mapping=mapping)
+        application = WSGIApplication(*bootstrapper())
+        return TestApp(application)
+        
+    
+    def test_redirect(self):
+        """ Returning ``self.redirect(url)`` results in a 302 response.
+        """
+        
+        from webtest import AppError
+        from weblayer import RequestHandler
+        
+        class A(RequestHandler):
+            def get(self):
+                return self.redirect('/b')
+            
+        
+        
+        mapping = [(r'/', A)]
+        app = self.make_app(mapping)
+        
+        status = app.get('/').status
+        self.assertTrue(status == '302 Found')
+        
+    
+    def test_redirect_location(self):
+        """ Returning ``self.redirect(url)`` uses either the host url or full
+          url if provided.
+        """
+        
+        from webtest import AppError
+        from weblayer import RequestHandler
+        
+        class A(RequestHandler):
+            def get(self):
+                return self.redirect('/b')
+            
+        
+        
+        class B(RequestHandler):
+            def get(self):
+                return self.redirect('http://foo.com/c')
+            
+        
+        
+        mapping = [(r'/a', A), (r'/b', B)]
+        app = self.make_app(mapping)
+        
+        res = app.get('/a').follow()
+        self.assertTrue(res.headers['location'] == 'http://foo.com/c')
+        
+    
+    def test_permanent_redirect(self):
+        """ Returning ``self.redirect(url, permanent=True)`` returns a 301.
+        """
+        
+        from webtest import AppError
+        from weblayer import RequestHandler
+        
+        class A(RequestHandler):
+            def get(self):
+                return self.redirect('/b', permanent=True)
+            
+        
+        
+        mapping = [(r'/', A)]
+        app = self.make_app(mapping)
+        
+        status = app.get('/').status
+        self.assertTrue(status == '301 Moved Permanently')
+        
+    
+
 
 """
-* return ``self.error()`` to return an HTTP error
-* return ``self.redirect()`` to redirect the request
 * return ``self.render()`` to return a rendered template
 """
