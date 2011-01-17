@@ -1,0 +1,18 @@
+<ul>
+  <li>
+    foo: ${request.params.get('foo')}
+  </li>
+  <li>
+    user: ${current_user}
+  </li>
+  <li>
+    static url: ${get_static_url('not_present.js')}
+  </li>
+  <li>
+    <form method="post">
+      ${xsrf_input}
+      <input name="name" />
+      <input type="submit" />
+    </form>
+  </li>
+</ul>

@@ -711,7 +711,6 @@ class TestXSRF(unittest.TestCase):
     """
     
     def make_app(self, mapping):
-        from os.path import dirname, join as join_path
         from webtest import TestApp
         from weblayer import Bootstrapper, WSGIApplication
         config = {
@@ -800,7 +799,6 @@ class TestError(unittest.TestCase):
     """
     
     def make_app(self, mapping):
-        from os.path import dirname, join as join_path
         from webtest import TestApp
         from weblayer import Bootstrapper, WSGIApplication
         config = {
@@ -868,7 +866,6 @@ class TestRedirect(unittest.TestCase):
     """
     
     def make_app(self, mapping):
-        from os.path import dirname, join as join_path
         from webtest import TestApp
         from weblayer import Bootstrapper, WSGIApplication
         config = {
@@ -949,7 +946,89 @@ class TestRedirect(unittest.TestCase):
         
     
 
+class TestRender(unittest.TestCase):
+    """ Sanity check ``self.render()``.
+    """
+    
+    def make_app(self, mapping):
+        from os.path import dirname, join as join_path
+        from webtest import TestApp
+        from weblayer import Bootstrapper, WSGIApplication
+        config = {
+            'cookie_secret': '...',
+            'static_files_path': join_path(dirname(__file__), 'static'),
+            'template_directories': [join_path(dirname(__file__), 'templates')]
+        }
+        bootstrapper = Bootstrapper(settings=config, url_mapping=mapping)
+        application = WSGIApplication(*bootstrapper())
+        return TestApp(application)
+        
+    
+    def test_builtins(self):
+        """ Returning ``self.render(tmpl_name)`` renders ``tmpl_name``, passing
+          through keyword arguments to the template's global namespace, along
+          with the builtins defined in :py:mod:`~weblayer.template`.
+        """
+        
+        import datetime
+        from weblayer import RequestHandler
+        
+        class A(RequestHandler):
+            def get(self):
+                kwargs = {
+                    'url': 'http://foo.com/b ar',
+                    'data': {'a': u'b'},
+                }
+                return self.render('builtins.tmpl', **kwargs)
+            
+        
+        
+        mapping = [(r'/', A)]
+        app = self.make_app(mapping)
+        
+        res = app.get('/')
+        self.assertTrue('{&quot;a&quot;: &quot;b&quot;}' in res)
+        self.assertTrue('http%3A%2F%2Ffoo.com%2Fb+ar' in res)
+        self.assertTrue(datetime.datetime.min in res)
+        
+    
+    def test_request_variables(self):
+        """ Returning ``self.render(tmpl_name)`` renders ``tmpl_name``, passing
+          through the ``request``, ``current_user``, ``get_static_url`` and 
+          ``xsrf_input``.
+        """
+        
+        from webtest import AppError
+        from weblayer import RequestHandler
+        
+        class A(RequestHandler):
+            __all__ = ('get', 'post')
+            
+            def get(self):
+                return self.render('request.tmpl')
+            
+            
+            def post(self):
+                return u'Hello %s!' % self.request.params.get('name')
+            
+        
+        mapping = [(r'/', A)]
+        app = self.make_app(mapping)
+        
+        res = app.get('/?foo=bar', extra_environ={'REMOTE_USER': 'brian'})
+        
+        self.assertTrue('foo: bar' in res)
+        self.assertTrue('user: brian' in res)
+        self.assertTrue(
+            'static url: http://localhost/static/not_present.js' in res
+        )
+        
+        form = res.form
+        form['name'] = 'Brian'
+        
+        res = form.submit()
+        self.assertTrue(res.body == 'Hello Brian!')
+        
+    
+    
 
-"""
-* return ``self.render()`` to return a rendered template
-"""
