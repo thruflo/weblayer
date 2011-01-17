@@ -613,8 +613,8 @@ class TestBaseHandlerRedirect(unittest.TestCase):
         self.Moved301 = Mock()
         self.Found302 = Mock()
         webob_exceptions.status_map = {
-            '301': self.Moved301,
-            '302': self.Found302
+            301: self.Moved301,
+            302: self.Found302
         }
         self.handler = self._make_one()
         self.handler.request.get_response = Mock()
@@ -706,8 +706,8 @@ class TestBaseHandlerError(unittest.TestCase):
         self.ClientError = Mock()
         self.ServerError = Mock()
         webob_exceptions.status_map = {
-            '400': self.ClientError,
-            '500': self.ServerError
+            400: self.ClientError,
+            500: self.ServerError
         }
         self.handler = self._make_one()
         self.handler.request.get_response = Mock()
@@ -733,13 +733,13 @@ class TestBaseHandlerError(unittest.TestCase):
           to get ExceptionClass from `webob_exceptions.status_map`.
         """
         
-        self.handler.error(status='500')
+        self.handler.error(status=500)
         self.assertRaises(
             AssertionError,
             self.ClientError.assert_called_with
         )
         self.ServerError.assert_called_with()
-        self.handler.error(status='400')
+        self.handler.error(status=400)
         self.ClientError.assert_called_with()
         
     
@@ -983,13 +983,13 @@ class TestCallBaseHandler(unittest.TestCase):
         
     
     def test_self_error_called_when_method_raises_http_exception(self):
-        """ If `method(*groups)` raises an `HTTPException` then 
+        """ If `method(*groups)` raises a `WSGIHTTPException` then 
           `self.error(exception=err)` is called.
         """
         
         from weblayer.request import webob_exceptions
         
-        err = webob_exceptions.HTTPException('', '')
+        err = webob_exceptions.WSGIHTTPException('', '')
         def raise_err(*args):
             raise err
             
@@ -1001,13 +1001,13 @@ class TestCallBaseHandler(unittest.TestCase):
         
     
     def test_self_error_response_used_when_method_raises_http_exception(self):
-        """ If `method(*groups)` raises an `HTTPException` then the return
+        """ If `method(*groups)` raises a `WSGIHTTPException` then the return
           value of `self.error(exception=err)` is used as the response.
         """
         
         from weblayer.request import webob_exceptions
         
-        err = webob_exceptions.HTTPException('', '')
+        err = webob_exceptions.WSGIHTTPException('', '')
         def raise_err(*args):
             raise err
             

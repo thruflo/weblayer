@@ -198,7 +198,7 @@ class BaseHandler(object):
           or if it doesn't match ``self.xsrf_token``.
         """
         
-        if self.request.method != 'post':
+        if self.request.method.lower() != 'post':
             return None
         
         if self.request.headers.get("X-Requested-With") == "XMLHttpRequest":
@@ -239,7 +239,7 @@ class BaseHandler(object):
           .. _`webob_exception`: http://pythonpaste.org/webob/module-webob.exc.html
         """
         
-        status = permanent is True and '301' or '302'
+        status = permanent is True and 301 or 302
         kwargs['location'] = location
         
         ExceptionClass = webob_exceptions.status_map[status]
@@ -263,7 +263,7 @@ class BaseHandler(object):
           .. _`webob_exception`: http://pythonpaste.org/webob/module-webob.exc.html
         """
         
-        status = str(status)
+        status = int(status)
         
         if exception is None:
             ExceptionClass = webob_exceptions.status_map[status]
