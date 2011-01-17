@@ -16,6 +16,7 @@ class TestBasics(unittest.TestCase):
         from webtest import TestApp
         from weblayer import Bootstrapper, WSGIApplication
         config = {
+            'check_xsrf': False,
             'cookie_secret': '...',
             'static_files_path': 'static',
             'template_directories': ['templates']
@@ -705,9 +706,97 @@ class TestStatic(unittest.TestCase):
     
     
 
+class TestXSRF(unittest.TestCase):
+    """ Sanity check validating against XSRF attacks.
+    """
+    
+    def make_app(self, mapping):
+        from os.path import dirname, join as join_path
+        from webtest import TestApp
+        from weblayer import Bootstrapper, WSGIApplication
+        config = {
+            'cookie_secret': '...',
+            'static_files_path': 'static',
+            'template_directories': ['templates']
+        }
+        bootstrapper = Bootstrapper(settings=config, url_mapping=mapping)
+        application = WSGIApplication(*bootstrapper())
+        return TestApp(application)
+        
+    
+    def test_form_post_using_xsrf_input(self):
+        """ If ``self.xsrf_input`` is included in the form POST it validates.
+        """
+        
+        from weblayer import RequestHandler
+        
+        class Handler(RequestHandler):
+            
+            __all__ = ('get', 'post')
+            
+            def get(self):
+                inputs = u'%s<input name="name" />' % self.xsrf_input
+                form = u'<form method="post">%s</form>' % inputs
+                return u'What is your name? %s' % form
+                
+            
+            def post(self):
+                return u'Hello %s!' % self.request.params.get('name')
+                
+            
+            
+        
+        
+        mapping = [(r'/', Handler)]
+        app = self.make_app(mapping)
+        
+        res = app.get('/')
+        form = res.form
+        form['name'] = 'Brian'
+        
+        res = form.submit()
+        self.assertTrue(res.body == 'Hello Brian!')
+        
+    
+    def test_form_post_without_xsrf_input(self):
+        """ If ``self.xsrf_input`` is not included in the form POST it,
+          fails to validate.
+        """
+        
+        from webtest import AppError
+        from weblayer import RequestHandler
+        
+        class Handler(RequestHandler):
+            
+            __all__ = ('get', 'post')
+            
+            def get(self):
+                form = u'<form method="post"><input name="name" /></form>'
+                return u'What is your name? %s' % form
+                
+            
+            def post(self):
+                """ Never gets called
+                """
+                
+            
+            
+        
+        
+        mapping = [(r'/', Handler)]
+        app = self.make_app(mapping)
+        
+        res = app.get('/')
+        form = res.form
+        form['name'] = 'Brian'
+        
+        self.assertRaisesRegexp(AppError, '403 Forbidden', form.submit)
+        
+    
+    
+
 
 """
-* ``self.xsrf_input``
 * return ``self.error()`` to return an HTTP error
 * return ``self.redirect()`` to redirect the request
 * return ``self.render()`` to return a rendered template
