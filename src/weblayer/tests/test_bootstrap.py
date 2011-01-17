@@ -249,10 +249,6 @@ class TestBootstrapperRequireSettings(unittest.TestCase):
         args = self.RequirableSettings.call_args
         packages = args[1]['packages']
         
-        import logging
-        logging.warning('packages')
-        logging.warning(packages)
-        
         self.assertTrue(
             packages == ['weblayer package', 'a package', 'b package']
         )
