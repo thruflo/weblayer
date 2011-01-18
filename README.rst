@@ -31,7 +31,7 @@ To develop (or play around with) it, get the `source code`_, either using
 
 Or from a release tarball, e.g.::
 
-    wget http://pypi.python.org/packages/source/c/weblayer/weblayer-0.4.tar.gz
+    wget http://pypi.python.org/packages/source/w/weblayer/weblayer-0.4.tar.gz
     tar -zxvf weblayer-0.4.tar.gz
     cd weblayer-0.4
 
