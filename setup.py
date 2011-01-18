@@ -4,11 +4,11 @@
 from os.path import dirname, join as join_path
 from setuptools import setup, find_packages
 
-def _get_long_description():
-    sock = open('README.rst')
-    long_description = sock.read()
+def _read(file_name):
+    sock = open(file_name)
+    text = sock.read()
     sock.close()
-    return long_description
+    return text
     
 
 
@@ -16,7 +16,7 @@ setup(
     name = 'weblayer',
     version = '0.4',
     description = 'A lightweight, componentised package for writing web applications',
-    long_description = _get_long_description(),
+    long_description = _read('README.rst'),
     author = 'James Arthur',
     author_email = 'username: thruflo, domain: gmail.com',
     url = 'http://packages.python.org/weblayer',
@@ -33,11 +33,11 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Topic :: Internet :: WWW/HTTP',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
-        'Topic :: Internet :: WWW/HTTP :: WSGI'
+        'Topic :: Internet :: WWW/HTTP :: WSGI',
         'Topic :: Internet :: WWW/HTTP :: WSGI :: Application',
         'Topic :: Software Development :: Libraries :: Python Modules'
     ],
-    license = 'http://creativecommons.org/publicdomain/zero/1.0/',
+    license = 'http://unlicense.org/UNLICENSE',
     packages = find_packages('src'),
     package_dir = {'': 'src'},
     include_package_data = True,

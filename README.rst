@@ -63,7 +63,7 @@ See the `User Guide`_ and `examples`_ for more information.
 .. _`examples`: http://github.com/thruflo/weblayer/tree/master/src/weblayer/examples
 .. _`git`: http://git-scm.com/
 .. _`github issues`: http://github.com/thruflo/weblayer/issues
-.. _`public domain`: http://creativecommons.org/publicdomain/zero/1.0/
+.. _`public domain`: http://unlicense.org/UNLICENSE
 .. _`python`: http://www.python.org
 .. _`python package index`: http://pypi.python.org/pypi/weblayer
 .. _`source code`: http://github.com/thruflo/weblayer

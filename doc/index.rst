@@ -36,5 +36,5 @@ Contents
 .. _`wsgi`: http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
 
 .. _`source code`: https://github.com/thruflo/weblayer
-.. _`public domain`: http://creativecommons.org/publicdomain/zero/1.0/
+.. _`public domain`: http://unlicense.org/UNLICENSE
 
