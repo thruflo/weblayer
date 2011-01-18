@@ -8,7 +8,14 @@
   :py:class:`MakoTemplateRenderer` requires 
   ``settings['template_directories']``::
   
-      >>> settings = {'template_directories': ['/tmp']}
+      >>> import tempfile, os
+      >>> from os.path import basename, dirname
+      
+      >>> fd, abs_path = tempfile.mkstemp()
+      >>> sock = os.fdopen(fd, 'w')
+      >>> tmpl_dir = dirname(abs_path)
+      >>> tmpl_name = basename(abs_path)
+      >>> settings = {'template_directories': [tmpl_dir]}
       >>> template_renderer = MakoTemplateRenderer(settings)
   
   And provides a :py:meth:`~MakoTemplateRenderer.render` method that accepts
@@ -18,10 +25,9 @@
   :py:meth:`~MakoTemplateRenderer.render` to the template's global namespace::
   
       >>> tmpl = u'<h1>${escape(foo)}</h1>'
-      >>> sock = open('/tmp/weblayer-template-demo.tmpl', 'w')
       >>> sock.write(tmpl)
       >>> sock.close()
-      >>> template_renderer.render('weblayer-template-demo.tmpl', foo='&')
+      >>> template_renderer.render(tmpl_name, foo='&')
       '<h1>&amp;</h1>'
   
   The built ins available by default are::
@@ -35,8 +41,7 @@
   
   Cleanup::
   
-      >>> import os
-      >>> os.remove('/tmp/weblayer-template-demo.tmpl')
+      >>> os.unlink(abs_path)
   
   .. _`Mako`: http://www.makotemplates.org/
 """

@@ -14,10 +14,12 @@
   ``settings['static_url_prefix']`` (which defaults to ``u'/static/'``).
   
       >>> from mock import Mock
+      >>> from os.path import normpath, join as join_path
+      >>> static_files_path = normpath('/var/www/static')
       >>> request = Mock()
       >>> request.host_url = 'http://foo.com'
       >>> settings = {}
-      >>> settings['static_files_path'] = '/var/www/static'
+      >>> settings['static_files_path'] = static_files_path
       >>> settings['static_url_prefix'] = u'/static/'
       >>> MemoryCachedStaticURLGenerator._cache = {}
       >>> static = MemoryCachedStaticURLGenerator(request, settings)
@@ -30,7 +32,7 @@
   
   For example, imagine we've hashed and cached ``/var/www/static/foo.js``::
   
-      >>> static._cache['/var/www/static/foo.js'] = 'abcdefghijkl'
+      >>> static._cache[join_path(static_files_path, 'foo.js')] = 'abcdefghij'
   
   The static URL returned is::
   
