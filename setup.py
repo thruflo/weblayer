@@ -25,11 +25,17 @@ setup(
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
         'License :: Public Domain',
+        'Natural Language :: English',
         'Operating System :: OS Independent',
+        'Programming Language :: Python',
         'Programming Language :: Python :: 2.5',
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
-        'Topic :: Internet :: WWW/HTTP :: WSGI :: Application'
+        'Topic :: Internet :: WWW/HTTP',
+        'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
+        'Topic :: Internet :: WWW/HTTP :: WSGI'
+        'Topic :: Internet :: WWW/HTTP :: WSGI :: Application',
+        'Topic :: Software Development :: Libraries :: Python Modules'
     ],
     license = 'http://creativecommons.org/publicdomain/zero/1.0/',
     packages = find_packages('src'),
