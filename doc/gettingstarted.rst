@@ -27,9 +27,9 @@ To develop (or play around with) it, get the `source code`_, either using
 
 Or from a release tarball, e.g.::
 
-    wget http://github.com/thruflo/weblayer/tarball/master
-    tar -zxvf thruflo-weblayer-*.tar.gz
-    cd thruflo-weblayer-*
+    wget http://pypi.python.org/packages/source/c/weblayer/weblayer-0.4.tar.gz
+    tar -zxvf weblayer-0.4.tar.gz
+    cd weblayer-0.4
 
 Develop the egg::
 
@@ -41,13 +41,14 @@ Install the additional dependencies::
 
 Run the tests::
 
-    ./bin/nosetests -c etc/nose.cfg
+    nosetests -c etc/nose.cfg
     
 Generate the docs::
 
-    ./bin/sphinx-build -a -b html doc doc/_build
+    sphinx-build -a -b html doc doc/_build
 
-If you have any problems or suggestions, `Github Issues`_ is the place to raise a ticket.
+If you have any problems or suggestions, `Github Issues`_ is the place to raise
+a ticket.
 
 .. _`git`: http://git-scm.com/
 .. _`github issues`: http://github.com/thruflo/weblayer/issues

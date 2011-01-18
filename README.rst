@@ -10,8 +10,9 @@ It's fast, tested and `documented`_.  The `source code`_ is `public domain`_.
 Install
 -------
 
-`weblayer`_ requires `Python`_ version 2.5 to 2.7.  Install it via the
-`Python Package Index`_, e.g.::
+`weblayer`_ requires `Python`_ version 2.5 to 2.7.  It's operating system
+independent, so runs on Unix (including Mac OSX) and on Windows.  Install it
+via the `Python Package Index`_, e.g.::
 
     easy_install weblayer
 
@@ -30,9 +31,9 @@ To develop (or play around with) it, get the `source code`_, either using
 
 Or from a release tarball, e.g.::
 
-    wget http://github.com/thruflo/weblayer/tarball/master
-    tar -zxvf thruflo-weblayer-*.tar.gz
-    cd thruflo-weblayer-*
+    wget http://pypi.python.org/packages/source/c/weblayer/weblayer-0.4.tar.gz
+    tar -zxvf weblayer-0.4.tar.gz
+    cd weblayer-0.4
 
 Develop the egg::
 
@@ -44,13 +45,14 @@ Install the additional dependencies::
 
 Run the tests::
 
-    ./bin/nosetests -c etc/nose.cfg
+    nosetests -c etc/nose.cfg
     
 Generate the docs::
 
-    ./bin/sphinx-build -a -b html doc doc/_build
+    sphinx-build -a -b html doc doc/_build
 
-If you have any problems or suggestions, `Github Issues`_ is the place to raise a ticket.
+If you have any problems or suggestions, `Github Issues`_ is the place to raise
+a ticket.
 
 Usage
 -----

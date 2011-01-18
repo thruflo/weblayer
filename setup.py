@@ -14,23 +14,22 @@ def _get_long_description():
 
 setup(
     name = 'weblayer',
-    version = '0.3',
+    version = '0.4',
     description = 'A lightweight, componentised package for writing web applications',
     long_description = _get_long_description(),
     author = 'James Arthur',
     author_email = 'username: thruflo, domain: gmail.com',
     url = 'http://packages.python.org/weblayer',
     classifiers = [
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Environment :: Web Environment',
-        'Framework :: Paste',
         'Intended Audience :: Developers',
         'License :: Public Domain',
-        'Operating System :: Unix',
-        'Programming Language :: Python',
+        'Operating System :: OS Independent',
         'Programming Language :: Python :: 2.5',
         'Programming Language :: Python :: 2.6',
-        'Programming Language :: Python :: 2.7'
+        'Programming Language :: Python :: 2.7',
+        'Topic :: Internet :: WWW/HTTP :: WSGI :: Application'
     ],
     license = 'http://creativecommons.org/publicdomain/zero/1.0/',
     packages = find_packages('src'),
@@ -58,9 +57,6 @@ setup(
     entry_points = {
         'setuptools.file_finders': [
             "foobar = setuptools_git:gitlsfiles"
-        ],
-        'console_scripts': [
-            'weblayer-demo = weblayer.examples.helloworld:main'
         ]
     }
 )
