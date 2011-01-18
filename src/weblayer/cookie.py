@@ -64,51 +64,8 @@ def _time_independent_equals(a, b):
           ...
           ValueError: `[]` must be a `basestring`
       
-      But, interestingly, not vulnerable to `timing attacks`_::
-      
-          >>> range_ = range(5000)
-          >>> a = 'abcdefghijklmnopqrstuvwxyz0'
-          >>> b = '0abcdefghijklmnopqrstuvwxyz'
-          >>> c = 'abcdefghijklmnopqrstuvwxyz0'
-          >>> d = 'abcdefghijklmnopqrstuvwxyz1'
-      
-      Running the function with strings that fail to match at the start
-      or at the end takes pretty much the same amount of time::
-      
-          >>> t1 = time.time()
-          >>> for i in range_:
-          ...     result = _time_independent_equals(a, b)
-          ...
-          >>> l1 = time.time() - t1
-          >>> t2 = time.time()
-          >>> for i in range_:
-          ...     result = _time_independent_equals(c, d)
-          ...
-          >>> l2 = time.time() - t2
-          >>> difference = l1 > l2 and l1 - l2 or l2 - l1
-          >>> difference_as_percentage_of_time = difference / l1 * 100
-          >>> difference_as_percentage_of_time < 10
-          True
-      
-      As opposed to the native python implementation of ``a == b``::
-      
-          >>> t1 = time.time()
-          >>> for i in range_:
-          ...     result = a == b
-          ...
-          >>> l1 = time.time() - t1
-          >>> t2 = time.time()
-          >>> for i in range_:
-          ...     result = c == d
-          ...
-          >>> l2 = time.time() - t2
-          >>> difference = l1 > l2 and l1 - l2 or l2 - l1
-          >>> difference_as_percentage_of_time = difference / l1 * 100
-          >>> difference_as_percentage_of_time < 10
-          False
-          
-      .. _`timing attacks`: http://seb.dbzteam.org/crypto/python-oauth-timing-hmac.pdf
-      
+      But not vulnerable to 
+      `timing attacks <http://seb.dbzteam.org/crypto/python-oauth-timing-hmac.pdf>`_.
     """
     
     if not isinstance(a, basestring):
