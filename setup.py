@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from os.path import dirname, join as join_path
 from setuptools import setup, find_packages
 
 def _get_long_description():
