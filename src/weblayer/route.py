@@ -22,7 +22,7 @@
       ...         # class the request should be handled by
       ...         DummyIndex
       ...     ), (
-      ...         r'(.*)',
+      ...         r'/(.*)',
       ...         Dummy404
       ...     )
       ... ]
@@ -35,14 +35,14 @@
   
   Returning the handler and the match groups if any::
   
-      >>> path_router.match('/foobar') == (Dummy404, ('/foobar',), {})
+      >>> path_router.match('/foobar') == (Dummy404, ('foobar',), {})
       True
   
   The mapping items are looked up in order::
   
       >>> mapping.reverse()
       >>> path_router = RegExpPathRouter(mapping)
-      >>> path_router.match('/') == (Dummy404, ('/',), {})
+      >>> path_router.match('/') == (Dummy404, ('',), {})
       True
   
   If the path doesn't match, returns ``(None, None, None)``::

@@ -10,16 +10,14 @@
   
   Then call the ``bootstrapper`` instance to register components and get
   :py:class:`~weblayer.interfaces.ISettings` and 
-  :py:class:`~weblayer.interfaces.IPathRouter` utilities.
-  
-  By default, the bootstrapper uses 
-  :py:class:`~weblayer.settings.RequirableSettings` and performs a 
+  :py:class:`~weblayer.interfaces.IPathRouter` utilities.  By default, the
+  bootstrapper uses :py:class:`~weblayer.settings.RequirableSettings` as its
+  :py:class:`~weblayer.interfaces.ISettings` implementation and performs a 
   `venusian scan`_ of the :ref:`weblayer` package to require settings declared
-  explicitly with :py:func:`~weblayer.settings.require_setting`.
-  
-  This means that you must pass the required settings into the 
-  :py:class:`Bootstrapper` constructor when instantiating the 
-  ``bootstrapper`` or get a ``KeyError``::
+  explicitly with :py:func:`~weblayer.settings.require_setting`.  This means
+  that you must pass the required settings into the 
+  :py:class:`Bootstrapper` constructor when instantiating the ``bootstrapper``
+  or get a ``KeyError``::
   
       >>> settings, path_router = bootstrapper() #doctest: +NORMALIZE_WHITESPACE
       Traceback (most recent call last):
@@ -38,6 +36,31 @@
       ... }
       >>> bootstrapper = Bootstrapper(settings=config, url_mapping=[])
       >>> settings, path_router = bootstrapper()
+  
+  If you require your own settings (see the :py:mod:`~weblayer.settings`
+  module for more information), pass in the dotted names of the modules
+  or packages they are required in::
+  
+      >>> bootstrapper = Bootstrapper(settings=config, url_mapping=[])
+      >>> settings, path_router = bootstrapper(packages=['foo', 'baz.bar'])
+      Traceback (most recent call last):
+      ...
+      ImportError: No module named foo
+  
+  To override specific components, either pass in ``False`` to skip
+  registering them, e.g.::
+  
+      >>> bootstrapper = Bootstrapper(settings=config, url_mapping=[])
+      >>> settings, path_router = bootstrapper(TemplateRenderer=False)
+  
+  Or pass in your own implementation, e.g.::
+  
+      >>> from mock import Mock
+      >>> mock_router = Mock()
+      >>> bootstrapper = Bootstrapper(settings=config, url_mapping=[])
+      >>> settings, path_router = bootstrapper(path_router=mock_router)
+      >>> path_router == mock_router
+      True
   
   .. _`venusian scan`: http://docs.repoze.org/venusian/
   
@@ -100,37 +123,6 @@ class Bootstrapper(object):
         """ If ``require_settings`` is ``True`` and ``settings`` isn't provided
           as a keyword argument, call :py:meth:`require_settings`, 
           :py:meth:`register_components` and return ``settings, path_router``.
-          
-          If you require your own settings (see the :py:mod:`~weblayer.settings`
-          module for more information), pass in the dotted names of the modules
-          or packages they are required in::
-          
-              >>> config = {
-              ...     'cookie_secret': '...', 
-              ...     'static_files_path': '/var/www/static',
-              ...     'template_directories': ['templates']
-              ... }
-              >>> bootstrapper = Bootstrapper(settings=config, url_mapping=[])
-              >>> settings, path_router = bootstrapper(packages=['foo', 'baz.bar'])
-              Traceback (most recent call last):
-              ...
-              ImportError: No module named foo
-          
-          To override specific components, either pass in ``False`` to skip
-          registering them, e.g.::
-          
-              >>> bootstrapper = Bootstrapper(settings=config, url_mapping=[])
-              >>> settings, path_router = bootstrapper(TemplateRenderer=False)
-          
-          Or pass in your own implementation, e.g.::
-          
-              >>> from mock import Mock
-              >>> mock_router = Mock()
-              >>> bootstrapper = Bootstrapper(settings=config, url_mapping=[])
-              >>> settings, path_router = bootstrapper(path_router=mock_router)
-              >>> path_router == mock_router
-              True
-          
         """
         
         if 'settings' in kwargs or not require_settings:

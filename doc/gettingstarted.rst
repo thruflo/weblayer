@@ -6,8 +6,9 @@ Getting Started
 Install
 -------
 
-:ref:`weblayer` requires `Python`_ version 2.5 to 2.7.  Install it via the
-`Python Package Index`_, e.g.::
+:ref:`weblayer` requires `Python`_ version 2.5 to 2.7.  It's operating system
+independent, so runs on Unix (including Mac OSX) and on Windows.  Install it
+via the `Python Package Index`_, e.g.::
 
     easy_install weblayer
 

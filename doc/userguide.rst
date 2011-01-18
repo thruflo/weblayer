@@ -217,12 +217,6 @@ For example, :py:class:`~weblayer.route.RegExpPathRouter`::
         # ``__init__`` method removed from this example for brevity
         
         def match(self, path):
-            """ Iterate through self._mapping.  If the path matches an item, 
-              return the handler class, the ``re`` ``match`` object's groups
-              (as ``args`` to pass to the handler) and an empty dict (as 
-              ``kwargs`` to pass to the handler).  Otherwise return 
-              ``(None, None, None)``.
-            """
             
             for regexp, handler_class in self._mapping:
                 match = regexp.match(path)
@@ -266,7 +260,7 @@ The default implementations are as follows:
 * :py:class:`~weblayer.interfaces.IResponse` is implemented by
   :py:class:`~weblayer.base.Response`
 * :py:class:`~weblayer.interfaces.IResponseNormaliser` is implemented by
-  :py:class:`~weblayer.response.DefaultToJSONResponseNormaliser`
+  :py:class:`~weblayer.normalise.DefaultToJSONResponseNormaliser`
 * :py:class:`~weblayer.interfaces.ISecureCookieWrapper` is implemented by
   :py:class:`~weblayer.cookie.SignedSecureCookieWrapper`
 * :py:class:`~weblayer.interfaces.ISettings` is implemented by

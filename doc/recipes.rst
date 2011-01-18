@@ -53,13 +53,14 @@ You can see this deployed at
     `setup.py`_ but at the time of writing this means you need to include:
     
     * `mako`, 
+    * `MarkupSafe`
+    * `pkg_resources.py`
     * `venusian`, 
     * `weblayer`, 
     * `webob`, 
     * `zope.component`
-    * `zope.interface`
     * `zope.event`
-    * `pkg_resources.py`
+    * `zope.interface`
     
 
 Paste

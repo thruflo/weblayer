@@ -5,16 +5,16 @@
   implementation of :py:class:`~weblayer.interfaces.ITemplateRenderer` that 
   uses `Mako`_ templates.
   
-  :py:class:`MakoTemplateRenderer` requires 
-  ``settings['template_directories']``::
-  
       >>> import tempfile, os
       >>> from os.path import basename, dirname
-      
       >>> fd, abs_path = tempfile.mkstemp()
       >>> sock = os.fdopen(fd, 'w')
       >>> tmpl_dir = dirname(abs_path)
       >>> tmpl_name = basename(abs_path)
+  
+  :py:class:`MakoTemplateRenderer` requires 
+  ``settings['template_directories']``::
+  
       >>> settings = {'template_directories': [tmpl_dir]}
       >>> template_renderer = MakoTemplateRenderer(settings)
   
