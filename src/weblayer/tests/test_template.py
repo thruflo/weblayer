@@ -5,7 +5,11 @@
 """
 
 import unittest
-from mock import Mock
+
+try: # pragma: no cover
+    from mock import Mock
+except: # pragma: no cover
+    pass
 
 class TestMakoTemplateRenderer(unittest.TestCase):
     """ Test the logic of the `MakoTemplateRenderer`.

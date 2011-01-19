@@ -8,16 +8,18 @@ from datetime import timedelta
 import time
 
 import unittest
-from mock import Mock
 
-from weblayer.cookie import SignedSecureCookieWrapper
-from weblayer.cookie import _generate_cookie_signature
+try: # pragma: no cover
+    from mock import Mock
+except: # pragma: no cover
+    pass
 
 class TestInitCookie(unittest.TestCase):
     """ Test the logic of initialising a SignedSecureCookieWrapper.
     """
     
     def setUp(self):
+        from weblayer.cookie import SignedSecureCookieWrapper
         self.request = Mock()
         self.response = Mock()
         self.settings = {'cookie_secret': 'psst'}
@@ -56,6 +58,7 @@ class TestSetCookie(unittest.TestCase):
     """
     
     def setUp(self):
+        from weblayer.cookie import SignedSecureCookieWrapper
         self.request = Mock()
         self.response = Mock()
         self.settings = {'cookie_secret': ''}
@@ -159,6 +162,7 @@ class TestGetCookie(unittest.TestCase):
     """
     
     def setUp(self):
+        from weblayer.cookie import SignedSecureCookieWrapper
         self.request = Mock()
         self.response = Mock()
         self.settings = {'cookie_secret': ''}
@@ -204,6 +208,8 @@ class TestGetCookie(unittest.TestCase):
         """ If the timestamp is more than 31 days old, returns `None`.
         """
         
+        from weblayer.cookie import _generate_cookie_signature
+        
         t = time.time()
         too_old = str(int(t - 32 * 24 * 60 * 60))
         
@@ -234,6 +240,8 @@ class TestGetCookie(unittest.TestCase):
           decoded, it raises a TypeError.
         """
         
+        from weblayer.cookie import _generate_cookie_signature
+        
         t = time.time()
         ts = str(int(t))
         
@@ -249,6 +257,8 @@ class TestGetCookie(unittest.TestCase):
         """ If the signature matches, the value comes back
           run through `base64.b64decode`.
         """
+        
+        from weblayer.cookie import _generate_cookie_signature
         
         t = time.time()
         ts = str(int(t))
@@ -295,6 +305,7 @@ class TestDeleteCookie(unittest.TestCase):
     """
     
     def setUp(self):
+        from weblayer.cookie import SignedSecureCookieWrapper
         self.request = Mock()
         self.response = Mock()
         self.settings = {'cookie_secret': ''}

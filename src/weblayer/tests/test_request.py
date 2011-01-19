@@ -5,7 +5,11 @@
 """
 
 import unittest
-from mock import Mock
+
+try: # pragma: no cover
+    from mock import Mock
+except: # pragma: no cover
+    pass
 
 def _was_called_with(m, *args, **kwargs):
     """ Takes a mock and the args and kwargs it should have been
@@ -1110,7 +1114,6 @@ class TestCallBaseHandler(unittest.TestCase):
         
     
     
-
 
 class TestRequestHandler(unittest.TestCase):
     """ Test the logic of `RequestHandler`.
