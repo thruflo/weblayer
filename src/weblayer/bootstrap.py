@@ -70,7 +70,11 @@ __all__ = [
     'Bootstrapper'
 ]
 
+import imp
 import sys
+
+from os.path import dirname
+from pkgutil import iter_modules
 
 from component import registry
 from interfaces import *
@@ -156,15 +160,23 @@ class Bootstrapper(object):
         if packages is None:
             packages = []
         
+        framework_modules = []
         if scan_framework:
-            packages.insert(0, 'weblayer')
-        
+            # only scan (non-orphaned) source files, in order to avoid scanning
+            # tests and examples
+            path = dirname(__file__)
+            for importer, modname, ispkg in iter_modules([path], 'weblayer.'):
+                loader = importer.find_module(modname)
+                module_type = loader.etc[2]
+                if module_type == imp.PY_SOURCE:
+                    framework_modules.append(modname)
+            
         to_scan = []
-        for item in packages:
+        
+        for item in framework_modules + packages:
             if not item in sys.modules: # pragma: no coverage
                 __import__(item)
             to_scan.append(sys.modules[item])
-        
         
         settings = RequirableSettings(
             packages=to_scan,

@@ -5,7 +5,11 @@
 """
 
 import unittest
-from mock import Mock
+
+try: # pragma: no cover
+    from mock import Mock
+except: # pragma: no cover
+    pass
 
 class TestInitBootstrapper(unittest.TestCase):
     """ Test the logic of `Bootstrap.__init__`.
@@ -199,6 +203,21 @@ class TestBootstrapperRequireSettings(unittest.TestCase):
         self.sys = Mock()
         self.sys.modules = {
             'weblayer': 'weblayer package', 
+            'weblayer.auth': 'weblayer.auth package',
+            'weblayer.base': 'weblayer.base package',
+            'weblayer.bootstrap': 'weblayer.bootstrap package',
+            'weblayer.component': 'weblayer.component package',
+            'weblayer.cookie': 'weblayer.cookie package',
+            'weblayer.interfaces': 'weblayer.interfaces package',
+            'weblayer.method': 'weblayer.method package',
+            'weblayer.normalise': 'weblayer.normalise package',
+            'weblayer.request': 'weblayer.request package',
+            'weblayer.route': 'weblayer.route package',
+            'weblayer.settings': 'weblayer.settings package',
+            'weblayer.static': 'weblayer.static package',
+            'weblayer.template': 'weblayer.template package',
+            'weblayer.utils': 'weblayer.utils package',
+            'weblayer.wsgi': 'weblayer.wsgi package',
             'a': 'a package', 
             'b': 'b package'
         }
@@ -242,16 +261,18 @@ class TestBootstrapperRequireSettings(unittest.TestCase):
         bootstrapper.require_settings()
         args = self.RequirableSettings.call_args
         packages = args[1]['packages']
-        self.assertTrue(packages == ['weblayer package'])
+        self.assertTrue(packages[0] == 'weblayer.auth package')
+        self.assertTrue(packages[-1] == 'weblayer.wsgi package')
         
         bootstrapper = self.make_one()
         bootstrapper.require_settings(packages=['a', 'b'])
         args = self.RequirableSettings.call_args
         packages = args[1]['packages']
         
-        self.assertTrue(
-            packages == ['weblayer package', 'a package', 'b package']
-        )
+        self.assertTrue(packages[0] == 'weblayer.auth package')
+        self.assertTrue(packages[-3] == 'weblayer.wsgi package')
+        self.assertTrue(packages[-2] == 'a package')
+        self.assertTrue(packages[-1] == 'b package')
         
     
     def test_extra_categories(self):
