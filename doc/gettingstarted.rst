@@ -26,11 +26,11 @@ To develop (or play around with) it, get the `source code`_, either using
     git clone git://github.com/thruflo/weblayer.git
     cd weblayer
 
-Or from a release tarball, e.g.::
+Or from a download, e.g.::
 
-    wget http://pypi.python.org/packages/source/w/weblayer/weblayer-0.4.tar.gz
-    tar -zxvf weblayer-0.4.tar.gz
-    cd weblayer-0.4
+    wget --no-check-certificate https://github.com/thruflo/weblayer/zipball/master
+    unzip thruflo-weblayer-*.zip
+    cd thruflo-weblayer-*
 
 Develop the egg::
 
