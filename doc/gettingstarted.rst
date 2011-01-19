@@ -8,29 +8,17 @@ Install
 
 :ref:`weblayer` requires `Python`_ version 2.5 to 2.7.  It's operating system
 independent, so runs on Unix (including Mac OSX) and on Windows.  Install it
-via the `Python Package Index`_, e.g.::
+via the `Python Package Index`_ using `Setuptools`_::
 
     easy_install weblayer
-
-Or::
-
-    pip install weblayer
-
 
 Develop
 -------
 
-To develop (or play around with) it, get the `source code`_, either using
-`Git`_::
+To develop (or play around with) it, get the `source code`_ using `Git`_::
 
     git clone git://github.com/thruflo/weblayer.git
     cd weblayer
-
-Or from a download, e.g.::
-
-    wget --no-check-certificate https://github.com/thruflo/weblayer/zipball/master
-    unzip thruflo-weblayer-*.zip
-    cd thruflo-weblayer-*
 
 Develop the egg::
 
@@ -55,4 +43,5 @@ a ticket.
 .. _`github issues`: http://github.com/thruflo/weblayer/issues
 .. _`python`: http://www.python.org
 .. _`python package index`: http://pypi.python.org/pypi/weblayer
+.. _`setuptools`: http://pypi.python.org/pypi/setuptools
 .. _`source code`: http://github.com/thruflo/weblayer
