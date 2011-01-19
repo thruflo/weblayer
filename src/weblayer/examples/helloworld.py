@@ -23,6 +23,10 @@ config = {
 bootstrapper = Bootstrapper(settings=config, url_mapping=mapping)
 application = WSGIApplication(*bootstrapper())
 
-if __name__ == '__main__': # pragma: no cover
+def main():
     from wsgiref.simple_server import make_server
     make_server('', 8080, application).serve_forever()
+    
+
+if __name__ == '__main__': # pragma: no cover
+    main()

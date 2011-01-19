@@ -99,7 +99,7 @@ to ``/foo`` will yield one match group, ``'foo'`` which is passed into
 
 You can see this for yourself by running::
 
-    python src/weblayer/examples/helloworld.py
+    weblayer-demo
 
 And then opening http://localhost:8080/foo in a web browser.
 

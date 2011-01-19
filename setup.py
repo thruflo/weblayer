@@ -14,7 +14,7 @@ def _read(file_name):
 
 setup(
     name = 'weblayer',
-    version = '0.4',
+    version = '0.4.1',
     description = 'A lightweight, componentised package for writing web applications',
     long_description = _read('README.rst'),
     author = 'James Arthur',
@@ -63,6 +63,9 @@ setup(
     entry_points = {
         'setuptools.file_finders': [
             "foobar = setuptools_git:gitlsfiles"
+        ],
+        'console_scripts': [
+            "weblayer-demo = weblayer.examples.helloworld:main"
         ]
     }
 )

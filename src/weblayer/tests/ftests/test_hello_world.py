@@ -27,5 +27,26 @@ class TestHelloWorld(unittest.TestCase):
         self.assertTrue(res.body == 'hello world')
         
     
+    def test_main(self):
+        """ ``def main()`` calls ``wsgiref.simple_server.make_server`` with
+          ``''``, ``8080`` and ``weblayer.examples.helloworld.application``.
+        """
+        
+        from weblayer.examples.helloworld import application, main
+        
+        # patch ``make_server``
+        from mock import Mock
+        import wsgiref.simple_server
+        __make_server = wsgiref.simple_server.make_server
+        mock_make_server = Mock()
+        wsgiref.simple_server.make_server = mock_make_server
+        
+        main()
+        mock_make_server.assert_called_with('', 8080, application)
+        
+        # restore ``make_server``
+        wsgiref.simple_server.make_server = __make_server
+        
+    
     
 
