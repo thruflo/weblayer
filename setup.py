@@ -14,7 +14,7 @@ def _read(file_name):
 
 setup(
     name = 'weblayer',
-    version = '0.4.1',
+    version = '0.4.2',
     description = 'A lightweight, componentised package for writing web applications',
     long_description = _read('README.rst'),
     author = 'James Arthur',
@@ -43,21 +43,21 @@ setup(
     include_package_data = True,
     zip_safe = False,
     install_requires=[
-        'zope.interface >= 3.6.1, < 4.0',
-        'zope.component >= 3.10, < 4.0',
-        'venusian >= 0.5, < 0.6',
-        'webob >= 1.0, < 2.0',
-        'Mako >= 0.3.6, < 0.4'
+        'WebOb==1.0.1',
+        'Mako==0.3.6',
+        'venusian==0.5',
+        'zope.interface==3.6.1',
+        'zope.component==3.10.0',
+        'setuptools-git==0.3.4'
     ],
     extras_require = {
         'dev': [
-            'WebTest >= 1.2.3, < 1.3',
-            'nose >= 1.0, < 2.0',
-            'coverage >= 3.4, < 4.0',
-            'mock >= 0.7.0b4, < 0.8',
-            'Sphinx >= 1.0.5, < 2.0',
-            'repoze.sphinx.autointerface >= 0.4, < 0.5',
-            'setuptools_git >= 0.3, < 0.4'
+            'coverage==3.4',
+            'nose==1.0.0',
+            'mock==0.7.0b4',
+            'repoze.sphinx.autointerface==0.4',
+            'Sphinx==1.0.7',
+            'WebTest==1.2.3'
         ]
     },
     entry_points = {
