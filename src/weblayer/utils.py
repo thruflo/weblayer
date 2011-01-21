@@ -22,10 +22,14 @@ import time
 import urllib
 import xml.sax.saxutils
 
-try: #pragma NO COVERAGE
+try: # pragma: no cover
     import simplejson as json
-except ImportError: #pragma NO COVERAGE
-    import json
+except ImportError: # pragma: no cover
+    try:
+        from django.utils import simplejson as json
+    except:
+        import json
+    
 
 def encode_to_utf8(value):
     """ Converts a ``unicode`` to a utf-8 encoded ``str``::
