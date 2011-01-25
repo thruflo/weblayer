@@ -199,7 +199,7 @@ Components
 Architecture
 ------------
 
-:ref:`weblayer` uses the `Zope Component Architecture <zope.component>`_ under
+:ref:`weblayer` uses the `Zope Component Architecture`_ under
 the hood.  Individual components are said to `implement`_ one of 
 :py:mod:`weblayer.interfaces`, listed in ``weblayer.interfaces.__all__``:
 
@@ -347,6 +347,13 @@ If you then run this, all requests will meet with a 404 response::
 You can see two further examples at `override/authentication_manager.py`_
 and `override/template_renderer.py`_
 
+.. note::
+
+    Using the :py:class:`~weblayer.bootstrap.Bootstrapper` to register
+    components is entirely optional.  You can register components manually
+    using (or even by monkey patching) the :py:mod:`weblayer.component` 
+    ``registry``.
+
 
 .. _`request handler api`:
 
@@ -419,3 +426,4 @@ attributes and methods:
 .. _`implement`: http://pypi.python.org/pypi/zope.interface#declaring-implemented-interfaces
 
 .. _`wsgi`: http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
+.. _`zope component architecture`: http://pypi.python.org/pypi/zope.component
