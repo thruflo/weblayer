@@ -14,7 +14,7 @@ def _read(file_name):
 
 setup(
     name = 'weblayer',
-    version = '0.4.2',
+    version = '0.4.3',
     description = 'A lightweight, componentised package for writing web applications',
     long_description = _read('README.rst'),
     author = 'James Arthur',

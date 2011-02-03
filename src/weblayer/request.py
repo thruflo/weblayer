@@ -56,6 +56,8 @@ class BaseHandler(object):
     adapts(IRequest, IResponse, ISettings)
     implements(IRequestHandler)
     
+    check_xsrf = True
+    
     def __init__(
             self, 
             request,
@@ -137,7 +139,7 @@ class BaseHandler(object):
             handler_response = self.handle_method_not_found(method_name)
         else:
             try:
-                if self.settings["check_xsrf"]:
+                if self.check_xsrf and self.settings["check_xsrf"]:
                     self.xsrf_validate()
             except XSRFError, err:
                 handler_response = self.handle_xsrf_error(err)

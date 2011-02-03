@@ -78,6 +78,31 @@ receives an `HTTP GET request`_.
     :py:meth:`~weblayer.method.ExposedMethodSelector.select_method`).  In most
     cases, the trick is simply to remember to include ``'head'`` in your 
     ``__all__`` list of exposed methods wherever you expose ``'get'``.
+
+.. note::
+    
+    In order to protect against XSRF attacks, POST Requests (that are not
+    XMLHttpRequest requests) are validated to check for the presence and value
+    of an ``_xsrf`` parameter.  You can include this in your forms using the
+    :py:attr:`~weblayer.request.RequestHandler.xsrf_input` (available as
+    ``xrsf_input`` in your templates, e.g.::
+    
+        <form>
+          ${xsrf_input}
+        </form>
+    
+    You can disable XSRF validation using an application level
+    :py:mod:`~weblayer.settings`, specifically the ``check_xsrf`` setting,
+    or by overriding the ``check_xsrf``
+    :py:class:`~weblayer.request.RequestHandler` class attribute, e.g.::
+    
+        class Hello3(RequestHandler):
+            """ I don't validate POST requests against XSRF request forgery.
+            """
+            
+            check_xsrf = False
+            
+        
     
 
 Handlers are mapped to incoming requests using the incoming request path.

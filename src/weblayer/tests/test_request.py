@@ -931,6 +931,20 @@ class TestCallBaseHandler(unittest.TestCase):
         )
         
     
+    def test_self_check_xsrf_false_doesnt_call_xsrf_validate(self):
+        """ If ``self.check_xsrf`` is ``False`` then don't call 
+          ``self.xsrf_validate()``.
+        """
+        
+        self.handler.check_xsrf = False
+        self.handler.xsrf_validate = Mock()
+        self.handler('foo')
+        self.assertRaises(
+            AssertionError,
+            self.handler.xsrf_validate.assert_called_with
+        )
+        
+    
     def test_xsrf_validate_error_calls_handle_xsrf_error(self):
         """ If `self.xsrf_validate()` raises an `XSRFError` then call
           self.handle_xsrf_error(err)`.
