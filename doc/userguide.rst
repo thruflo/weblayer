@@ -91,10 +91,10 @@ receives an `HTTP GET request`_.
           ${xsrf_input}
         </form>
     
-    You can disable XSRF validation using an application level
-    :py:mod:`~weblayer.settings`, specifically the ``check_xsrf`` setting,
-    or by overriding the ``check_xsrf``
-    :py:class:`~weblayer.request.RequestHandler` class attribute, e.g.::
+    You can disable XSRF validation by setting ``check_xsrf`` to ``False``
+    in your application level :py:mod:`~weblayer.settings` and / or by
+    overriding the ``check_xsrf`` :py:class:`~weblayer.request.RequestHandler`
+    class attribute, e.g.::
     
         class Hello3(RequestHandler):
             """ I don't validate POST requests against XSRF request forgery.
