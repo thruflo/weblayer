@@ -270,7 +270,7 @@ def json_decode(value, **kwargs):
           >>> json_decode('{"a": object()}') #doctest: +ELLIPSIS
           Traceback (most recent call last):
           ...
-          ValueError: No JSON object could be decoded
+          ValueError: ...
       
     """
     

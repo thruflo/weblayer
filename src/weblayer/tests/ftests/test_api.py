@@ -789,10 +789,15 @@ class TestXSRF(unittest.TestCase):
         form = res.form
         form['name'] = 'Brian'
         
-        self.assertRaisesRegexp(AppError, '403 Forbidden', form.submit)
+        self.assertRaises(AppError, form.submit)
+        try:
+            result = form.submit()
+        except AppError, err:
+            self.assertTrue('403 Forbidden' in str(err))
         
     
     
+
 
 class TestError(unittest.TestCase):
     """ Sanity check ``self.error()``.
@@ -827,12 +832,11 @@ class TestError(unittest.TestCase):
         mapping = [(r'/', A)]
         app = self.make_app(mapping)
         
-        self.assertRaisesRegexp(
-            AppError, 
-            '500 Internal Server Error', 
-            app.get, 
-            '/'
-        )
+        self.assertRaises(AppError, app.get, '/')
+        try:
+            result = app.get('/')
+        except AppError, err:
+            self.assertTrue('500 Internal Server Error' in str(err))
         
     
     def test_return_specific_error(self):
@@ -851,12 +855,11 @@ class TestError(unittest.TestCase):
         mapping = [(r'/', A)]
         app = self.make_app(mapping)
         
-        self.assertRaisesRegexp(
-            AppError, 
-            '501 Not Implemented',
-            app.get, 
-            '/'
-        )
+        self.assertRaises(AppError, app.get, '/')
+        try:
+            result = app.get('/')
+        except AppError, err:
+            self.assertTrue('501 Not Implemented' in str(err))
         
     
     
